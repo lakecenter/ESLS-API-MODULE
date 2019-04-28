@@ -1,0 +1,68 @@
+cos:
+ secretId: AKIDzyqbM3y9RXTI0bsNWZR8f4HJD6pPq9HE
+ secretKey: vmS1fEcqunY8ZsBKJ7nQxKWXQOScp2BH
+ region: ap-guangzhou
+ bucketName: mybucket1-1257353650
+ path: https://mybucket1-1257353650.cos.ap-guangzhou.myqcloud.com
+
+license:
+  subject: license_subject
+  publicAlias: publicCert
+  storePass: public_password1234
+  licensePath: localData.license
+  publicKeysStorePath: publicCerts.keystore
+
+acme:
+  command:
+    # 路由器注册
+    router_registry:
+      mac:
+        begin: 0
+        end: 1
+      port:
+        begin: 0
+        end: 1
+    # 路由器设置
+    router_setting:
+      mac:
+        begin: 0
+        end: 1
+      port:
+        begin: 0
+        end: 1
+
+category:
+  commandCategory:
+    ACK:
+      command_class: 0x01
+      command_id: 0x01
+    NACK:
+      command_class: 0x01
+      command_id: 0x02
+    OVERTIME:
+      command_class: 0x01
+      command_id: 0x03
+    TAGRESPONSE:
+      command_class: 0x05
+      command_id: 0x01
+    ROUTERRESPONSE:
+      command_class: 0x05
+      command_id: 0x02
+    ROUTERREGISTY:
+      command_class: 0x02
+      command_id: 0x03
+    TAGREGISTY:
+      command_class: 0x02
+      command_id: 0x01
+    APREAD:
+      command_class: 0x09
+      command_id: 0x12
+    BALANCEDATA:
+      command_class: 0x08
+      command_id: 0x01
+    BALANCEPOWER:
+      command_class: 0x08
+      command_id: 0x04
+
+
+

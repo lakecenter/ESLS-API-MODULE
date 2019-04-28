@@ -1,0 +1,39 @@
+version: '3'
+services:
+  redis:
+    container_name: v-redis
+    image: redis:latest
+    restart: always
+    ports:
+      - 6379:6379
+
+  mysql:
+    container_name: v-mysql
+    image: mysql:5.6
+    # environment: 此节点下的信息会当作环境变量传入容器，此示例中 mysql 服务配置了数据库、密码和权限信息。
+    environment:
+      MYSQL_DATABASE: tags
+      MYSQL_ROOT_PASSWORD: 123
+      MYSQL_ROOT_HOST: 'root'
+    ports:
+      - "3306:3306"
+    restart: always
+
+  app:
+    # restart: always 表示如果服务启动不成功会一直尝试
+    restart: always
+    # docker文件目录
+    build: ./
+    # 容器工作目录
+    working_dir: /src
+    # volumes: 加载本地目录下的配置文件到容器目标地址下
+    volumes:
+      - ./:/src
+      - ~/.m2:/root/.m2
+    expose:
+      - "8080"
+      # depends_on：可以配置依赖服务，表示需要先启动 depends_on 下面的服务后，再启动本服务。
+    depends_on:
+      - redis
+      - mysql
+    command: mvn clean spring-boot:run

@@ -1,0 +1,14 @@
+language: java
+jdk:
+- openjdk8
+install: mvn install -DskipTests=true -Dmaven.javadoc.skip=true
+script: mvn test
+addons:
+  ssh_known_hosts: 39.108.106.167
+before_install:
+- openssl aes-256-cbc -K $encrypted_e74fd7ab158d_key -iv $encrypted_e74fd7ab158d_iv
+   -in id_rsa.enc -out ~/.ssh/id_rsa -d
+- chmod 600 ~/.ssh/id_rsa
+after_script:
+  - scp -o stricthostkeychecking=no -r target/ESLS-0.0.1-SNAPSHOT.jar root@39.108.106.167:/root/ESLS
+
