@@ -1,5 +1,5 @@
 # ESLS
-基于springboot的ESLS后台管理系统（API接口） 集成swagger进行测试、JPA数据库访问、netty通信、redis作token数据库缓存、aop日志、JWT认证、POI数据批量导入导出、定时任务、validation作参数认证、自定义日志处理、用户登录及邮件激活、邮件短信通知、shiro权限管理、truelicense证书安装验证（mac ip地址）、技术文档接口文档、rabbitmq
+ESLS后端接口多模块版本基于springboot的ESLS后台管理系统（API接口） 集成swagger进行测试、JPA、MybatisPlus数据库访问、netty通信、redis作token数据库缓存、aop日志、JWT认证、POI结合反射数据批量导入导出、定时任务、validation作参数认证、自定义日志处理、用户登录及邮件激活、邮件短信通知、shiro权限管理、truelicense证书安装验证（mac ip地址）、技术文档接口文档、rabbitmq、第三方登录
 
 详情参照技术文档及接口文档
 # 启动流程
