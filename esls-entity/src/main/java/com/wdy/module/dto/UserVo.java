@@ -34,7 +34,9 @@ public class UserVo {
     private Byte activateStatus;
     @ExcelField(title = "mail", order = 12)
     private String mail;
-    @ExcelField(title = "shopId", order = 13, readConverter = StringToLongConverter.class)
+    @ExcelField(title = "avatarUrl", order = 13)
+    private String avatarUrl;
+    @ExcelField(title = "shopId", order = 14, readConverter = StringToLongConverter.class)
     private Long shopId;
     private String roleList;
 }

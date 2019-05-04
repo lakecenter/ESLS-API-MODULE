@@ -5,6 +5,7 @@ import com.wdy.module.license.LicenseCreator;
 import com.wdy.module.license.LicenseCreatorParam;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -12,10 +13,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletResponse;
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.OutputStream;
+import java.io.*;
 
 @RestController
 @RequestMapping("/license")
@@ -45,13 +43,16 @@ public class LicenseCreatorController {
     @ApiOperation("生成证书")
     @PostMapping(value = "/generateLicense", produces = {MediaType.APPLICATION_JSON_UTF8_VALUE})
     public ResponseEntity<ResultBean> generateLicense(@RequestBody LicenseCreatorParam param, @RequestParam String userName, @RequestParam String passWd) {
-        boolean result =false;
-        if(!StringUtils.isEmpty(userName)  && !StringUtils.isEmpty(passWd) && "ESLS".equals(userName)  && "123456".equals(passWd)) {
+        boolean result = false;
+        if (!StringUtils.isEmpty(userName) && !StringUtils.isEmpty(passWd) && "ESLS".equals(userName) && "123456".equals(passWd)) {
             LicenseCreator licenseCreator = new LicenseCreator(param);
             result = licenseCreator.generateLicense();
         }
+        if (result)
+            return new ResponseEntity<>(ResultBean.success(result), HttpStatus.OK);
+        else
+            return new ResponseEntity<>(ResultBean.error(result), HttpStatus.BAD_REQUEST);
 
-        return new ResponseEntity<>(ResultBean.success(result), HttpStatus.OK);
     }
 
     @ApiOperation("下载证书")
@@ -61,12 +62,10 @@ public class LicenseCreatorController {
         response.addHeader("Content-Disposition", "attachment;fileName=" + "data.license");// 设置文件名
         // 写出响应
         try (OutputStream os = response.getOutputStream()) {
-            File file = new File("data.license");
+            ClassPathResource classPathResource = new ClassPathResource("license/data.license");
             byte[] buffer = new byte[1024];
-            FileInputStream fis;
             BufferedInputStream bis;
-            fis = new FileInputStream(file);
-            bis = new BufferedInputStream(fis);
+            bis = new BufferedInputStream(classPathResource.getInputStream());
             int i = bis.read(buffer);
             while (i != -1) {
                 os.write(buffer, 0, i);
@@ -74,7 +73,7 @@ public class LicenseCreatorController {
             }
             return new ResponseEntity<>(ResultBean.success("下载成功"), HttpStatus.OK);
         } catch (Exception e) {
-            return new ResponseEntity<>(ResultBean.error("下载失败"+e), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(ResultBean.error("下载失败" + e), HttpStatus.BAD_REQUEST);
         }
     }
 

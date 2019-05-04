@@ -103,7 +103,6 @@ public class SmsVerifyController {
     @RequiresPermissions("添加或修改信息")
     @PostMapping("/smsVerify")
     public ResponseModel save(@RequestBody SmsVerify smsVerify) {
-        System.out.println(smsVerify);
         return ResponseHelper.buildResponseModel(smsVerifyService.insertOrUpdate(smsVerify));
     }
 
@@ -119,7 +118,7 @@ public class SmsVerifyController {
     @GetMapping("/smsVerify/{smsType}/{mobile}")
     @Pass
     @Log(action = "getCaptcha", modelName = "Sms", value = "获取短信验证码接口")
-    public ResponseModel<SmsVerify> getCaptcha(@PathVariable String smsType, @PathVariable String mobile) throws Exception {
+    public ResponseModel getCaptcha(@PathVariable String smsType, @PathVariable String mobile) throws Exception {
         return ResponseHelper.buildResponseModel(smsVerifyService.addAndGetMobileAndCaptcha(smsType, mobile));
     }
 

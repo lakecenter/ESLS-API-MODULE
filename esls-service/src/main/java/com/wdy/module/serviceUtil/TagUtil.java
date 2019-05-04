@@ -16,7 +16,7 @@ public class TagUtil {
     public static List<TagsAndRouter> splitTagsByRouter(List<Tag> tags) {
         ArrayList<TagsAndRouter> tagsAndRouters = new ArrayList<>();
         for (Tag tag : tags) {
-            if (tag.getForbidState() == 0 || tag.getRouter()==null) continue;
+            if (tag.getForbidState() == 0 || tag.getRouter() == null) continue;
             TagsAndRouter tagsAndRouter = new TagsAndRouter(tag.getRouter());
             if (tagsAndRouters.contains(tagsAndRouter)) {
                 tagsAndRouter = getTagsAndRouter(tagsAndRouters, tagsAndRouter.getRouter().getId());
@@ -45,6 +45,7 @@ public class TagUtil {
             // 变价超时
             tag.setCompleteTime(new Timestamp(System.currentTimeMillis()));
             tag.setCompleteTime(null);
+            tag.setExecTime(null);
             tagService.saveOne(tag);
         }
         return result;
@@ -58,6 +59,7 @@ public class TagUtil {
             tagService.saveOne(newTag);
         } else {
             // 变价超时
+            tag.setWaitUpdate(0);
             tag.setExecTime(null);
             tag.setCompleteTime(null);
             tagService.saveOne(tag);
@@ -107,8 +109,11 @@ public class TagUtil {
         String styleNumber = style.getStyleNumber();
         if (resolutionWidth == null || styleNumber == null)
             return false;
-        if (styleNumber.substring(0, 2).equals("21") && style.getStyleType().contains("黑白") && resolutionWidth.substring(0, 2).equals("25")) {
-            return true;
+        if (styleNumber.substring(0, 2).equals("21") && style.getStyleType().contains("黑白")) {
+            if (resolutionWidth.substring(0, 2).equals("25"))
+                return true;
+            else
+                return false;
         }
         if (styleNumber.substring(0, 2).equals("42") && resolutionWidth.substring(0, 2).equals("40")) {
             return true;

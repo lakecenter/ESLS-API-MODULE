@@ -6,7 +6,7 @@ import com.wdy.module.entity.User;
 import com.wdy.module.entity.OperationLog;
 import com.wdy.module.mybatis.mybatisService.IOperationLogService;
 import com.wdy.module.serviceUtil.SpringContextUtil;
-import com.wdy.module.utils.ContextUtil;
+import com.wdy.module.serviceUtil.ContextUtil;
 import com.wdy.module.utils.RedisUtil;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.slf4j.Logger;

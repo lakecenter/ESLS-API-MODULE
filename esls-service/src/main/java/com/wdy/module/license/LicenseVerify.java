@@ -1,8 +1,11 @@
 package com.wdy.module.license;
 
+import com.wdy.module.serviceUtil.LicenseUtil;
 import de.schlichtherle.license.*;
+import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.core.io.ClassPathResource;
 
 import java.io.File;
 import java.text.*;
@@ -24,14 +27,17 @@ public class LicenseVerify {
      * @date 2019/4/16 10:44
      */
     public synchronized LicenseContent install(LicenseVerifyParam param) throws Exception {
-        LicenseContent result ;
+        LicenseContent result;
         DateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
         //1. 安装证书
         LicenseManager licenseManager = LicenseManagerHolder.getInstance(initLicenseParam(param));
         licenseManager.uninstall();
-
-        result = licenseManager.install(new File(param.getLicensePath()));
+//        File localFile = File.createTempFile("temp", null);
+//        FileUtils.copyInputStreamToFile(new ClassPathResource(param.getLicensePath()).getInputStream(), localFile);
+        File localFile = new File(param.getLicensePath());
+        result = licenseManager.install(localFile);
+        LicenseUtil.licenseContent = result;
         logger.info(MessageFormat.format("证书安装成功，证书有效期：{0} - {1}", format.format(result.getNotBefore()), format.format(result.getNotAfter())));
 
         return result;

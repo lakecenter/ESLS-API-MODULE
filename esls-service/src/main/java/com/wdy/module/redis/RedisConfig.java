@@ -1,6 +1,7 @@
 package com.wdy.module.redis;
 
 import com.alibaba.fastjson.support.spring.FastJsonRedisSerializer;
+import com.wdy.module.common.constant.RedisConstant;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
@@ -50,25 +51,25 @@ public class RedisConfig extends CachingConfigurerSupport {
             }
         };
     }
-    // 针对注解方式配置
-    @Bean
-    public CacheManager cacheManager(RedisConnectionFactory redisConnectionFactory, RedisConstant redisConstant) {
-        // 生成一个默认配置，通过config对象即可对缓存进行自定义配置
-        RedisCacheConfiguration config = RedisCacheConfiguration.defaultCacheConfig()
-                             // 不缓存空值
-                            .disableCachingNullValues();
-        // 根据key设定具体的缓存时间，key统一放在常量类RedisKeys中
-        Set<String> cacheNames = new HashSet<>(redisConstant.getExpiresMap().keySet());
-        Map<String, RedisCacheConfiguration> expiresMap = new HashMap<>();
-        redisConstant.getExpiresMap().forEach((key, value)->{
-            expiresMap.put(key, config.entryTtl(Duration.ofSeconds(value)));
-        });
-        return RedisCacheManager.builder(redisConnectionFactory)
-                // 注意这两句的调用顺序，一定要先调用该方法设置初始化的缓存名，再初始化相关的配置
-                .initialCacheNames(cacheNames)
-                .withInitialCacheConfigurations(expiresMap)
-                .build();
-    }
+//    // 针对注解方式配置
+//    @Bean
+//    public CacheManager cacheManager(RedisConnectionFactory redisConnectionFactory, RedisConstant redisConstant) {
+//        // 生成一个默认配置，通过config对象即可对缓存进行自定义配置
+//        RedisCacheConfiguration config = RedisCacheConfiguration.defaultCacheConfig()
+//                             // 不缓存空值
+//                            .disableCachingNullValues();
+//        // 根据key设定具体的缓存时间，key统一放在常量类RedisKeys中
+//        Set<String> cacheNames = new HashSet<>(redisConstant.getExpiresMap().keySet());
+//        Map<String, RedisCacheConfiguration> expiresMap = new HashMap<>();
+//        redisConstant.getExpiresMap().forEach((key, value)->{
+//            expiresMap.put(key, config.entryTtl(Duration.ofSeconds(value)));
+//        });
+//        return RedisCacheManager.builder(redisConnectionFactory)
+//                // 注意这两句的调用顺序，一定要先调用该方法设置初始化的缓存名，再初始化相关的配置
+//                .initialCacheNames(cacheNames)
+//                .withInitialCacheConfigurations(expiresMap)
+//                .build();
+//    }
     @Bean("redisTemplate")
     public RedisTemplate<Object, Object> redisTemplate(RedisConnectionFactory redisConnectionFactory) {
         RedisTemplate<Object, Object> template = new RedisTemplate<>();

@@ -65,7 +65,7 @@ public class ServerChannelHandler extends SimpleChannelInboundHandler<Object> {
                 //读空闲（服务器端）
                 case READER_IDLE:
                     String id = ctx.channel().id().toString();
-                    SocketChannelHelper.heartBeanMap.put(id, SocketChannelHelper.heartBeanMap.get(id) + 1);
+                    SocketChannelHelper.heartBeanMap.put(id, SocketChannelHelper.heartBeanMap.get(id) == null ? 0 : SocketChannelHelper.heartBeanMap.get(id) + 1);
                     // 重试2次无响应则断开
                     if (SocketChannelHelper.heartBeanMap.get(id) + 1 == 2) {
                         removeWorkingRouter(ctx.channel());
@@ -78,7 +78,7 @@ public class ServerChannelHandler extends SimpleChannelInboundHandler<Object> {
                 case WRITER_IDLE:
                     byte[] heartBeat = CommandConstant.COMMAND_BYTE.get(CommandConstant.ROUTERHEARTBEAN);
                     ctx.channel().writeAndFlush(Unpooled.wrappedBuffer(heartBeat));
-                    log.info("【" + ctx.channel().remoteAddress() + "】发送心跳包");
+                    log.info("【" + ctx.channel().id().toString() + "】发送心跳包");
                     break;
                 case ALL_IDLE:
                     break;
@@ -103,7 +103,9 @@ public class ServerChannelHandler extends SimpleChannelInboundHandler<Object> {
         // ACK
         if (header[0] == 0x01 && header[1] == 0x01) {
             if (req[11] == 0x0B && req[12] == 0x01) {
-                log.info("接收到心跳包");
+                String id = ctx.channel().id().toString();
+                log.info(id + ":接收到心跳包");
+                SocketChannelHelper.heartBeanMap.put(ctx.channel().id().toString(), SocketChannelHelper.heartBeanMap.get(id) == null ? 0 : SocketChannelHelper.heartBeanMap.get(id) - 1);
                 return;
             }
             String key = ctx.channel().id().toString() + "-" + req[11] + req[12];

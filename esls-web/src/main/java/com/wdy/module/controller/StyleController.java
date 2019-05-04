@@ -114,8 +114,15 @@ public class StyleController {
     @Log("添加或修改样式信息")
     @RequiresPermissions("添加或修改信息")
     public ResponseEntity<ResultBean> saveStyleByStyleType(@RequestParam String styleType) {
-        Style result = styleService.saveOne(styleType);
-        return new ResponseEntity<>(new ResultBean(result), HttpStatus.OK);
+        List<Style> result = styleService.saveOne(styleType);
+        return new ResponseEntity<>(ResultBean.success(result), HttpStatus.OK);
+    }
+
+    @ApiOperation(value = "获得促销或非促销的样式信息")
+    @GetMapping("/style/promote")
+    @Log("获得指定样式的内容")
+    public ResponseEntity<ResultBean> getStyleByStyleNumberAndType(@RequestParam String styleNumber, @RequestParam Byte isPromote) {
+        return new ResponseEntity<>(ResultBean.success(styleService.findByStyleNumberAndIsPromote(styleNumber, isPromote)), HttpStatus.OK);
     }
 
     @ApiOperation(value = "添加或修改样式信息")
@@ -135,6 +142,15 @@ public class StyleController {
         if (flag)
             return new ResponseEntity<>(ResultBean.success("删除成功"), HttpStatus.OK);
         return new ResponseEntity<>(ResultBean.error("删除失败！没有指定ID的样式"), HttpStatus.BAD_REQUEST);
+    }
+
+    @ApiOperation(value = "根据styleNumber删除样式信息")
+    @DeleteMapping("/style/styleNumber/{styleNumber}")
+    @Log("根据styleNumber删除样式信息")
+    @RequiresPermissions("删除指定ID的信息")
+    public ResponseEntity<ResultBean> deleteStyleByStyleNumber(@PathVariable String styleNumber) {
+        ResponseBean responseBean = styleService.deleteByStyleNumber(styleNumber);
+        return new ResponseEntity<>(ResultBean.success(responseBean), HttpStatus.OK);
     }
 
     //    @ApiOperation(value = "更改指定ID样式的小样式")
@@ -158,13 +174,11 @@ public class StyleController {
     })
     @RequiresPermissions("新建或修改样式同时绑定小样式")
     public ResponseEntity<ResultBean> newStyleById(@RequestParam long styleId, @RequestBody @ApiParam(value = "样式信息JSON格式") List<Dispms> dispms, @RequestParam Integer mode, @RequestParam Integer update) {
-        List<Style> styleList = dispmsService.findByArrtribute(TableConstant.TABLE_STYLE, ArrtributeConstant.TABLE_ID, String.valueOf(styleId), Style.class);
-        if (styleList == null || styleList.size() == 0)
+        Optional<Style> style = styleService.findById(styleId);
+        if (!style.isPresent())
             return new ResponseEntity<>(ResultBean.error("没有指定的样式,请先添加样式"), HttpStatus.BAD_REQUEST);
-        ResponseEntity<ResultBean> result;
-        if ((result = ResponseUtil.testListSize("没有对应ID的样式", styleList)) != null) return result;
         // 返回前端提示信息
-        return new ResponseEntity<>(ResultBean.success(styleService.newStyleById(styleId, dispms, styleList.get(0), mode, update)), HttpStatus.OK);
+        return new ResponseEntity<>(ResultBean.success(styleService.newStyleById(styleId, dispms, style.get(), mode, update)), HttpStatus.OK);
     }
 
     @ApiOperation(value = "刷新选用该样式的标签或设置定期刷新", notes = "定期刷新才需加beginTime和cycleTime字段")
@@ -182,7 +196,7 @@ public class StyleController {
     @GetMapping("/style/photo/{id}")
     @Log("生成指定ID样式的所有小样式图片")
     @RequiresPermissions("生成指定ID样式的所有小样式图片")
-    public ResponseEntity<ResultBean> creatStyle(@PathVariable long id, @RequestParam Long goodId) {
+    public ResponseEntity<ResultBean> createStyle(@PathVariable long id, @RequestParam Long goodId) {
         Style style = styleService.findById(id).get();
         Good good = goodService.findById(goodId);
         Collection<Dispms> dispmses = style.getDispmses();
@@ -196,7 +210,7 @@ public class StyleController {
     @GetMapping("/style/dism/photo/{id}")
     @Log("生成指定ID样式的所有小样式图片")
     @RequiresPermissions("生成指定ID样式的所有小样式图片")
-    public ResponseEntity<ResultBean> creatDism(@PathVariable long id, @RequestParam Long goodId, @RequestParam String styleNumber) {
+    public ResponseEntity<ResultBean> createDism(@PathVariable long id, @RequestParam Long goodId, @RequestParam String styleNumber) {
         Dispms dispms = dispmsService.findById(id).get();
         Good good = goodService.findById(goodId);
         ImageHelper.getRegionImage(dispms, styleNumber, good);

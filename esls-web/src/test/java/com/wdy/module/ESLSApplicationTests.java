@@ -1,6 +1,11 @@
 package com.wdy.module;
-import com.wdy.module.entity.User;
+
+import com.wdy.module.dao.GoodDao;
+import com.wdy.module.dao.StyleDao;
+import com.wdy.module.dynamicquery.DynamicQuery;
+import com.wdy.module.entity.*;
 import com.wdy.module.service.UserService;
+import com.wdy.module.serviceUtil.SpringContextUtil;
 import com.wdy.module.utils.JWTTokenUtil;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -8,14 +13,21 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import java.util.HashMap;
-import java.util.Map;
+import javax.persistence.Temporal;
+import java.util.*;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
 public class ESLSApplicationTests {
     @Autowired
     private UserService userService;
+    @Autowired
+    private DynamicQuery dynamicQuery;
+    @Autowired
+    private StyleDao styleDao;
+    @Autowired
+    private GoodDao goodDao;
+
     @Test
     public void contextLoads() {
 //        RabbiMqSendBean rabbiMqSendBean = new RabbiMqSendBean();
@@ -35,4 +47,31 @@ public class ESLSApplicationTests {
         System.out.println(map.get("id"));
     }
 
+    @Test
+    public void testJPA() {
+        String sql = "SELECT * FROM T_User WHERE name=?";
+        User user = dynamicQuery.nativeQuerySingleResult(User.class, sql, new Object[]{"ESLS"});
+//        System.out.println(user.getName());
+//        dynamicQuery.save(user);
+    }
+
+    @Test
+    public void testStyle() {
+        List<Style> byWidthOrWidthOrderByStyleNumber = styleDao.findByWidthOrWidthOrderByStyleNumber(212, 250);
+        List<Style> byWidthOrderByStyleNumber = styleDao.findByWidthOrderByStyleNumber(296);
+    }
+
+    @Test
+    public void testGood() {
+        Good good = goodDao.findById((long) 2).get();
+        if (good.getPrice().contains("."))
+            System.out.println(good.getPrice().substring(0, good.getPrice().indexOf(".") + 3));
+
+    }
+    @Test
+    public void testSyleService() {
+        Style byStyleNumberAndIsPromote = styleDao.findByStyleNumberAndIsPromote("2901", (byte) 0);
+        System.out.println(byStyleNumberAndIsPromote);
+
+    }
 }

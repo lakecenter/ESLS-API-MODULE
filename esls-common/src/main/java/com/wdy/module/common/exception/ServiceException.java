@@ -1,6 +1,5 @@
 package com.wdy.module.common.exception;
 
-import com.wdy.module.common.exception.ResultEnum;
 import lombok.Data;
 
 @Data

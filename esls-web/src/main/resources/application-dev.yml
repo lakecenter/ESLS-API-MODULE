@@ -1,3 +1,8 @@
+outNetIp: 39.108.106.167
+mysql:
+ userName: root
+ passWord: 123
+
   # 开发环境配置
 server:
   # 服务端口
@@ -17,16 +22,16 @@ server:
 spring:
   profiles: dev
   rabbitmq:
-    host: 39.108.106.167
+    host: ${outNetIp}
     port: 5672
     username: root
     password: 123
     publisher-confirms: true
   #datasource start
   datasource:
-    url: jdbc:mysql://39.108.106.167:3306/tags?characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&autoReconnect=true
-    username: root
-    password: 123
+    url: jdbc:mysql://${outNetIp}:3306/tags?characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&autoReconnect=true
+    username: ${mysql.userName}
+    password: ${mysql.passWord}
     driver-class-name: com.mysql.jdbc.Driver
     type: com.alibaba.druid.pool.DruidDataSource
   #datasource end
@@ -88,4 +93,7 @@ mybatis-plus:
   type-aliases-package: com.wdy.module.entity
 #  configuration:
 #    map-underscore-to-camel-case: true
+
+
+
 

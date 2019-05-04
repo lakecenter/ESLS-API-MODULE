@@ -48,7 +48,7 @@ public class LicenseCreatorParam implements Serializable {
      * 密钥库存储路径
      */
     @JsonIgnore
-    private String privateKeysStorePath = "privateKeys.keystore";
+    private String privateKeysStorePath = "license/privateKeys.keystore";
 
     /**
      * 证书生效时间

@@ -40,14 +40,22 @@ public class AsyncServiceTask {
         if (depth == 0)
             return new AsyncResult<>(0);
         log.info("-----向(标签集合)发送命令线程-----");
-        SuccessAndFailList successAndFailList;
+        SuccessAndFailList successAndFailList = null;
         if (tagList.size() > 1) {
             nettyUtil.awakeFirst(tagList);
-            successAndFailList = sendByTags(tagList, begin, content, messageType, 1000);
-            nettyUtil.awakeOverLast(tagList);
+            try {
+                successAndFailList = sendByTags(tagList, begin, content, messageType, 1000);
+            } catch (Exception e) {
+            }
+            try {
+                nettyUtil.awakeOverLast(tagList);
+            } catch (Exception e) {
+            }
         } else {
             successAndFailList = sendByTags(tagList, begin, content, messageType, 5500);
         }
+        if (successAndFailList == null)
+            return new AsyncResult<>(0);
         ListenableFuture<Integer> integerListenableFuture = sendMessageWithRepeat(successAndFailList.getNoSuccessTags(), begin, content, messageType, --depth);
         return new AsyncResult<>(integerListenableFuture.get() + successAndFailList.getSuccessNumber());
     }
@@ -57,21 +65,28 @@ public class AsyncServiceTask {
         if (depth == 0 || tagList.size() == 0)
             return new AsyncResult<>(0);
         log.info("-----向(标签集合)发送更新样式命令线程-----");
-        // 线程中等待路由器执行完成
         SuccessAndFailList successAndFailList = null;
         Integer tagsLengthCommand = Integer.valueOf(SystemVersionArgs.tagsLengthCommand);
         if (tagList.size() > 1) {
             List<List<Tag>> splitByTags = Lists.partition(tagList, tagsLengthCommand);
             for (List tags : splitByTags) {
                 nettyUtil.awakeFirst(tags);
-                successAndFailList = updateStylesByTags(tags, begin, false);
-                nettyUtil.awakeOverLast(tags);
+                try {
+                    successAndFailList = updateStylesByTags(tags, begin, false);
+                } catch (Exception e) {
+                }
+                try {
+                    nettyUtil.awakeOverLast(tags);
+                } catch (Exception e) {
+                }
             }
         } else {
             List<List<Tag>> splitByTags = Lists.partition(tagList, tagsLengthCommand);
             for (List tags : splitByTags)
                 successAndFailList = updateStylesByTags(tags, begin, true);
         }
+        if (successAndFailList == null)
+            return new AsyncResult<>(0);
         if (depth == 1 && isNeedSending) {
             List<Tag> noSuccessTags = successAndFailList.getNoSuccessTags();
             try {
@@ -85,7 +100,7 @@ public class AsyncServiceTask {
                 log.info("发送ESLS变价通知信息邮件失败");
             }
         }
-        ListenableFuture<Integer> integerListenableFuture = updateTagStyle(successAndFailList.getNoSuccessTags(),tagsAll, begin, --depth, isNeedSending);
+        ListenableFuture<Integer> integerListenableFuture = updateTagStyle(successAndFailList.getNoSuccessTags(), tagsAll, begin, --depth, isNeedSending);
         return new AsyncResult<>(integerListenableFuture.get() + successAndFailList.getSuccessNumber());
     }
 
@@ -113,7 +128,12 @@ public class AsyncServiceTask {
             byte[] address = SpringContextUtil.getAddressByBarCode(tag.getBarCode());
             if (address == null || (tag.getForbidState() != null && tag.getForbidState() == 0)) continue;
             byte[] message = CommandConstant.getBytesByType(address, content, messageType);
-            String result = nettyUtil.sendMessageWithRepeat(channel, message, Integer.valueOf(SystemVersionArgs.commandRepeatTime), commandWaitingTime);
+            String result = "失败";
+            try {
+                result = nettyUtil.sendMessageWithRepeat(channel, message, Integer.valueOf(SystemVersionArgs.commandRepeatTime), commandWaitingTime);
+            } catch (Exception e) {
+                TagUtil.judgeResultAndSettingTag(result, begin, tag);
+            }
             TagUtil.judgeResultAndSettingTag(result, begin, tag);
             if ("成功".equals(result)) {
                 successNumber++;
@@ -129,7 +149,11 @@ public class AsyncServiceTask {
         List<Tag> nosuccessTags = new ArrayList<>();
         List<Tag> successTags = new ArrayList<>();
         for (Tag tag : tagList) {
-            ResponseBean responseBean = tagService.updateTagStyle(tag, isWaitingLong);
+            ResponseBean responseBean = new ResponseBean(0, 0);
+            try {
+                responseBean = tagService.updateTagStyle(tag, isWaitingLong);
+            } catch (Exception e) {
+            }
             String result = responseBean.getSuccessNumber() == 1 ? "成功" : "失败";
             TagUtil.judgeResultAndSettingTagWaitUpdate(result, begin, tag);
             if ("失败".equals(result))

@@ -8,7 +8,7 @@ import java.io.Serializable;
 
 @Data
 @ApiModel(value = "响应对象")
-public  class ResultBean<T> implements Serializable {
+public class ResultBean<T> implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
@@ -23,6 +23,7 @@ public  class ResultBean<T> implements Serializable {
     private int code = SUCCESS;
     @ApiModelProperty(value = "响应的json数据")
     private T data;
+
     public ResultBean() {
         super();
     }
@@ -31,33 +32,42 @@ public  class ResultBean<T> implements Serializable {
         super();
         this.data = data;
     }
+
     public ResultBean(T data, int code) {
         super();
         this.data = data;
-        this.code=code;
+        this.code = code;
     }
+
     public ResultBean(T data, String msg) {
         super();
         this.data = data;
-        this.msg=msg;
+        this.msg = msg;
     }
+
     public ResultBean(String msg, int code) {
         super();
         this.msg = msg;
-        this.code=code;
+        this.code = code;
     }
+
     public ResultBean(Throwable e) {
         super();
         this.msg = e.toString();
-        this.code = FAIL ;
+        this.code = FAIL;
     }
-    public static ResultBean error(String msg){
-        return new ResultBean(msg,ResultBean.FAIL);
+
+    public static ResultBean error(Object msg) {
+        ResultBean error = new ResultBean(msg, ResultBean.FAIL);
+        error.setMsg("error");
+        return error;
     }
-    public static ResultBean error(String msg,Integer code){
-        return new ResultBean(msg,code);
+
+    public static ResultBean error(String msg, Integer code) {
+        return new ResultBean(msg, code);
     }
-    public static ResultBean success(Object msg){
+
+    public static ResultBean success(Object msg) {
         return new ResultBean(msg);
     }
 }

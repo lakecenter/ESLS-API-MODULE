@@ -1,5 +1,6 @@
 package com.wdy.module.controller;
 
+import com.wdy.module.aop.AccessLimit;
 import com.wdy.module.common.constant.*;
 import com.wdy.module.common.request.RequestBean;
 import com.wdy.module.common.response.ResponseBean;
@@ -10,6 +11,7 @@ import com.wdy.module.entity.*;
 import com.wdy.module.entity.Tag;
 import com.wdy.module.aop.Log;
 import com.wdy.module.netty.command.CommandConstant;
+import com.wdy.module.rabbitMq.RabbiMqSendBean;
 import com.wdy.module.service.StyleService;
 import com.wdy.module.service.TagService;
 import com.wdy.module.serviceUtil.*;
@@ -23,6 +25,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import springfox.documentation.annotations.ApiIgnore;
 
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
@@ -165,6 +168,7 @@ public class TagController {
     })
     @PutMapping("/tag/bind")
     @Log("标签和商品绑定和取消绑定")
+    @AccessLimit(perSecond = 1)
     public ResponseEntity<ResultBean> bindGoodAndTag(@RequestParam String sourceArgs1, @RequestParam String ArgsString1, @RequestParam String sourceArgs2, @RequestParam String ArgsString2, String mode) {
         return tagService.bindGoodAndTag(sourceArgs1, ArgsString1, sourceArgs2, ArgsString2, mode);
     }
@@ -242,7 +246,7 @@ public class TagController {
     @RequiresPermissions("查看所有变价超时的标签信息")
     @Log("查看所有变价超时的标签信息")
     public ResponseEntity<ResultBean> getOverTimeTags() {
-        List<Tag> tagList = tagService.findBySql("SELECT * FROM tags WHERE  completeTime IS NULL OR  execTime = 0", Tag.class);
+        List<Tag> tagList = tagService.findBySql("SELECT * FROM tags WHERE  (completeTime IS NULL OR  execTime  IS NULL OR  completeTime =0 OR  execTime =0) AND waitUpdate = 0", Tag.class);
         ResponseEntity<ResultBean> result;
         if ((result = ResponseUtil.testListSize("没有相应的标签或商品 请重新选择", tagList)) != null) return result;
         List<TagVo> tagVos = CopyUtil.copyTag(tagList);
@@ -286,7 +290,7 @@ public class TagController {
         List<Style> resultList = new ArrayList<>();
         for (Tag tag : tags)
             for (Style style : styles)
-                if (TagUtil.judgeTagMatchStyle(tag, style))
+                if ((style.getIsPromote() == null || style.getIsPromote() == 0) && TagUtil.judgeTagMatchStyle(tag, style))
                     resultList.add(style);
         return new ResponseEntity<>(new ResultBean(CopyUtil.copyStyle(resultList)), HttpStatus.OK);
     }
@@ -311,6 +315,7 @@ public class TagController {
     @ApiOperation("对工作的标签进行批量改价操作")
     @PutMapping("/tags/test")
     @Log("对工作的标签进行批量改价操作")
+    @ApiIgnore
     public ResponseEntity<ResultBean> testAllTags() {
         List<Tag> tags = tagService.findAll();
         for (Tag tag : tags) {
@@ -322,14 +327,14 @@ public class TagController {
             }
             tag.setWaitUpdate(0);
         }
-        SendCommandUtil.updateTagStyle(tags, true,false);
+        SendCommandUtil.updateTagStyle(tags, true, false);
         return new ResponseEntity<>(ResultBean.success("成功"), HttpStatus.OK);
 
     }
 
     @ApiOperation("对标签进行改价")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "mode", value = "0为对指定的标签改价 1对所有启用的标签改价", dataType = "int", paramType = "query")
+            @ApiImplicitParam(name = "mode", value = "0为对指定的标签改价 1对所有等待变价的标签改价 2对所有启用的标签改价", dataType = "int", paramType = "query")
     })
     @PostMapping("/tag/update")
     @Log("对标签进行改价")
@@ -337,24 +342,28 @@ public class TagController {
         ResponseBean responseBean;
         if (mode == 0) {
             List<Tag> tags = RequestBeanUtil.getTagsByRequestBean(requestBean);
-            responseBean = SendCommandUtil.updateTagStyle(tags, true,false);
+            responseBean = SendCommandUtil.updateTagStyle(tags, true, false);
+        } else if (mode == 1) {
+            List<Tag> tags = tagService.findBySql(SqlConstant.getQuerySql(TableConstant.TABLE_TAGS, ArrtributeConstant.GOOD_WAITUPDATE, "=", "0"), Tag.class);
+            responseBean = SendCommandUtil.updateTagStyle(tags, true, false);
         } else {
             List<Tag> tags = tagService.findBySql(SqlConstant.getQuerySql(TableConstant.TABLE_TAGS, ArrtributeConstant.TAG_FORBIDSTATE, "=", "1"), Tag.class);
-            responseBean = SendCommandUtil.updateTagStyle(tags, true,false);
+            responseBean = SendCommandUtil.updateTagStyle(tags, true, false);
         }
         return new ResponseEntity<>(ResultBean.success(responseBean), HttpStatus.OK);
     }
 
-//    @ApiOperation("测试rabbitmq")
-//    @PostMapping("/tag/testRabbitMq")
-//    @Log("测试rabbitmq")
-//    public ResponseEntity<ResultBean> testRabbitMq() {
-//        RabbiMqSendBean rabbiMqSendBean = new RabbiMqSendBean();
-//        List<Tag> tags = tagService.findAll();
-//        rabbiMqSendBean.setTags(tags);
-//        rabbiMqSendBean.setIsWaiting(true);
-//        //rabbitMqSender.send(rabbiMqSendBean);
-//        SendCommandUtil.updateTagStyle(rabbiMqSendBean.getTags(),rabbiMqSendBean.getIsWaiting(),false);
-//        return new ResponseEntity<>(ResultBean.success(rabbiMqSendBean), HttpStatus.OK);
-//    }
+    @ApiOperation("测试rabbitmq")
+    @PostMapping("/tag/testRabbitMq")
+    @Log("测试rabbitmq")
+    @ApiIgnore
+    public ResponseEntity<ResultBean> testRabbitMq() {
+        RabbiMqSendBean rabbiMqSendBean = new RabbiMqSendBean();
+        List<Tag> tags = tagService.findAll();
+        rabbiMqSendBean.setTags(tags);
+        rabbiMqSendBean.setIsWaiting(true);
+        //rabbitMqSender.send(rabbiMqSendBean);
+        SendCommandUtil.updateTagStyle(rabbiMqSendBean.getTags(), rabbiMqSendBean.getIsWaiting(), false);
+        return new ResponseEntity<>(ResultBean.success(rabbiMqSendBean), HttpStatus.OK);
+    }
 }

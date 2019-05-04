@@ -2,10 +2,7 @@ package com.wdy.module.entity;
 
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
-import com.github.crab2died.annotation.ExcelField;
-import com.wdy.module.converter.*;
-import lombok.Builder;
-import lombok.Data;
+import lombok.*;
 import org.apache.commons.lang3.builder.ToStringExclude;
 
 import javax.persistence.*;
@@ -18,12 +15,15 @@ import java.util.List;
         property = "id")
 @Entity
 @Table(name = "T_User", schema = "tags", catalog = "")
+@Builder
 @Data
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@NoArgsConstructor
 public class User implements Serializable {
     @Id
     @Column(name = "id", nullable = false)
     @GeneratedValue(strategy = GenerationType.IDENTITY)//自增主键
-    private long id;
+    private Long id;
     @Column(name = "name")
     private String name;
     @Column(name = "passwd")
@@ -46,6 +46,8 @@ public class User implements Serializable {
     private Byte activateStatus;
     @Column(name = "mail")
     private String mail;
+    @Column(name = "avatarUrl")
+    private String avatarUrl;
     @ManyToOne(cascade = {CascadeType.MERGE})
     @JoinColumn(name = "shopid", referencedColumnName = "id")
     private Shop shop;

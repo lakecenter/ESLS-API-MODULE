@@ -209,21 +209,14 @@ public class UserController {
     @ApiOperation(value = "用户激活")
     @GetMapping("/user/activate")
     public ResponseEntity<ResultBean> activateUser(@RequestParam @ApiParam("用户激活码") String code) {
-        User user = (User) redisUtil.sentinelGet(code, User.class);
+        User user = (User) redisUtil.get(code);
         if (user == null)
             throw new ServiceException(ResultEnum.ACTIVATE_EXPIRE);
         user.setActivateStatus((byte) 1);
         User newUser = userService.saveOne(user);
         if (newUser == null)
             throw new ServiceException(ResultEnum.USER_SAVE_ERROR);
-        Role role = roleDao.findByType("基础权限");
-        if (newUser != null && role != null) {
-            UserRole userRole = new UserRole();
-            userRole.setUserId(newUser.getId());
-            userRole.setRoleId(role.getId());
-            if (userAndRoleDao.findByUserIdAndRoleId(newUser.getId(), role.getId()) == null)
-                userAndRoleDao.save(userRole);
-        }
+        userService.giveBasePermissionToUser(newUser);
         return new ResponseEntity<>(ResultBean.success("激活成功"), HttpStatus.OK);
     }
 

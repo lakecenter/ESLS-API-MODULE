@@ -14,11 +14,13 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 import com.wdy.module.service.CycleJobService;
 import com.wdy.module.service.GoodService;
 
 import java.io.*;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -61,60 +63,21 @@ public class GoodServiceImpl extends BaseServiceImpl implements GoodService {
         // 添加商品
         if (good.getId() != 0) {
             Good g = goodDao.findById(good.getId()).get();
-            String regionNames = g.getRegionNames();
-            regionNames = StringUtil.isEmpty(regionNames) ? new String() : regionNames;
-            String sql = SqlConstant.QUERY_TABLIE_COLUMN + "\'" + TableConstant.TABLE_GOODS + "\'";
-            List<String> data = baseDao.findBySql(sql);
-            for (String column : data) {
-                if (isNotProperty(column)) continue;
-                String sourceData = SpringContextUtil.getSourceData(column, good);
-                String targetData = SpringContextUtil.getSourceData(column, g);
-                if (sourceData != null && targetData != null && !sourceData.equals(targetData)) {
-                    if (!regionNames.contains(column)) {
-                        regionNames += (column + " ");
-                    }
-                }
-            }
-            List<Tag> tags = tagDao.findByGoodId(good.getId());
-            for (Tag tag : tags) {
-                //标签等待更新
-                tag.setWaitUpdate(0);
-            }
-            // 0为等待更新
-            good.setWaitUpdate(0);
-            good.setRegionNames(regionNames);
-        } else
+            setRegionNames(g, good);
+        } else {
             // 1为不更新
             good.setWaitUpdate(1);
+            good.setImportTime(new Timestamp(System.currentTimeMillis()));
+        }
         return goodDao.save(good);
     }
 
     @Override
     public Good updateGood(Good good) {
-        Good goodbyBarCode = findByBarCode(good.getBarCode());
-        if (goodbyBarCode != null) {
-            good.setId(goodbyBarCode.getId());
-            String regionNames = "";
-            String sql = SqlConstant.QUERY_TABLIE_COLUMN + "\'" + TableConstant.TABLE_GOODS + "\'";
-            List<String> data = baseDao.findBySql(sql);
-            for (String column : data) {
-                if (isNotProperty(column)) continue;
-                String sourceData = SpringContextUtil.getSourceData(column, goodbyBarCode);
-                String targetData = SpringContextUtil.getSourceData(column, good);
-                if (sourceData != null && targetData != null && !sourceData.equals(targetData)) {
-                    if (!regionNames.contains(column)) {
-                        regionNames += (column + " ");
-                    }
-                }
-            }
-            List<Tag> tags = tagDao.findByGoodId(good.getId());
-            for (Tag tag : tags) {
-                //标签等待更新
-                tag.setWaitUpdate(0);
-            }
-            // 0为等待更新
-            good.setWaitUpdate(0);
-            good.setRegionNames(regionNames);
+        Good g = findByBarCode(good.getBarCode());
+        if (g != null) {
+            good.setId(g.getId());
+            setRegionNames(g, good);
         }
         return goodDao.save(good);
     }
@@ -174,12 +137,7 @@ public class GoodServiceImpl extends BaseServiceImpl implements GoodService {
             responseBean = SendCommandUtil.updateTagStyle(tags, true, false);
         } catch (Exception e) {
         }
-        for (Good good : goods) {
-            // 商品改价置1更新完毕
-            good.setWaitUpdate(1);
-            good.setRegionNames(null);
-            goodDao.save(good);
-        }
+        setGoodUpdateComplete(responseBean, goods);
         return responseBean;
     }
 
@@ -199,12 +157,7 @@ public class GoodServiceImpl extends BaseServiceImpl implements GoodService {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        for (Good good : goods) {
-            // 商品改价置1更新完毕
-            good.setWaitUpdate(1);
-            good.setRegionNames(null);
-            goodDao.save(good);
-        }
+        setGoodUpdateComplete(responseBean, goods);
         return responseBean;
     }
 
@@ -246,6 +199,44 @@ public class GoodServiceImpl extends BaseServiceImpl implements GoodService {
             return true;
         } catch (Exception e) {
             return false;
+        }
+    }
+
+    private void setGoodUpdateComplete(ResponseBean responseBean, List<Good> goods) {
+        if (responseBean != null && responseBean.getSuccessNumber() > 0) {
+            for (Good good : goods) {
+                // 商品改价置1更新完毕
+                good.setWaitUpdate(1);
+                good.setRegionNames(null);
+                goodDao.save(good);
+            }
+        }
+    }
+
+    private void setRegionNames(Good targetGood, Good sourceGood) {
+        String regionNames = targetGood.getRegionNames();
+        regionNames = StringUtil.isEmpty(regionNames) ? new String() : regionNames;
+        String sql = SqlConstant.QUERY_TABLIE_COLUMN + "\'" + TableConstant.TABLE_GOODS + "\'";
+        List<String> data = baseDao.findBySql(sql);
+        for (String column : data) {
+            if (isNotProperty(column)) continue;
+            String sourceData = SpringContextUtil.getSourceData(column, sourceGood);
+            String targetData = SpringContextUtil.getSourceData(column, targetGood);
+            if (sourceData != null && targetData != null && !sourceData.equals(targetData)) {
+                if (!regionNames.contains(column)) {
+                    regionNames += (column + " ");
+                }
+            }
+        }
+        if (!StringUtils.isEmpty(regionNames)) {
+            List<Tag> tags = tagDao.findByGoodId(sourceGood.getId());
+            for (Tag tag : tags) {
+                //标签等待更新
+                tag.setWaitUpdate(0);
+            }
+            // 0为等待更新
+            sourceGood.setWaitUpdate(0);
+            sourceGood.setRegionNames(regionNames);
         }
     }
 }

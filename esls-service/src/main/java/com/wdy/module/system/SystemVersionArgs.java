@@ -1,5 +1,6 @@
 package com.wdy.module.system;
 
+import com.wdy.module.cycleJob.DynamicTask;
 import com.wdy.module.dao.*;
 import com.wdy.module.entity.*;
 import com.wdy.module.license.LicenseCheckListener;
@@ -116,6 +117,10 @@ public class SystemVersionArgs {
             cycleJob.setArgs("/root/goodsData.csv");
             cycleJobDao.save(cycleJob);
         }
+
+        // 加载数据库定时任务
+        DynamicTask dynamicTask = (DynamicTask) SpringContextUtil.getBean("DynamicTask");
+        dynamicTask.init();
     }
 
     public void initSystemArgs() {
@@ -130,7 +135,7 @@ public class SystemVersionArgs {
             SystemVersionArgs.commandRepeatTime = systemVersion.getCommandRepeatTime();
             SystemVersionArgs.packageLength = systemVersion.getPackageLength();
             SystemVersionArgs.commandWaitingTime = systemVersion.getCommandWaitingTime();
-            SystemVersionArgs.outNetIp = systemVersion.getCommandWaitingTime();
+            SystemVersionArgs.outNetIp = systemVersion.getOutNetIp();
             SystemVersionArgs.recursionDepth = systemVersion.getRecursionDepth();
             SystemVersionArgs.timeGapAndTime = systemVersion.getTimeGapAndTime();
             SystemVersionArgs.basePermissions = systemVersion.getBasePermissions();

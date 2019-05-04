@@ -66,7 +66,7 @@ public class CommonController {
             List dataList;
             try {
                 if (query == null || query == null || connection == null) {
-                    dataList = baseDao.findBySql("select * from " + tableName, Class.forName("com.datagroup.ESLS.entity." + SqlConstant.EntityToSqlMap.get(tableName)));
+                    dataList = baseDao.findBySql("select * from " + tableName, Class.forName("com.wdy.module.entity." + SqlConstant.EntityToSqlMap.get(tableName)));
                 } else {
                     if (!"=".equals(connection) && !"like".equalsIgnoreCase(connection) && !"is".equalsIgnoreCase(connection))
                         return new ResponseEntity<>(ResultBean.error("connecttion参数出错"), HttpStatus.BAD_REQUEST);
@@ -96,14 +96,14 @@ public class CommonController {
         List dataList ;
         try (final OutputStream os = response.getOutputStream()) {
             if(query==null || query==null  || connection==null){
-                dataList = baseDao.findBySql("select * from "+ tableName , Class.forName("com.datagroup.ESLS.entity." + SqlConstant.EntityToSqlMap.get(tableName)));
+                dataList = baseDao.findBySql("select * from "+ tableName , Class.forName("com.wdy.module.entity." + SqlConstant.EntityToSqlMap.get(tableName)));
             }
             else {
                 if (!"=".equals(connection) && !"like".equalsIgnoreCase(connection) && !"is".equalsIgnoreCase(connection))
                     return new ResponseEntity<>(ResultBean.error("connecttion参数出错"), HttpStatus.BAD_REQUEST);
                 if (connection.equalsIgnoreCase("like"))
                     queryString = "%" + queryString + "%";
-                dataList = baseDao.findBySql(SqlConstant.getQuerySql(tableName, query, connection, queryString), Class.forName("com.datagroup.ESLS.entity." + SqlConstant.EntityToSqlMap.get(tableName)));
+                dataList = baseDao.findBySql(SqlConstant.getQuerySql(tableName, query, connection, queryString), Class.forName("com.wdy.module.entity." + SqlConstant.EntityToSqlMap.get(tableName)));
             }
             PoiUtil.responseSetProperties(tableName, request,response);
             PoiUtil.exportData2Csv(dataList, dataColumnList, os);

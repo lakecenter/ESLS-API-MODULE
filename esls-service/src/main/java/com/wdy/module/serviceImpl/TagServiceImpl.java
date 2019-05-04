@@ -37,6 +37,10 @@ public class TagServiceImpl extends BaseServiceImpl<Tag> implements TagService<T
         try {
             if (tag == null)
                 throw new ServiceException(ResultEnum.TAG_NOT_EXIST);
+            if (tag.getStyle() == null)
+                throw new ServiceException(ResultEnum.TAG_NOT_BIND_STYLES);
+            if (tag.getStyle().getDispmses().size() == 0)
+                throw new ServiceException(ResultEnum.TAG_EMPTY_STYLES);
             Channel channel = SocketChannelHelper.getChannelByRouter(tag.getRouter().getId());
             if (channel == null)
                 throw new ServiceException(ResultEnum.COMMUNITICATION_ERROR);
@@ -192,15 +196,19 @@ public class TagServiceImpl extends BaseServiceImpl<Tag> implements TagService<T
     //绑定商品和标签
     @Override
     public ResponseEntity<ResultBean> bindGoodAndTag(String sourceArgs1, String ArgsString1, String sourceArgs2, String ArgsString2, String mode) {
-        // 获取商品实体
-        List<Good> goods = findByArrtribute(TableConstant.TABLE_GOODS, sourceArgs1, ArgsString1, Good.class);
         // 获取标签实体
         List<Tag> tagList = findByArrtribute(TableConstant.TABLE_TAGS, sourceArgs2, ArgsString2, Tag.class);
+        // 获取商品实体
+        List<Good> goods = findByArrtribute(TableConstant.TABLE_GOODS, sourceArgs1, ArgsString1, Good.class);
         ResponseEntity<ResultBean> result;
-        if ((result = ResponseUtil.testListSize("没有相应的标签或商品 请重新选择", goods, tagList)) != null) return result;
-        // 修改标签实体的goodid state
         if (goods.size() > 1 || tagList.size() > 1)
             return new ResponseEntity<>(ResultBean.error(" 根据字段获取的数据不唯一 请选择唯一字段 "), HttpStatus.BAD_REQUEST);
+        if ((result = ResponseUtil.testListSize("没有相应的标签或商品 请重新选择", goods, tagList)) != null) return result;
+        if (tagList.get(0).getStyle() == null)
+            return new ResponseEntity<>(ResultBean.error("标签绑定样式为空，无法绑定"), HttpStatus.BAD_REQUEST);
+        if (tagList.get(0).getStyle().getDispmses().size() == 0)
+            return new ResponseEntity<>(ResultBean.error("标签绑定样式中的区域数量为0,无法绑定"), HttpStatus.BAD_REQUEST);
+        // 修改标签实体的goodid state
         Good good = goods.get(0);
         // regionNames置空
         good.setRegionNames(null);
@@ -256,10 +264,7 @@ public class TagServiceImpl extends BaseServiceImpl<Tag> implements TagService<T
         if (mode == 0) {
             List<Tag> tags = RequestBeanUtil.getTagsByRequestBean(requestBean);
             for (Tag tag : tags) {
-                tag.setIsWorking((byte) 0);
-                tag.setGood(null);
-                saveOne(tag);
-
+                forbiddenTag(tag);
             }
             responseBean = SendCommandUtil.sendCommandWithTags(tags, contentType, CommandConstant.COMMANDTYPE_TAG);
         } else if (mode == 1) {
@@ -270,10 +275,7 @@ public class TagServiceImpl extends BaseServiceImpl<Tag> implements TagService<T
                 tags.addAll(byRouterId);
             }
             for (Tag tag : tags) {
-                tag.setIsWorking((byte) 0);
-                tag.setGood(null);
-                tag.setForbidState(1);
-                saveOne(tag);
+                forbiddenTag(tag);
             }
             responseBean = SendCommandUtil.sendCommandWithRouters(routers, contentType, CommandConstant.COMMANDTYPE_TAG_BROADCAST);
         }
@@ -300,6 +302,8 @@ public class TagServiceImpl extends BaseServiceImpl<Tag> implements TagService<T
             return new ResponseEntity<>(ResultBean.error("标签对应的样式一致,无需更改"), HttpStatus.BAD_REQUEST);
         else {
             Style one = styleDao.getOne(styleId);
+            if (one.getDispmses().size() == 0)
+                return new ResponseEntity<>(ResultBean.error("标签更换的目标样式中的区域数量为0,无法更新样式"), HttpStatus.BAD_REQUEST);
             tag.setStyle(one);
             saveOne(tag);
             List<Tag> tags = new ArrayList<>();
@@ -327,6 +331,10 @@ public class TagServiceImpl extends BaseServiceImpl<Tag> implements TagService<T
                 if (!tag.getForbidState().equals(mode)) {
                     tag.setForbidState(mode);
                     tag.setIsWorking((byte) mode.intValue());
+                    if (mode == 0) {
+                        tag.setExecTime(null);
+                        tag.setCompleteTime(null);
+                    }
                     Tag resultTag = saveOne(tag);
                     if (resultTag != null)
                         successNumber++;
@@ -381,6 +389,15 @@ public class TagServiceImpl extends BaseServiceImpl<Tag> implements TagService<T
         } catch (Exception e) {
             return false;
         }
+    }
+
+    private void forbiddenTag(Tag tag) {
+        tag.setCompleteTime(null);
+        tag.setExecTime(null);
+        tag.setIsWorking((byte) 0);
+        tag.setForbidState(1);
+        tag.setGood(null);
+        saveOne(tag);
     }
 
     @Autowired

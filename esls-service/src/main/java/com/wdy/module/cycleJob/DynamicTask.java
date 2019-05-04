@@ -4,6 +4,7 @@ import com.wdy.module.common.constant.ModeConstant;
 import com.wdy.module.common.constant.SqlConstant;
 import com.wdy.module.common.request.RequestBean;
 import com.wdy.module.common.request.RequestItem;
+import com.wdy.module.common.response.ResponseBean;
 import com.wdy.module.dao.CycleJobDao;
 import com.wdy.module.entity.*;
 import com.wdy.module.serviceUtil.*;
@@ -22,7 +23,7 @@ import java.io.FileInputStream;
 import java.util.*;
 import java.util.concurrent.ScheduledFuture;
 
-@Component
+@Component("DynamicTask")
 @Slf4j
 public class DynamicTask {
     @Autowired
@@ -241,12 +242,6 @@ public class DynamicTask {
                     try {
                         // 修改
                         PoiUtil.importCsvDataFile(new FileInputStream(files[i]), dataColumnList, "goods", 1);
-                        String startPath = filePath + File.separator + files[i].getName();
-                        String endPath = filePath + "_finish" + File.separator + files[i].getName();
-                        File startFile = new File(startPath);
-                        FileUtils.copyFile(startFile, new File(endPath));
-                        System.gc();
-                        FileUtils.forceDelete(startFile);
                     } catch (Exception e) {
                         System.out.println(files[i].getName() + "导入失败");
                     }
@@ -255,11 +250,23 @@ public class DynamicTask {
                 }
             }
             // 开始变价
-            goodService.updateGoods(true);
+            ResponseBean responseBean = goodService.updateGoods(true);
+            if (responseBean != null && responseBean.getSuccessNumber() == responseBean.getSum() && responseBean.getSum() != 0) {
+                for (int i = 0; i < files.length; i++) {
+                    try {
+                        String startPath = filePath + File.separator + files[i].getName();
+                        String endPath = filePath + "_finish" + File.separator + files[i].getName();
+                        File startFile = new File(startPath);
+                        FileUtils.copyFile(startFile, new File(endPath));
+                        System.gc();
+                        FileUtils.forceDelete(startFile);
+                    } catch (Exception e) {
+                    }
+                }
+            }
         }
     }
 
-    @PostConstruct
     public void init() {
         List<CycleJob> CycleJobs = cycleJobDao.findAll();
         for (CycleJob job : CycleJobs) {

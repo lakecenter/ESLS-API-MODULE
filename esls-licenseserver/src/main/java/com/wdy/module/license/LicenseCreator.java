@@ -1,8 +1,11 @@
 package com.wdy.module.license;
 
 import de.schlichtherle.license.*;
+import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.util.ResourceUtils;
 
 import javax.security.auth.x500.X500Principal;
 import java.io.File;
@@ -24,22 +27,22 @@ public class LicenseCreator {
     /**
      * 生成License证书
      *
-     * @author dongyang_wu
-     * @date 2019/4/16 10:43
      * @param
      * @return
      * @throws
+     * @author dongyang_wu
+     * @date 2019/4/16 10:43
      */
-    public boolean generateLicense(){
+    public boolean generateLicense() {
         try {
             LicenseManager licenseManager = new CustomLicenseManager(initLicenseParam());
             LicenseContent licenseContent = initLicenseContent();
-
-            licenseManager.store(licenseContent,new File(param.getLicensePath()));
-
+            File localFile = File.createTempFile("temp", null);
+            FileUtils.copyInputStreamToFile(new ClassPathResource(param.getLicensePath()).getInputStream(), localFile);
+            licenseManager.store(licenseContent, localFile);
             return true;
-        }catch (Exception e){
-            logger.error(MessageFormat.format("证书生成失败：{0}",param),e);
+        } catch (Exception e) {
+            logger.error(MessageFormat.format("证书生成失败：{0}", param), e);
             return false;
         }
     }
@@ -47,28 +50,28 @@ public class LicenseCreator {
     /**
      * 初始化证书生成参数
      *
-     * @author dongyang_wu
-     * @date 2019/4/16 10:43
      * @param
      * @return
      * @throws
+     * @author dongyang_wu
+     * @date 2019/4/16 10:43
      */
-    private LicenseParam initLicenseParam(){
+    private LicenseParam initLicenseParam() {
         Preferences preferences = Preferences.userNodeForPackage(LicenseCreator.class);
 
         //设置对证书内容加密的秘钥
         CipherParam cipherParam = new DefaultCipherParam(param.getStorePass());
 
         KeyStoreParam privateStoreParam = new CustomKeyStoreParam(LicenseCreator.class
-                ,param.getPrivateKeysStorePath()
-                ,param.getPrivateAlias()
-                ,param.getStorePass()
-                ,param.getKeyPass());
+                , param.getPrivateKeysStorePath()
+                , param.getPrivateAlias()
+                , param.getStorePass()
+                , param.getKeyPass());
 
         LicenseParam licenseParam = new DefaultLicenseParam(param.getSubject()
-                ,preferences
-                ,privateStoreParam
-                ,cipherParam);
+                , preferences
+                , privateStoreParam
+                , cipherParam);
 
         return licenseParam;
     }
@@ -76,13 +79,13 @@ public class LicenseCreator {
     /**
      * 设置证书生成正文信息
      *
-     * @author dongyang_wu
-     * @date 2019/4/16 10:43
      * @param []
      * @return de.schlichtherle.license.LicenseContent
      * @throws
+     * @author dongyang_wu
+     * @date 2019/4/16 10:43
      */
-    private LicenseContent initLicenseContent(){
+    private LicenseContent initLicenseContent() {
         LicenseContent licenseContent = new LicenseContent();
         licenseContent.setHolder(DEFAULT_HOLDER_AND_ISSUER);
         licenseContent.setIssuer(DEFAULT_HOLDER_AND_ISSUER);

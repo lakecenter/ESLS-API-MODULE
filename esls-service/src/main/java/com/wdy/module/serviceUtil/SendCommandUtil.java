@@ -10,6 +10,7 @@ import com.wdy.module.system.SystemVersionArgs;
 import com.wdy.module.utils.*;
 import io.netty.channel.Channel;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.util.concurrent.ListenableFuture;
 import com.wdy.module.service.RouterService;
@@ -110,6 +111,8 @@ public class SendCommandUtil {
                 if (tagsAndRouter.getRouter() == null) continue;
                 testIfValid("UPDATE_TAG_STYLE_" + tagsAndRouter.getRouter().getId() + "_");
                 ArrayList<Tag> tagsList = tagsAndRouter.getTags();
+                if (CollectionUtils.isEmpty(tagsList))
+                    continue;
                 ListenableFuture<Integer> result = ((AsyncServiceTask) SpringContextUtil.getBean("AsyncServiceTask")).updateTagStyle(tagsList, tagsList, System.currentTimeMillis(), Integer.valueOf(SystemVersionArgs.recursionDepth), isNeedSending);
                 listenableFutures.add(result);
             }
@@ -312,10 +315,6 @@ public class SendCommandUtil {
 
     public static void testIfValid(String methodName) {
         RedisUtil redisUtil = (RedisUtil) SpringContextUtil.getBean("RedisUtil");
-        User user = ContextUtil.getUser();
-        if (user == null) {
-            throw new ServiceException(ResultEnum.USER_NOT_LOGIN);
-        }
         String redisCache = (String) redisUtil.sentinelGet(methodName + ContextUtil.getUser().getName(), String.class);
         String timeGapAndtime[] = SystemVersionArgs.timeGapAndTime.split(" ");
         if (timeGapAndtime[1].equals(redisCache)) {

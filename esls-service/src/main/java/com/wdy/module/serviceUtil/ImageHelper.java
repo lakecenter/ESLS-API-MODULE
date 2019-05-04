@@ -26,9 +26,9 @@ import java.util.List;
 
 @Slf4j
 public class ImageHelper {
-    public static ByteResponse getRequest(List<Dispms> dispms, String styleNumber, Good good) throws IOException {
+    public static ByteResponse getRequest(List<Dispms> dispms, String styleNumber, Good good) {
         StyleService styleService = (StyleService) SpringContextUtil.getBean("StyleService");
-        Style style = styleService.findByStyleNumber(styleNumber);
+        Style style = styleService.findByStyleNumberAndIsPromote(styleNumber, good.getIsPromote() == null ? 0 : good.getIsPromote());
         if (dispms.size() == 0)
             return null;
         List<byte[]> allbyteList = new ArrayList<>();
@@ -129,7 +129,6 @@ public class ImageHelper {
     }
 
     public static ByteAndRegion getImageByType1(Dispms dispM, String styleNumber, Good good) throws Exception {
-        DispmsService dispmsService = (DispmsService) SpringContextUtil.getBean("DispmsService");
         Dispms returnDispms = new Dispms();
         BeanUtils.copyProperties(dispM, returnDispms);
         returnDispms.setId(0);
@@ -150,8 +149,9 @@ public class ImageHelper {
         g2d.fillRect(0, 0, imageWidth, imageHeight);
         // 二维码
         if (columnType.contains(StringUtil.QRCODE)) {
+            String result = SpringContextUtil.getSourceData(dispM.getSourceColumn(), good);
             int value = Math.min(get8Number(imageWidth), get8Number(imageHeight));
-            BufferedImage image = QRCode.encode(dispM.getText(), value, value);
+            BufferedImage image = QRCode.encode(result, value, value);
             g2d.drawImage(image, 0, 0, null);
         }
         // 条形码
@@ -235,27 +235,20 @@ public class ImageHelper {
             String right = s.substring(s.indexOf(".") + 1);
             String[] leftArgs = ImageHelper.getWidthAndHeight(dispM.getFontFamily(), fontType, dispM.getFontSize(), columnType, left);
             String[] backup = dispM.getBackup().split("/");
-            if (Integer.valueOf(right) > 0) {
-                String[] rightArgs = ImageHelper.getWidthAndHeight(dispM.getFontFamily(), fontType, Integer.valueOf(backup[1]), columnType, right);
-                // 左侧数字直接画
-                g2d.drawString(left, 0, imageAscent);
-                // 0/fontsize/left的宽我存
-                // 画划线
-                if (backup[0].equals("1")) {
-                    g2d.drawLine(0, Integer.valueOf(args[1]) / 2, Integer.valueOf(leftArgs[0]), Integer.valueOf(args[1]) / 2);
-                    g2d.drawLine(Integer.valueOf(leftArgs[0]), Integer.valueOf(rightArgs[1]) / 2, Integer.valueOf(leftArgs[0]) + Integer.valueOf(rightArgs[0]), Integer.valueOf(rightArgs[1]) / 2);
-                }
-                font = new Font(dispM.getFontFamily(), fontType, Integer.valueOf(backup[1]));
-                g2d.setFont(font);
-                g2d.setStroke(new BasicStroke(3));
-                // 画右侧数字 改变画笔
-                g2d.drawString(right, Integer.valueOf(leftArgs[0]), Integer.valueOf(rightArgs[2]));
-            } else {
-                g2d.drawString(left.substring(0, left.length() - 1), 0, imageAscent);
-                if (backup[0].equals("1")) {
-                    g2d.drawLine(0, Integer.valueOf(args[1]) / 2, Integer.valueOf(leftArgs[0]), Integer.valueOf(args[1]) / 2);
-                }
+            String[] rightArgs = ImageHelper.getWidthAndHeight(dispM.getFontFamily(), fontType, Integer.valueOf(backup[1]), columnType, right);
+            // 左侧数字直接画
+            g2d.drawString(left, 0, imageAscent);
+            // 0/fontsize/left的宽我存
+            // 画划线
+            if (backup[0].equals("1")) {
+                g2d.drawLine(0, Integer.valueOf(args[1]) / 2, Integer.valueOf(leftArgs[0]), Integer.valueOf(args[1]) / 2);
+                g2d.drawLine(Integer.valueOf(leftArgs[0]), Integer.valueOf(rightArgs[1]) / 2, Integer.valueOf(leftArgs[0]) + Integer.valueOf(rightArgs[0]), Integer.valueOf(rightArgs[1]) / 2);
             }
+            font = new Font(dispM.getFontFamily(), fontType, Integer.valueOf(backup[1]));
+            g2d.setFont(font);
+            g2d.setStroke(new BasicStroke(3));
+            // 画右侧数字 改变画笔
+            g2d.drawString(right, Integer.valueOf(leftArgs[0]), Integer.valueOf(rightArgs[2]));
             String textLeft = dispM.getText();
             if (dispM.getText().contains("."))
                 textLeft = dispM.getText().substring(0, textLeft.indexOf("."));
@@ -279,10 +272,11 @@ public class ImageHelper {
         return new ByteAndRegion(changeImage(bufferedImage, styleNumber), returnDispms);
     }
 
-    public static synchronized ByteResponse getByteResponse(Tag tag) throws IOException {
-        List<Dispms> dispmses = (List<Dispms>) tag.getStyle().getDispmses();
+    public static synchronized ByteResponse getByteResponse(Tag tag) {
+        StyleService styleService = (StyleService) SpringContextUtil.getBean("StyleService");
         List<Dispms> dispmsesList = new ArrayList<>();
         Good good = tag.getGood();
+        List<Dispms> dispmses = (List<Dispms>) styleService.findByStyleNumberAndIsPromote(tag.getStyle().getStyleNumber(), good.getIsPromote() == null ? 0 : good.getIsPromote()).getDispmses();
         String regionNames = good.getRegionNames();
         boolean isRegion = !StringUtil.isEmpty(regionNames) ? true : false;
         ByteResponse byteResponse;

@@ -1,7 +1,10 @@
 package com.wdy.module.license;
+
+import com.wdy.module.common.constant.LicenseConstant;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -11,53 +14,28 @@ import org.springframework.stereotype.Component;
 @Component("LicenseCheckListener")
 public class LicenseCheckListener {
     private Logger logger = LogManager.getLogger(LicenseCheckListener.class);
+    @Autowired
+    private LicenseConstant licenseConstant;
 
-    /**
-     * 证书subject
-     */
-    @Value("${license.subject}")
-    private String subject;
+    public void installLicense() {
+        try {
+            if (StringUtils.isNotBlank(licenseConstant.getLicensePath())) {
+                logger.info("++++++++ 开始安装证书 ++++++++");
+                LicenseVerifyParam param = new LicenseVerifyParam();
+                param.setSubject(licenseConstant.getSubject());
+                param.setPublicAlias(licenseConstant.getPublicAlias());
+                param.setStorePass(licenseConstant.getStorePass());
+                param.setLicensePath(licenseConstant.getLicensePath());
+                param.setPublicKeysStorePath(licenseConstant.getPublicKeysStorePath());
 
-    /**
-     * 公钥别称
-     */
-    @Value("${license.publicAlias}")
-    private String publicAlias;
+                LicenseVerify licenseVerify = new LicenseVerify();
+                //安装证书
+                licenseVerify.install(param);
 
-    /**
-     * 访问公钥库的密码
-     */
-    @Value("${license.storePass}")
-    private String storePass;
-
-    /**
-     * 证书生成路径
-     */
-    @Value("${license.licensePath}")
-    private String licensePath;
-
-    /**
-     * 密钥库存储路径
-     */
-    @Value("${license.publicKeysStorePath}")
-    private String publicKeysStorePath;
-
-    public void installLicense() throws Exception {
-        if (StringUtils.isNotBlank(licensePath)) {
-            logger.info("++++++++ 开始安装证书 ++++++++");
-
-            LicenseVerifyParam param = new LicenseVerifyParam();
-            param.setSubject(subject);
-            param.setPublicAlias(publicAlias);
-            param.setStorePass(storePass);
-            param.setLicensePath(licensePath);
-            param.setPublicKeysStorePath(publicKeysStorePath);
-
-            LicenseVerify licenseVerify = new LicenseVerify();
-            //安装证书
-            licenseVerify.install(param);
-
-            logger.info("++++++++ 证书安装结束 ++++++++");
+                logger.info("++++++++ 证书安装结束 ++++++++");
+            }
+        } catch (Exception e) {
+            System.out.println(e);
         }
     }
 }

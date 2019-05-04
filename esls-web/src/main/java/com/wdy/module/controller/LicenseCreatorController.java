@@ -3,8 +3,12 @@ package com.wdy.module.controller;
 import com.wdy.module.common.response.ResultBean;
 import com.wdy.module.license.*;
 import com.wdy.module.serviceUtil.SpringContextUtil;
+import de.schlichtherle.license.LicenseContent;
+import de.schlichtherle.license.LicenseManager;
 import io.swagger.annotations.*;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -13,14 +17,13 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.*;
 
 @RestController
-@RequestMapping("/license")
 @Api(description = "证书API")
 @CrossOrigin(origins = "*", maxAge = 3600)
 public class LicenseCreatorController {
 
 
     @ApiOperation("获取服务器硬件信息")
-    @GetMapping(value = "/getServerInfos", produces = {MediaType.APPLICATION_JSON_UTF8_VALUE})
+    @GetMapping(value = "/license/getServerInfos", produces = {MediaType.APPLICATION_JSON_UTF8_VALUE})
     public LicenseCheckModel getServerInfos(@RequestParam(value = "osName", required = false) String osName) {
         //操作系统类型
         if (StringUtils.isBlank(osName)) {
@@ -62,7 +65,7 @@ public class LicenseCreatorController {
 //    }
 //    }
     @ApiOperation("生成证书")
-    @PostMapping(value = "/generateLicense", produces = {MediaType.APPLICATION_JSON_UTF8_VALUE})
+    @PostMapping(value = "/license/generateLicense", produces = {MediaType.APPLICATION_JSON_UTF8_VALUE})
     public ResponseEntity<ResultBean> generateLicense(@RequestBody LicenseCreatorParam param) {
         LicenseCreator licenseCreator = new LicenseCreator(param);
         boolean result = licenseCreator.generateLicense();
@@ -71,12 +74,13 @@ public class LicenseCreatorController {
     }
 
     @ApiOperation("下载证书")
-    @GetMapping(value = "/downloadLicense")
+    @GetMapping(value = "/license/downloadLicense")
     public ResponseEntity<ResultBean> downloadLicense(HttpServletResponse response) {
         response.setContentType("application/force-download");// 设置强制下载不打开
         response.addHeader("Content-Disposition", "attachment;fileName=" + "data.license");// 设置文件名
         // 写出响应
         try (OutputStream os = response.getOutputStream()) {
+//            ClassPathResource classPathResource = new ClassPathResource("license/data.license");
             File file = new File("data.license");
             byte[] buffer = new byte[1024];
             FileInputStream fis;
@@ -90,14 +94,24 @@ public class LicenseCreatorController {
             }
             return new ResponseEntity<>(ResultBean.success("下载成功"), HttpStatus.OK);
         } catch (Exception e) {
-            return new ResponseEntity<>(ResultBean.error("下载失败"+e), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(ResultBean.error("下载失败" + e), HttpStatus.BAD_REQUEST);
         }
     }
 
     @ApiOperation("为后台安装证书")
-    @PostMapping("/installLicense")
+    @PostMapping("/license/installLicense")
     public ResponseEntity<ResultBean> installLicense(@ApiParam(value = "文件信息", required = true) @RequestParam("file") MultipartFile multipartFile) {
         try {
+//            File licenseFile = File.createTempFile("licenseFile", null);
+//            multipartFile.transferTo(licenseFile);
+//            FileOutputStream os = new FileOutputStream(new ClassPathResource("license/localData.license").getFile());
+//            BufferedInputStream bis = new BufferedInputStream(new FileInputStream(licenseFile));
+//            byte[] buffer = new byte[1024];
+//            int i = bis.read(buffer);
+//            while (i != -1) {
+//                os.write(buffer, 0, i);
+//                i = bis.read(buffer);
+//            }
             String property = System.getProperty("user.dir");
             File localFile = new File(property + File.separator + "localData.license");
             multipartFile.transferTo(localFile);
@@ -105,8 +119,15 @@ public class LicenseCreatorController {
             licenseCheckListener.installLicense();
             return new ResponseEntity<>(ResultBean.success("安装成功"), HttpStatus.OK);
         } catch (Exception e) {
-            return new ResponseEntity<>(ResultBean.error("安装失败"+e), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(ResultBean.error("安装失败" + e), HttpStatus.BAD_REQUEST);
         }
     }
 
+    @ApiOperation("获取安装的证书相关信息")
+    @GetMapping("/license")
+    public ResponseEntity<ResultBean> getValidTime() throws Exception {
+        LicenseManager licenseManager = LicenseManagerHolder.getInstance(null);
+        LicenseContent verify = licenseManager.verify();
+        return new ResponseEntity<>(ResultBean.success(verify), HttpStatus.OK);
+    }
 }

@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.interceptor.TransactionAspectSupport;
 
 import java.sql.Timestamp;
+import java.util.List;
 
 @Component("handler21")
 @Slf4j
@@ -79,8 +80,8 @@ public class Handler21 implements ServiceHandler {
             tag.setRouter(router);
             // 找到标签对应的样式
             StyleService styleService = ((StyleService) SpringContextUtil.getBean("StyleService"));
-            Style style = styleService.findByStyleNumber(styleNumber);
-            tag.setStyle(style);
+            List<Style> style = styleService.findByStyleNumber(styleNumber);
+            tag.setStyle(style.get(0));
             tagService.saveOne(tag);
         } catch (Exception e) {
             System.out.println(e);

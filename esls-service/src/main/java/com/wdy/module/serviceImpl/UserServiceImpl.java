@@ -1,6 +1,8 @@
 package com.wdy.module.serviceImpl;
 
 import com.wdy.module.common.exception.ResultEnum;
+import com.wdy.module.dao.RoleDao;
+import com.wdy.module.dao.UserAndRoleDao;
 import com.wdy.module.dao.UserDao;
 import com.wdy.module.dto.UserVo;
 import com.wdy.module.entity.*;
@@ -9,8 +11,6 @@ import com.wdy.module.service.UserService;
 import com.wdy.module.system.SystemVersionArgs;
 import com.wdy.module.utils.*;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.shiro.crypto.hash.SimpleHash;
-import org.apache.shiro.util.ByteSource;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
@@ -30,6 +30,10 @@ public class UserServiceImpl extends BaseServiceImpl implements UserService {
     private RedisUtil redisUtil;
     @Autowired
     private MailSender mailSender;
+    @Autowired
+    private RoleDao roleDao;
+    @Autowired
+    private UserAndRoleDao userAndRoleDao;
 
     @Override
     public List<User> findAll() {
@@ -110,20 +114,40 @@ public class UserServiceImpl extends BaseServiceImpl implements UserService {
         else {
             User user = new User();
             BeanUtils.copyProperties(userVo, user);
-            // 加盐加密
-            ByteSource credentialsSalt = ByteSource.Util.bytes(userVo.getName());
-            Object obj = new SimpleHash("MD5", userVo.getPasswd(), credentialsSalt, MD5Util.HASHITERATIONS);
-            user.setPasswd(((SimpleHash) obj).toHex());
+            user.setPasswd(MD5Util.md5UserPassword(userVo.getPasswd(), userVo.getName()));
             user.setStatus((byte) 1);
             user.setActivateStatus((byte) 0);
             user.setCreateTime(new Timestamp(System.currentTimeMillis()));
             String code = "ACTIVATEUSER_" + UUID.randomUUID();
-            redisUtil.sentinelSet(code, user, (long) (60000 * 5));
-            String content = "<html><head></head><body><h1>这是一封激活邮件,激活请点击以下链接</h1><h3><a href='http://" + SystemVersionArgs.outNetIp + ":8086/user/activate?code="
+            redisUtil.set(code, user, (long) (60000 * 5));
+            String content = "<html><head></head><body><h1>这是一封激活邮件,请5分钟内进行激活，否则邮件失效，点击以下链接即可激活</h1><h3><a href='http://" + SystemVersionArgs.outNetIp + ":8086/user/activate?code="
                     + code + "'>http://" + SystemVersionArgs.outNetIp + ":8086/user/activate?code=" + code
                     + "</href></h3></body></html>";
             mailSender.sendMail(user.getMail(), "ESLS系统激活邮件", content, true);
             return user;
+        }
+    }
+
+    @Override
+    public User registerUser(User user) {
+        user.setCreateTime(new Timestamp(System.currentTimeMillis()));
+        User result = saveOne(user);
+        if (result != null) {
+            this.giveBasePermissionToUser(result);
+            return result;
+        }
+        return null;
+    }
+
+    @Override
+    public void giveBasePermissionToUser(User user) {
+        Role role = roleDao.findByType("基础权限");
+        if (user != null && role != null) {
+            UserRole userRole = new UserRole();
+            userRole.setUserId(user.getId());
+            userRole.setRoleId(role.getId());
+            if (userAndRoleDao.findByUserIdAndRoleId(user.getId(), role.getId()) == null)
+                userAndRoleDao.save(userRole);
         }
     }
 

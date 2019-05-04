@@ -28,6 +28,16 @@ public class StringUtil {
         // 为与商品有关字段
         if (!dispM.getSourceColumn().equals("0")) {
             String text = SpringContextUtil.getSourceData(dispM.getSourceColumn(), good);
+            if (NUMBER.equals(dispM.getColumnType())) {
+                if (text.contains(".")) {
+                    String right = text.substring(text.indexOf(".") + 1);
+                    if (right.length() >= 2) {
+                        text = text.substring(0, text.indexOf(".") + 3);
+                    } else
+                        text += "0";
+                } else
+                    text += ".00";
+            }
             sb.append(text);
         }
         // 为与商品无关字段
@@ -39,34 +49,38 @@ public class StringUtil {
         }
         return sb.toString();
     }
+
     /**
      * 获取方法中指定注解的value值返回
-     * @param method 方法名
+     *
+     * @param method               方法名
      * @param validationParamValue 注解的类名
      * @return
      */
     public static String getMethodAnnotationOne(Method method, String validationParamValue) {
-        String retParam =null;
+        String retParam = null;
         Annotation[][] parameterAnnotations = method.getParameterAnnotations();
         for (int i = 0; i < parameterAnnotations.length; i++) {
             for (int j = 0; j < parameterAnnotations[i].length; j++) {
                 String str = parameterAnnotations[i][j].toString();
-                if(str.indexOf(validationParamValue) >0){
-                    retParam = str.substring(str.indexOf("=")+1,str.indexOf(")"));
+                if (str.indexOf(validationParamValue) > 0) {
+                    retParam = str.substring(str.indexOf("=") + 1, str.indexOf(")"));
                 }
             }
         }
         return retParam;
     }
+
     //首字母大写
     public static String captureName(String name) {
         name = name.substring(0, 1).toUpperCase() + name.substring(1);
-        return  name;
+        return name;
 
     }
+
     //首字母转小写
-    public static String toLowerCaseFirstOne(String s){
-        if(Character.isLowerCase(s.charAt(0)))
+    public static String toLowerCaseFirstOne(String s) {
+        if (Character.isLowerCase(s.charAt(0)))
             return s;
         else
             return (new StringBuilder()).append(Character.toLowerCase(s.charAt(0))).append(s.substring(1)).toString();
