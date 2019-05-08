@@ -1,5 +1,6 @@
 package com.wdy.module.controller;
 
+import com.wdy.module.aop.Log;
 import com.wdy.module.common.constant.TableConstant;
 import com.wdy.module.common.request.RequestBean;
 import com.wdy.module.common.response.ResponseBean;
@@ -103,6 +104,7 @@ public class BalanceController {
             @ApiImplicitParam(name = "mode", value = "0为获取计量数据 1为电子秤置零 2为电子秤去皮 3为获取电子秤电量", dataType = "int", paramType = "query")
     })
     @RequiresPermissions("使用电子秤相关API")
+    @Log("使用电子秤相关API")
     public ResponseEntity<ResultBean> sendGetBalance(@RequestBody @ApiParam("标签信息集合") RequestBean requestBean, @RequestParam Integer mode) {
         ResponseBean responseBean = new ResponseBean(0,0);
         List<Tag> tags = RequestBeanUtil.getTagsByRequestBean(requestBean);

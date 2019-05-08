@@ -18,7 +18,6 @@ public class GoodVo {
     private String operator;
     private Timestamp importTime;
     private String promotionReason;
-    private Integer status;
     private String price;
     private String promotePrice;
     private String imageUrl;
@@ -33,5 +32,6 @@ public class GoodVo {
     private String regionNames;
     private String stock;
     private Byte isPromote;
+    private String promoteTimeGap;
     private List<Long> tagIdList = new ArrayList<>();
 }

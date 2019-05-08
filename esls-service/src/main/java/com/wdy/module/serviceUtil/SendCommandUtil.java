@@ -6,6 +6,7 @@ import com.wdy.module.common.exception.ServiceException;
 import com.wdy.module.netty.command.CommandConstant;
 import com.wdy.module.dto.TagsAndRouter;
 import com.wdy.module.entity.*;
+import com.wdy.module.service.GoodService;
 import com.wdy.module.system.SystemVersionArgs;
 import com.wdy.module.utils.*;
 import io.netty.channel.Channel;
@@ -122,8 +123,11 @@ public class SendCommandUtil {
         if (isNeedWaiting) {
             successNumber = waitAllThread(listenableFutures);
         }
+        // 所有的标签都变价成功，才更新商品状态
+        if (sum == successNumber) {
+            setGoodWaitUpdate(tags);
+        }
         return new ResponseBean(sum, successNumber);
-
     }
 
     public static ResponseBean sendAwakeMessage(List<TagsAndRouter> tagsAndRouters, Integer messageType) {
@@ -323,5 +327,17 @@ public class SendCommandUtil {
         if (StringUtils.isEmpty(redisCache))
             redisCache = "0";
         redisUtil.sentinelSet(methodName + ContextUtil.getUser().getName(), Integer.valueOf(redisCache) + 1, Long.valueOf(Integer.valueOf(timeGapAndtime[0])));
+    }
+
+    private static void setGoodWaitUpdate(List<Tag> tags) {
+        for (Tag tag : tags) {
+            Good good = tag.getGood();
+            if (good != null) {
+                GoodService goodService = (GoodService) SpringContextUtil.getBean("GoodService");
+                good.setWaitUpdate(0);
+                good.setRegionNames(null);
+                goodService.save(good);
+            }
+        }
     }
 }

@@ -33,37 +33,37 @@ public class SmsVerify extends Model<SmsVerify> {
      * 主键
      */
     @TableId(value = "id", type = IdType.AUTO)
-    @ExcelField(title = "id", order = 1, readConverter = StringToLongConverter.class)
+    @ExcelField(title = "主键", order = 1, readConverter = StringToLongConverter.class)
     private Long id;
     /**
      * 短信编号（可以自己生成，也可以第三方复返回）
      */
     @TableField("smsId")
-    @ExcelField(title = "smsId", order = 2)
+    @ExcelField(title = "短信ID", order = 2)
     private String smsId;
     /**
      * 电话号码
      */
     @TableField("mobile")
-    @ExcelField(title = "mobile", order = 3)
+    @ExcelField(title = "手机号", order = 3)
     private String mobile;
     /**
      * 验证码
      */
     @TableField("smsVerify")
-    @ExcelField(title = "smsVerify", order = 4)
+    @ExcelField(title = "验证码", order = 4)
     private String smsVerify;
     /**
      * 验证码类型（1：登录验证，2：注册验证，3：忘记密码，4：修改账号）
      */
     @TableField("smsType")
-    @ExcelField(title = "smsType", order = 5, readConverter = StringToLongConverter.class)
+    @ExcelField(title = "验证码类型（1：登录验证，2：注册验证，3：忘记密码，4：修改账号）", order = 5, readConverter = StringToLongConverter.class)
     private Integer smsType;
     /**
      * 发送时间
      */
     @TableField("createTime")
-    @ExcelField(title = "createTime", order = 6, readConverter = StringToLongConverter.class)
+    @ExcelField(title = "发送时间", order = 6, readConverter = StringToLongConverter.class)
     private Long createTime;
 
     @Override

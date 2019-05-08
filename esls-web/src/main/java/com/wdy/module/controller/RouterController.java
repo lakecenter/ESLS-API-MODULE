@@ -44,7 +44,6 @@ public class RouterController {
             @ApiImplicitParam(name = "count", value = "数量", dataType = "int", paramType = "query")
     })
     @GetMapping("/routers")
-    @Log("获取路由器信息")
     @RequiresPermissions("系统菜单")
     public ResponseEntity<ResultBean> getRouter(@RequestParam(required = false) String query, @RequestParam(required = false) String queryString, @Min(message = "data.page.min", value = 0)@RequestParam(required = false) Integer page, @Min(message = "data.count.min", value = 0)@RequestParam(required = false)  Integer count) {
         String result = ConditionUtil.judgeArgument(query, queryString, page, count);
@@ -82,7 +81,6 @@ public class RouterController {
 
     @ApiOperation(value = "获取指定ID的路由器信息")
     @GetMapping("/router/{id}")
-    @Log("获取指定ID的路由器信息")
     @RequiresPermissions("获取指定ID的信息")
     public ResponseEntity<ResultBean> getRouterById(@PathVariable Long id) {
         Optional<Router> result = routerService.findById(id);
@@ -96,7 +94,6 @@ public class RouterController {
 
     @ApiOperation(value = "添加或修改路由器信息(路由器设置)")
     @PostMapping("/router")
-    @Log("添加或修改路由器信息")
     @RequiresPermissions("添加或修改信息")
     public ResponseEntity<ResultBean> saveRouter(@RequestBody @ApiParam(value = "路由器信息json格式") RouterVo routerVo) {
         Router router = new Router();
@@ -126,7 +123,6 @@ public class RouterController {
     }
     @ApiOperation("根据多个字段搜索数据")
     @PostMapping("/routers/search")
-    @Log("根据多个字段搜索数据")
     @RequiresPermissions("查询和搜索功能")
     public ResponseEntity<ResultBean> searchRoutersByConditon(@RequestParam String connection, @Min(message = "data.page.min", value = 0)@RequestParam Integer page, @RequestParam @Min(message = "data.count.min", value = 0)Integer count, @RequestBody @ApiParam(value = "查询条件json格式") RequestBean requestBean){
         List<Router> routerList = routerService.findAllBySql(TableConstant.TABLE_ROUTERS, connection, requestBean, page, count, Router.class);
@@ -148,6 +144,7 @@ public class RouterController {
     })
     @PutMapping("/router/scan")
     @RequiresPermissions("路由器巡检")
+    @Log("路由器巡检")
     public ResponseEntity<ResultBean> routerScan(@RequestBody @ApiParam("路由器信息集合") RequestBean requestBean, @RequestParam Integer mode) {
         ResponseBean responseBean;
         if(mode == 0)
@@ -159,6 +156,7 @@ public class RouterController {
     @ApiOperation("对所有路由器发起巡检")
     @PutMapping("/routers/scan")
     @RequiresPermissions("对所有路由器发起巡检")
+    @Log("对所有路由器发起巡检")
     public ResponseEntity<ResultBean> routersScan() {
         ResponseBean responseBean = routerService.routersScan();
         return new ResponseEntity<>(ResultBean.success(responseBean), HttpStatus.OK);
@@ -167,6 +165,7 @@ public class RouterController {
     @ApiOperation("发送路由器设置命令")
     @PutMapping("/router/setting")
     @RequiresPermissions("发送路由器设置命令")
+    @Log("发送路由器设置命令")
     public ResponseEntity<ResultBean> routerSetting(@RequestBody @ApiParam("路由器信息集合") RequestBean requestBean) {
         ResponseBean responseBean = routerService.settingRouter(requestBean);
         return new ResponseEntity<>(ResultBean.success(responseBean), HttpStatus.OK);
@@ -186,6 +185,7 @@ public class RouterController {
     })
     @PutMapping("/router/test")
     @RequiresPermissions("AP测试")
+    @Log("AP测试命令")
     public ResponseEntity<ResultBean> routerTest(@RequestBody @ApiParam("路由器信息集合") RequestBean requestBean, @RequestParam(required = false) String barCode, @RequestParam(required = false) String channelId, @RequestParam(required = false) String hardVersion, @RequestParam Integer mode) {
         // 9获取接收无线帧RSSI
         if(mode==6){
@@ -230,6 +230,7 @@ public class RouterController {
     })
     @PutMapping("/router/remote")
     @RequiresPermissions("设置远程服务器信息")
+    @Log("设置远程服务器信息")
     public ResponseEntity<ResultBean> settingRemote(@RequestBody @ApiParam("路由器信息集合") RequestBean requestBean, @RequestParam Integer mode, @RequestParam(required = false)String outNetIp){
         // 3接收查询历史连接IP列表信息
         if(mode==3){

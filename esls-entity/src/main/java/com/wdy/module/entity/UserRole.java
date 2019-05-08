@@ -3,6 +3,7 @@ package com.wdy.module.entity;
 import com.github.crab2died.annotation.ExcelField;
 import com.wdy.module.converter.StringToLongConverter;
 import lombok.*;
+import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
 
@@ -14,14 +15,15 @@ import javax.persistence.*;
 public class UserRole {
     @Id
     @Column(name = "id", nullable = false)
-    @GeneratedValue(strategy = GenerationType.IDENTITY)//自增主键
-    @ExcelField(title = "id", order = 1, readConverter = StringToLongConverter.class)
+    @GeneratedValue(strategy = GenerationType.IDENTITY, generator = "idOrGenerate")
+    @GenericGenerator(name = "idOrGenerate", strategy = "com.wdy.module.serviceUtil.IdOrGenerate")
+    @ExcelField(title = "主键", order = 1, readConverter = StringToLongConverter.class)
     private Long id;
     @Column(name = "roleId")
-    @ExcelField(title = "roleId", order = 2, readConverter = StringToLongConverter.class)
+    @ExcelField(title = "角色ID", order = 2, readConverter = StringToLongConverter.class)
     private Long roleId;
     @Column(name = "userId")
-    @ExcelField(title = "userId", order = 3, readConverter = StringToLongConverter.class)
+    @ExcelField(title = "用户ID", order = 3, readConverter = StringToLongConverter.class)
     private Long userId;
 
     public UserRole(Long roleId, Long userId) {

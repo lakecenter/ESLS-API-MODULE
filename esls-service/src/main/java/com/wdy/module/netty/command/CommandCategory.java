@@ -17,9 +17,12 @@ public class CommandCategory {
         return COMMAND_CATEGORY;
     }
 
-    public static byte[] getResponse(byte[] classId, byte[] header,int type,byte[] address) {
+    public static Byte ACK = 1;
+    public static Byte NACK = 2;
+
+    public static byte[] getResponse(byte[] classId, byte[] header, int type, byte[] address, Byte ackType) {
         byte[] result = new byte[13];
-        if(type == CommandConstant.COMMANDTYPE_TAG){
+        if (type == CommandConstant.COMMANDTYPE_TAG) {
             // int length = address.length + message.length;
             // 通讯对象22对标签
             result[0] = 0x22;
@@ -29,8 +32,7 @@ public class CommandCategory {
             result[5] = address[1];
             result[6] = address[2];
             result[7] = address[3];
-        }
-        else if(type == CommandConstant.COMMANDTYPE_ROUTER){
+        } else if (type == CommandConstant.COMMANDTYPE_ROUTER) {
             // 通讯对象11对路由器
             result[0] = 0x11;
             result[1] = 0x11;
@@ -39,8 +41,7 @@ public class CommandCategory {
             result[5] = (byte) 0xff;
             result[6] = (byte) 0xff;
             result[7] = (byte) 0xff;
-        }
-        else if(type == CommandConstant.COMMANDTYPE_TAG_BROADCAST){
+        } else if (type == CommandConstant.COMMANDTYPE_TAG_BROADCAST) {
             // 通讯对象22标签
             result[0] = 0x22;
             result[1] = 0x22;
@@ -52,10 +53,10 @@ public class CommandCategory {
         }
         // 长度
         result[2] = 0;
-        result[3] = 9 ;
+        result[3] = 9;
         //数据段
         result[8] = 0x01;
-        result[9] = 0x01;
+        result[9] = ackType;
         result[10] = 2;
         result[11] = header[0];
         result[12] = header[1];
@@ -91,7 +92,7 @@ public class CommandCategory {
             return CommandConstant.BALANCEDATA;
         } else if (header[0] == COMMAND_CATEGORY.get(CommandConstant.BALANCEPOWER).getCommand_class() && header[1] == COMMAND_CATEGORY.get(CommandConstant.BALANCEPOWER).getCommand_id()) {
             return CommandConstant.BALANCEPOWER;
-        }else {
+        } else {
             return null;
         }
     }

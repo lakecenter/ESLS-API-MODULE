@@ -101,6 +101,7 @@ public class SystemVersionArgs {
         if (baseGoodJob == null) {
             CycleJob cycleJob = new CycleJob();
             cycleJob.setDescription("扫描商品基本数据");
+            cycleJob.setId((long) 1);
             cycleJob.setMode(-1);
             cycleJob.setType(7);
             cycleJob.setCron("0 1/30 * * * ?");
@@ -110,6 +111,7 @@ public class SystemVersionArgs {
         CycleJob updateGoodJob = cycleJobDao.findByMode(-2);
         if (updateGoodJob == null) {
             CycleJob cycleJob = new CycleJob();
+            cycleJob.setId((long) 2);
             cycleJob.setDescription("扫描商品变价数据");
             cycleJob.setMode(-2);
             cycleJob.setType(8);
@@ -199,7 +201,8 @@ public class SystemVersionArgs {
             Role baseRole = new Role();
             baseRole.setType("基础权限");
             baseRole.setName("基本用户");
-            roleDao.save(baseRole);
+            baseRole.setId((long) 2);
+            roleDao.saveAndFlush(baseRole);
             roleId = baseRole.getId();
         } else {
             roleId = role.getId();
@@ -224,6 +227,7 @@ public class SystemVersionArgs {
             Role managerRole = new Role();
             managerRole.setType("最高权限");
             managerRole.setName("管理员");
+            managerRole.setId((long) 1);
             roleDao.save(managerRole);
             roleId = managerRole.getId();
         } else {
@@ -245,11 +249,17 @@ public class SystemVersionArgs {
         User save = admin;
         if (admin == null) {
             User user = new User();
+            user.setId((long) 1);
             user.setName("ESLS");
             user.setRawPasswd("123456");
             user.setPasswd("833c1e098a53575033c5e7a97875b9f5");
             user.setStatus((byte) 1);
             user.setActivateStatus((byte) 1);
+            user.setCreateTime(new Timestamp(System.currentTimeMillis()));
+            user.setDepartment("创协");
+            user.setMail("13058142866@163.com");
+            user.setTelephone("17722828134");
+            user.setAddress("深圳大学");
             save = userDao.save(user);
         }
         Role managerRole = roleDao.findByType("最高权限");

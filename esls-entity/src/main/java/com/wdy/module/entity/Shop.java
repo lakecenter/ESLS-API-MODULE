@@ -5,6 +5,7 @@ import com.github.crab2died.annotation.ExcelField;
 import com.wdy.module.converter.StringToByteConverter;
 import com.wdy.module.converter.StringToLongConverter;
 import lombok.Data;
+import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
 import java.io.Serializable;
@@ -20,35 +21,33 @@ import java.util.Objects;
 public class Shop implements Serializable {
     @Id
     @Column(name = "id", nullable = false)
-    @GeneratedValue(strategy = GenerationType.IDENTITY)//自增主键
-    @ExcelField(title = "id", order = 1, readConverter = StringToLongConverter.class)
+    @GeneratedValue(strategy = GenerationType.IDENTITY, generator = "idOrGenerate")
+    @GenericGenerator(name = "idOrGenerate", strategy = "com.wdy.module.serviceUtil.IdOrGenerate")
+    @ExcelField(title = "主键", order = 1, readConverter = StringToLongConverter.class)
     private Long id;
     @Column(name = "type")
-    @ExcelField(title = "type", order = 2, readConverter = StringToByteConverter.class)
+    @ExcelField(title = "店铺类型", order = 2, readConverter = StringToByteConverter.class)
     private Byte type;
     @Column(name = "number")
-    @ExcelField(title = "number", order = 3)
+    @ExcelField(title = "店铺编号", order = 3)
     private String number;
     @Column(name = "fatherShop")
-    @ExcelField(title = "fatherShop", order = 4)
+    @ExcelField(title = "父店铺", order = 4)
     private String fatherShop;
     @Column(name = "name")
-    @ExcelField(title = "name", order = 5)
+    @ExcelField(title = "店铺名字", order = 5)
     private String name;
     @Column(name = "manager")
-    @ExcelField(title = "manager", order = 6)
+    @ExcelField(title = "店铺管理员", order = 6)
     private String manager;
     @Column(name = "address")
-    @ExcelField(title = "address", order = 7)
+    @ExcelField(title = "店铺地址", order = 7)
     private String address;
     @Column(name = "account")
-    @ExcelField(title = "account", order = 8)
+    @ExcelField(title = "店铺描述", order = 8)
     private String account;
-    @Column(name = "password")
-    @ExcelField(title = "password", order = 9)
-    private String password;
     @Column(name = "phone")
-    @ExcelField(title = "phone", order = 10)
+    @ExcelField(title = "店铺联系方式", order = 9)
     private String phone;
     @OneToMany(mappedBy = "shop")
     private Collection<Router> routers;
@@ -69,13 +68,12 @@ public class Shop implements Serializable {
                 Objects.equals(manager, shop.manager) &&
                 Objects.equals(address, shop.address) &&
                 Objects.equals(account, shop.account) &&
-                Objects.equals(password, shop.password) &&
                 Objects.equals(phone, shop.phone);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, type, number, fatherShop, name, manager, address, account, password, phone);
+        return Objects.hash(id, type, number, fatherShop, name, manager, address, account, phone);
     }
 
     @Override
@@ -89,7 +87,6 @@ public class Shop implements Serializable {
                 ", manager='" + manager + '\'' +
                 ", address='" + address + '\'' +
                 ", account='" + account + '\'' +
-                ", password='" + password + '\'' +
                 ", phone='" + phone + '\'' +
                 '}';
     }

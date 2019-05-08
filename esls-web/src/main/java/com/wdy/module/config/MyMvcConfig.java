@@ -33,10 +33,10 @@ public class MyMvcConfig implements WebMvcConfigurer {
         //super.addInterceptors(registry);
         //静态资源；  *.css , *.js
         //SpringBoot已经做好了静态资源映射
-        registry.addInterceptor(licenseCheckInterceptor())
-                .excludePathPatterns("/index.html", "/", "/user/login", "/asserts/**")
-                .excludePathPatterns("/swagger-resources/**", "/webjars/**", "/v2/**", "/swagger-ui.html/**", "/license/installLicense", "/license/getServerInfos", "/license/generateLicense", "/license/downloadLicense")
-                .addPathPatterns("/**");
+//        registry.addInterceptor(licenseCheckInterceptor())
+//                .excludePathPatterns("/index.html", "/", "/user/login", "/asserts/**")
+//                .excludePathPatterns("/swagger-resources/**", "/webjars/**", "/v2/**", "/swagger-ui.html/**", "/license/installLicense", "/license/getServerInfos", "/license/generateLicense", "/license/downloadLicense")
+//                .addPathPatterns("/**");
     }
 
     @Override

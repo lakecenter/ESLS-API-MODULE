@@ -39,7 +39,6 @@ public class GoodController {
             @ApiImplicitParam(name = "count", value = "数量", dataType = "int", paramType = "query")
     })
     @GetMapping("/goods")
-    @Log("获取商品信息")
     @RequiresPermissions("系统菜单")
     public ResponseEntity<ResultBean> getGoods(@RequestParam(required = false) String query, @RequestParam(required = false) String queryString, @Min(message = "data.page.min", value = 0)@RequestParam(required = false) Integer page, @RequestParam(required = false) @Min(message = "data.count.min", value = 0)Integer count) {
         String result = ConditionUtil.judgeArgument(query, queryString, page, count);
@@ -82,7 +81,6 @@ public class GoodController {
 
     @ApiOperation("根据多个字段搜索数据")
     @PostMapping("/goods/search")
-    @Log("根据多个字段搜索数据")
     @RequiresPermissions("查询和搜索功能")
     public ResponseEntity<ResultBean> searchGoodsByConditon(@RequestParam String connection, @Min(message = "data.page.min", value = 0)@RequestParam Integer page, @RequestParam @Min(message = "data.count.min", value = 0)Integer count, @RequestBody @ApiParam(value = "查询条件json格式") RequestBean requestBean){
         List<Good> goods = goodService.findAllBySql(TableConstant.TABLE_GOODS, connection, requestBean, page, count, Good.class);
@@ -90,7 +88,6 @@ public class GoodController {
     }
     @ApiOperation(value = "获取指定ID的商品信息")
     @GetMapping("/goods/{id}")
-    @Log("获取指定ID的商品信息")
     @Transactional
     @RequiresPermissions("获取指定ID的信息")
     public ResponseEntity<ResultBean> getGoodById(@PathVariable Long id) {
@@ -105,7 +102,6 @@ public class GoodController {
     // 上传商品时带特征图片
     @ApiOperation(value = "添加或修改商品信息")
     @PostMapping("/good")
-    @Log("添加或修改商品信息")
     @RequiresPermissions("添加或修改信息")
     public ResponseEntity<ResultBean> saveGood(@RequestBody @ApiParam(value = "商品信息json格式") Good good) {
         return new ResponseEntity<>(new ResultBean(goodService.saveOne(good)), HttpStatus.OK);
@@ -135,7 +131,6 @@ public class GoodController {
     }
     @ApiOperation("通过商品属性获取其绑定的所有标签信息（连接符可取=或like）")
     @GetMapping("/good/binded")
-    @Log("通过商品ID获取其绑定的所有标签信息")
     @RequiresPermissions("通过商品ID获取其绑定的所有标签信息")
     public ResponseEntity<ResultBean> getBindTags(@RequestParam String query, @RequestParam String connection, @RequestParam String queryString){
         List<Tag> tags = goodService.getBindTags(query, connection, queryString);

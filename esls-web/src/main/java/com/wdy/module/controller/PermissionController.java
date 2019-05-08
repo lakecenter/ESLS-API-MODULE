@@ -39,7 +39,6 @@ public class PermissionController {
             @ApiImplicitParam(name = "count", value = "数量", dataType = "int", paramType = "query")
     })
     @GetMapping("/permissions")
-    @Log("获取权限数据")
     @RequiresPermissions("系统菜单")
     public ResponseEntity<ResultBean> getPermissions(@RequestParam(required = false) String query, @RequestParam(required = false) String queryString, @Min(message = "data.page.min", value = 0)@RequestParam(required = false) Integer page, @Min(message = "data.count.min", value = 0) @RequestParam(required = false) Integer count) {
         String result = ConditionUtil.judgeArgument(query, queryString, page, count);
@@ -71,7 +70,6 @@ public class PermissionController {
 
     @ApiOperation(value = "获取指定ID的权限信息")
     @GetMapping("/permission/{id}")
-    @Log("获取指定ID的权限信息")
     @RequiresPermissions("获取指定ID的信息")
     public ResponseEntity<ResultBean> getPermissionById(@PathVariable Long id) {
         Optional<Permission> result = permissionService.findById(id);

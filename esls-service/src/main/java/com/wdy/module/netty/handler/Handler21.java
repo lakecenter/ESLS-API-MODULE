@@ -1,5 +1,6 @@
 package com.wdy.module.netty.handler;
 
+import com.wdy.module.common.constant.StyleType;
 import com.wdy.module.entity.*;
 import com.wdy.module.netty.command.CommandCategory;
 import com.wdy.module.netty.command.CommandConstant;
@@ -11,7 +12,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.interceptor.TransactionAspectSupport;
+import org.springframework.util.CollectionUtils;
 
+import javax.swing.*;
 import java.sql.Timestamp;
 import java.util.List;
 
@@ -81,13 +84,31 @@ public class Handler21 implements ServiceHandler {
             // 找到标签对应的样式
             StyleService styleService = ((StyleService) SpringContextUtil.getBean("StyleService"));
             List<Style> style = styleService.findByStyleNumber(styleNumber);
-            tag.setStyle(style.get(0));
+            if (!CollectionUtils.isEmpty(style))
+                tag.setStyle(style.get(0));
+            else {
+                Integer type = ImageHelper.getTypeByStyleNumber(styleNumber);
+                switch (type) {
+                    case 0:
+                        tag.setStyle(styleService.findByStyleNumberAndIsPromote("2101", (byte) 0));
+                        break;
+                    case 1:
+                        tag.setStyle(styleService.findByStyleNumberAndIsPromote("2901", (byte) 0));
+                        break;
+                    case 2:
+                        tag.setStyle(styleService.findByStyleNumberAndIsPromote("4201", (byte) 0));
+                        break;
+                    default:
+                        break;
+                }
+            }
             tagService.saveOne(tag);
         } catch (Exception e) {
             System.out.println(e);
             TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
+            return CommandCategory.getResponse(null, header, CommandConstant.COMMANDTYPE_TAG, SpringContextUtil.getAddressByBarCode(barCode), CommandCategory.NACK);
         }
-        return CommandCategory.getResponse(null, header, CommandConstant.COMMANDTYPE_TAG, SpringContextUtil.getAddressByBarCode(barCode));
+        return CommandCategory.getResponse(null, header, CommandConstant.COMMANDTYPE_TAG, SpringContextUtil.getAddressByBarCode(barCode), CommandCategory.ACK);
     }
 
 }

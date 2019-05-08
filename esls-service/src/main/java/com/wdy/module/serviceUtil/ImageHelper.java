@@ -49,7 +49,7 @@ public class ImageHelper {
                 region = byteAndRegion.getRegion();
                 byte[] regionImage = byteAndRegion.getRegionBytes();
                 // 区域编号
-                firstByte[(i * 12) + 9] = Byte.parseByte(region.getRegionId());
+                firstByte[(i * 12) + 9] = Byte.parseByte(String.valueOf(region.getRegionId()));
                 // 颜色
                 firstByte[(i * 12) + 10] = ColorUtil.getColorByte(region.getBackgroundColor(), region.getFontColor());
                 byte[] x, y, height, width;
@@ -86,7 +86,7 @@ public class ImageHelper {
                 // 显示存储字节数
                 firstByte[(i * 12) + 19] = length[1];
                 firstByte[(i * 12) + 20] = length[0];
-                List<byte[]> byteList = getByteList(regionImage, Integer.valueOf(region.getRegionId()));
+                List<byte[]> byteList = getByteList(regionImage, region.getRegionId());
                 allbyteList.addAll(byteList);
             } catch (Exception e) {
                 System.out.println("getRequest - " + e);
@@ -106,7 +106,7 @@ public class ImageHelper {
             ByteAndRegion byteAndRegion = getRegionImage(region, styleNumber, good);
             region = byteAndRegion.getRegion();
             byte[] regionImage = byteAndRegion.getRegionBytes();
-            List<byte[]> byteList = getByteList(regionImage, Integer.valueOf(region.getRegionId()));
+            List<byte[]> byteList = getByteList(regionImage, region.getRegionId());
             allbyteList.addAll(byteList);
         }
         byte[] bytes = allbyteList.get(allbyteList.size() - 1);
@@ -227,7 +227,7 @@ public class ImageHelper {
         g2d.fillRect(0, 0, imageWidth, imageHeight);
         Font font = new Font(dispM.getFontFamily(), fontType, dispM.getFontSize());
         g2d.setFont(font);
-        g2d.setStroke(new BasicStroke(3));
+        g2d.setStroke(new BasicStroke(2));
         g2d = ImageHelper.getGraphiceByColor(g2d, dispM, flag);
         //  数字
         if (columnType.equals(StringUtil.NUMBER)) {
@@ -246,7 +246,7 @@ public class ImageHelper {
             }
             font = new Font(dispM.getFontFamily(), fontType, Integer.valueOf(backup[1]));
             g2d.setFont(font);
-            g2d.setStroke(new BasicStroke(3));
+            g2d.setStroke(new BasicStroke(2));
             // 画右侧数字 改变画笔
             g2d.drawString(right, Integer.valueOf(leftArgs[0]), Integer.valueOf(rightArgs[2]));
             String textLeft = dispM.getText();
@@ -302,7 +302,7 @@ public class ImageHelper {
     }
 
     // 分包发送
-    public static List<byte[]> getByteList(byte[] regionImage, int number) {
+    public static List<byte[]> getByteList(byte[] regionImage, long number) {
         List<byte[]> byteList = new ArrayList<>();
         int i, j;
         int packageLength = Integer.valueOf(SystemVersionArgs.packageLength);

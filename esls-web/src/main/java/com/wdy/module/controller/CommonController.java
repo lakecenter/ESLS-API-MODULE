@@ -1,5 +1,6 @@
 package com.wdy.module.controller;
 
+import com.wdy.module.aop.Log;
 import com.wdy.module.common.constant.SqlConstant;
 import com.wdy.module.common.response.ResultBean;
 import com.wdy.module.dao.SystemVersionDao;
@@ -147,6 +148,7 @@ public class CommonController {
     @ApiOperation("设置系统参数")
     @PutMapping("/common/systemArgs")
     @RequiresPermissions("设置系统参数")
+    @Log("设置系统参数")
     public ResponseEntity<ResultBean> setCommandTime(@ApiParam("参数值") @RequestParam String time, @RequestParam Integer mode) {
         SystemVersion systemVersion = null;
         List<SystemVersion> systemVersions = systemVersionDao.findAll();
@@ -192,6 +194,7 @@ public class CommonController {
     @ApiOperation("设置系统版本号和开发人员")
     @PutMapping("/common/system")
     @RequiresPermissions("设置命令参数")
+    @Log("设置命令参数")
     public ResponseEntity<ResultBean> setSystemArgs(@ApiParam("版本号") @RequestParam String softVersion, @ApiParam("开发人员")String productor) throws IOException {
         SystemVersion systemVersion = systemVersionDao.findById((long) 1).get();
         systemVersion.setSoftVersion(softVersion);

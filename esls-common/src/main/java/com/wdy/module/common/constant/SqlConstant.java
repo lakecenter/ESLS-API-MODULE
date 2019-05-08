@@ -3,6 +3,7 @@ package com.wdy.module.common.constant;
 
 import com.wdy.module.common.request.RequestBean;
 import com.wdy.module.common.request.RequestItem;
+import com.wdy.module.entity.Balance;
 
 import java.util.*;
 
@@ -109,7 +110,7 @@ public class SqlConstant {
         EntityToSqlMap.put("tags", "Tag");
         EntityToSqlMap.put("routers", "Router");
         EntityToSqlMap.put("logs", "Logs");
-        EntityToSqlMap.put("T_User", "User");
+        EntityToSqlMap.put("t_user", "User");
         EntityToSqlMap.put("dispms", "Dispms");
         EntityToSqlMap.put("cyclejobs", "CycleJob");
         EntityToSqlMap.put("permission", "Permission");
@@ -123,7 +124,7 @@ public class SqlConstant {
         EntityToSqlMap.put("sms_verify", "SmsVerify");
         EntityToSqlMap.put("operation_log", "OperationLog");
         EntityToSqlMap.put("user_thirdparty", "UserThirdparty");
-        needVoEntity = Arrays.asList("T_User", "routers", "balance", "dispms", "tags");
-        needIgnoreEntity = Arrays.asList("user_thirdparty");
+        needVoEntity = Arrays.asList("t_user", "routers", "balance", "dispms", "tags");
+        needIgnoreEntity = Arrays.asList("user_thirdparty","sms_verify");
     }
 }

@@ -1,6 +1,6 @@
 package com.wdy.module.resttemplate;
 
-import com.wdy.module.utils.HttpRequestUtils;
+import com.wdy.module.serviceUtil.HttpRequestUtils;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.config.Registry;

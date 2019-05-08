@@ -33,7 +33,6 @@ public class DispmsController {
             @ApiImplicitParam(name = "count", value = "数量",dataType = "int",  paramType = "query")
     })
     @GetMapping("/dispms")
-    @Log("获取样式块信息")
     @RequiresPermissions("系统菜单")
     public ResponseEntity<ResultBean> getDispmses(@RequestParam(required = false) String query, @RequestParam(required = false) String queryString, @Min(message = "data.page.min", value = 0)@RequestParam Integer page, @Min(message = "data.count.min", value = 0) @RequestParam Integer count){
         if(query!=null && queryString!=null) {
@@ -46,7 +45,6 @@ public class DispmsController {
     }
     @ApiOperation(value = "获取指定ID的样式块信息")
     @GetMapping("/dispm/{id}")
-    @Log("获取指定ID的样式块信息")
     @RequiresPermissions("获取指定ID的信息")
     public ResponseEntity<ResultBean> getDispmsById(@PathVariable Long id){
         Optional<Dispms> dispms = dispmsService.findById(id);

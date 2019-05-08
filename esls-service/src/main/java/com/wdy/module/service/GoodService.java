@@ -13,6 +13,7 @@ public interface GoodService extends Service{
     List<Good> findAll(Integer page, Integer count);
     Good findByBarCode(String barCode);
     Good save(Good good);
+    Good saveOne(Good good,Integer mode);
     Good saveOne(Good good);
     Good updateGood(Good good);
     boolean setScheduleTask(String cron, String rootfilePath, Integer mode);

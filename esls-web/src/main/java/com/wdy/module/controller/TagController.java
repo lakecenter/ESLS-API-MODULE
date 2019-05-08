@@ -54,7 +54,6 @@ public class TagController {
             @ApiImplicitParam(name = "count", value = "数量", dataType = "int", paramType = "query")
     })
     @GetMapping("/tags")
-    @Log("获取标签数据")
     @RequiresPermissions("系统菜单")
     public ResponseEntity<ResultBean> getTags(@RequestParam(required = false) String query, @RequestParam(required = false) String queryString, @Min(message = "data.page.min", value = 0) @RequestParam(required = false) Integer page, @Min(message = "data.count.min", value = 0) @RequestParam(required = false) Integer count) {
         String result = ConditionUtil.judgeArgument(query, queryString, page, count);
@@ -97,7 +96,6 @@ public class TagController {
 
     @ApiOperation(value = "获取指定ID的标签信息")
     @GetMapping("/tag/{id}")
-    @Log("获取指定ID的标签信息")
     @RequiresPermissions("获取指定ID的信息")
     public ResponseEntity<ResultBean> getTagById(@PathVariable Long id) {
         Optional<Tag> result = tagService.findById(id);
@@ -112,7 +110,6 @@ public class TagController {
 
     @ApiOperation(value = "添加或修改标签信息")
     @PostMapping("/tag")
-    @Log("添加或修改标签信息")
     @RequiresPermissions("添加或修改信息")
     public ResponseEntity<ResultBean> saveTag(@RequestBody @ApiParam(value = "标签信息json格式") TagVo tagVo) {
         Tag tag = new Tag();
@@ -151,7 +148,6 @@ public class TagController {
 
     @ApiOperation("根据多个字段搜索数据")
     @PostMapping("/tags/search")
-    @Log("根据多个字段搜索数据")
     @RequiresPermissions("查询和搜索功能")
     public ResponseEntity<ResultBean> searchTagsByConditon(@RequestParam String connection, @Min(message = "data.page.min", value = 0) @RequestParam Integer page, @RequestParam @Min(message = "data.count.min", value = 0) Integer count, @RequestBody @ApiParam(value = "查询条件json格式") RequestBean requestBean) {
         List<Tag> tags = tagService.findAllBySql(TableConstant.TABLE_TAGS, connection, requestBean, page, count, Tag.class);
@@ -244,7 +240,6 @@ public class TagController {
     @ApiOperation("查看所有变价超时的标签信息")
     @GetMapping("/tags/overtime")
     @RequiresPermissions("查看所有变价超时的标签信息")
-    @Log("查看所有变价超时的标签信息")
     public ResponseEntity<ResultBean> getOverTimeTags() {
         List<Tag> tagList = tagService.findBySql("SELECT * FROM tags WHERE  (completeTime IS NULL OR  execTime  IS NULL OR  completeTime =0 OR  execTime =0) AND waitUpdate = 0", Tag.class);
         ResponseEntity<ResultBean> result;
@@ -282,7 +277,6 @@ public class TagController {
 
     @ApiOperation("获得标签可绑定的所有样式")
     @PostMapping("/tag/styles")
-    @Log("获得标签可绑定的所有样式")
     @CrossOrigin(origins = "*", maxAge = 3600)
     public ResponseEntity<ResultBean> getStyles(@RequestBody @ApiParam("标签集合") RequestBean requestBean) {
         List<Tag> tags = RequestBeanUtil.getTagsByRequestBean(requestBean);
@@ -290,7 +284,7 @@ public class TagController {
         List<Style> resultList = new ArrayList<>();
         for (Tag tag : tags)
             for (Style style : styles)
-                if ((style.getIsPromote() == null || style.getIsPromote() == 0) && TagUtil.judgeTagMatchStyle(tag, style))
+                if (TagUtil.judgeTagMatchStyle(tag, style))
                     resultList.add(style);
         return new ResponseEntity<>(new ResultBean(CopyUtil.copyStyle(resultList)), HttpStatus.OK);
     }
@@ -365,5 +359,17 @@ public class TagController {
         //rabbitMqSender.send(rabbiMqSendBean);
         SendCommandUtil.updateTagStyle(rabbiMqSendBean.getTags(), rabbiMqSendBean.getIsWaiting(), false);
         return new ResponseEntity<>(ResultBean.success(rabbiMqSendBean), HttpStatus.OK);
+    }
+
+    @ApiOperation(value = "墨水瓶测试命令")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "mode", value = " 0为对标签巡检 1为对指定路由器的所有标签巡检", dataType = "int", paramType = "query"),
+            @ApiImplicitParam(name = "type", value = " 对应测试命令1-5", dataType = "int", paramType = "query")
+    })
+    @PutMapping("/tag/testInkScreen")
+    @Log("墨水瓶测试命令")
+    public ResponseEntity<ResultBean> testInkScreen(@RequestBody RequestBean requestBean, @RequestParam Integer type, @RequestParam Integer mode) {
+        ResponseBean responseBean = tagService.testInkScreen(requestBean, type, mode);
+        return new ResponseEntity<>(ResultBean.success(responseBean), HttpStatus.OK);
     }
 }

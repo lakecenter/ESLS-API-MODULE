@@ -59,10 +59,11 @@ public class Handler23 implements ServiceHandler {
             routerService.saveOne(r);
         } catch (Exception e) {
             System.out.println(e);
+            return CommandCategory.getResponse(null, header, CommandConstant.COMMANDTYPE_ROUTER, null, CommandCategory.NACK);
         }
 //        System.out.println(CommandConstant.ACK);
 //        System.out.println(CommandConstant.COMMANDTYPE_ROUTER);
 //        System.out.println(CommandCategory.getResponse(CommandConstant.ACK,header,CommandConstant.COMMANDTYPE_ROUTER,null));
-        return CommandCategory.getResponse(null, header, CommandConstant.COMMANDTYPE_ROUTER, null);
+        return CommandCategory.getResponse(null, header, CommandConstant.COMMANDTYPE_ROUTER, null, CommandCategory.ACK);
     }
 }

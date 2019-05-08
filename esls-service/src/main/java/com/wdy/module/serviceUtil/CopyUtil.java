@@ -3,12 +3,14 @@ package com.wdy.module.serviceUtil;
 import com.wdy.module.common.constant.SqlConstant;
 import com.wdy.module.dto.*;
 import com.wdy.module.entity.*;
+import com.wdy.module.service.ShopService;
 import com.wdy.module.service.UserService;
 import com.wdy.module.utils.ReflectUtil;
 import org.apache.poi.ss.formula.functions.T;
 import org.springframework.beans.BeanUtils;
 import org.springframework.util.*;
 
+import javax.swing.*;
 import java.lang.reflect.Method;
 import java.util.*;
 
@@ -187,9 +189,15 @@ public class CopyUtil {
                         if (update == 1) {
                             String serviceName = entityName + "Service";
                             Object serviceObj = SpringContextUtil.getBean(serviceName);
-                            Method findById;
-                            findById = serviceObj.getClass().getMethod("findById", Long.class);
-                            o = findById.invoke(serviceObj, Long.valueOf(ReflectUtil.getSourceData("id", item)));
+                            if (NONEEDOPTIONALENTITY.contains(entityName)) {
+                                Method findById = serviceObj.getClass().getMethod("findById", Long.class);
+                                o = findById.invoke(serviceObj, Long.valueOf(ReflectUtil.getSourceData("id", item)));
+                            } else {
+                                Method findById = serviceObj.getClass().getMethod("findById", Long.class);
+                                Object oo = findById.invoke(serviceObj, Long.valueOf(ReflectUtil.getSourceData("id", item)));
+                                Method get = oo.getClass().getMethod("get");
+                                o = get.invoke(oo);
+                            }
                         } else {
                             Class clazz = Class.forName("com.wdy.module.entity." + entityName);
                             o = clazz.newInstance();
@@ -199,10 +207,18 @@ public class CopyUtil {
                         for (String propertyName : filedName) {
                             if (NEEDIGNOREPROPERTY.contains(propertyName)) {
                                 String id = ReflectUtil.getSourceData(propertyName, item);
-                                ReflectUtil.setFiledAttrValue(o, propertyName, id);
+                                if (!"channelId".equals(propertyName))
+                                    ReflectUtil.setFiledAttrValue(o, propertyName, Long.valueOf(id));
+                                else
+                                    ReflectUtil.setFiledAttrValue(o, propertyName, id);
                                 continue;
                             }
-                            if (propertyName.contains("Id")) {
+                            if (propertyName.contains("shopId")) {
+                                ShopService shopService = (ShopService) SpringContextUtil.getBean("ShopService");
+                                String id = ReflectUtil.getSourceData(propertyName, item);
+                                Shop shop = shopService.findById(Long.valueOf(id)).get();
+                                ReflectUtil.setFiledAttrValue(o, "shop", shop);
+                            } else if (propertyName.contains("Id")) {
                                 String propertyTargetName = propertyName.substring(0, propertyName.length() - 2);
                                 Class clazz = Class.forName("com.wdy.module.entity." + StringUtil.captureName(propertyTargetName));
                                 Object innerTarget = clazz.newInstance();
@@ -214,9 +230,15 @@ public class CopyUtil {
                             }
                         }
                         if (saveOne) {
-                            Object serviceObj = SpringContextUtil.getBean(entityName + "Service");
-                            Method saveOneMethod = serviceObj.getClass().getMethod("saveOne", o.getClass());
-                            saveOneMethod.invoke(serviceObj, o);
+                            if ("Good".equals(entityName)) {
+                                Object serviceObj = SpringContextUtil.getBean(entityName + "Service");
+                                Method saveOneMethod = serviceObj.getClass().getMethod("saveOne", o.getClass(), Integer.class);
+                                saveOneMethod.invoke(serviceObj, o, 1);
+                            } else {
+                                Object serviceObj = SpringContextUtil.getBean(entityName + "Service");
+                                Method saveOneMethod = serviceObj.getClass().getMethod("saveOne", o.getClass());
+                                saveOneMethod.invoke(serviceObj, o);
+                            }
                         }
                         resultList.add(o);
                     } catch (Exception e) {
@@ -239,4 +261,6 @@ public class CopyUtil {
     }
 
     private static String NEEDIGNOREPROPERTY = "openId smsId channelId userId permissionId roleId regionId";
+    private static String NONEEDOPTIONALENTITY = "Balance Good User CycleJob";
+
 }

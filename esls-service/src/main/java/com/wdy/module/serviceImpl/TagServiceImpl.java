@@ -320,6 +320,20 @@ public class TagServiceImpl extends BaseServiceImpl<Tag> implements TagService<T
         }
     }
 
+    @Override
+    public ResponseBean testInkScreen(RequestBean requestBean, Integer type, Integer mode) {
+        String contentType = CommandConstant.getInkScreenType(type);
+        ResponseBean responseBean;
+        if (mode == 0) {
+            List<Tag> tags = RequestBeanUtil.getTagsByRequestBean(requestBean);
+            responseBean = SendCommandUtil.sendCommandWithTags(tags, contentType, CommandConstant.COMMANDTYPE_TAG);
+        } else {
+            List<Router> routers = RequestBeanUtil.getRoutersByRequestBean(requestBean);
+            responseBean = SendCommandUtil.sendCommandWithRouters(routers, contentType, CommandConstant.COMMANDTYPE_TAG_BROADCAST);
+        }
+        return responseBean;
+    }
+
     // 改变标签状态
     @Override
     public ResponseBean changeStatus(RequestBean requestBean, Integer mode) {

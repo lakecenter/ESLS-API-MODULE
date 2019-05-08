@@ -24,12 +24,9 @@ public class ExcelUtil {
         List<NoTemplateSheetWrapper> sheets = new ArrayList<>();
         List<String> names = Arrays.asList(StringUtils.delimitedListToStringArray(tableNames, ","));
         if (StringUtils.isEmpty(tableNames)) {
-            names = reflectFindBySqlMethod();
+            names = getAllTableNames();
         }
         for (int i = 0; i < names.size(); i++) {
-            if (SqlConstant.needIgnoreEntity.contains(names.get(i))) {
-                continue;
-            }
             String entityName = SqlConstant.EntityToSqlMap.get(names.get(i));
             List list = reflectFindAllMethod(entityName);
             if (SqlConstant.needVoEntity.contains(names.get(i))) {
@@ -62,14 +59,7 @@ public class ExcelUtil {
     public static void excelImport(String tableNames, MultipartFile file, Integer update) throws Exception {
         List<String> names = Arrays.asList(StringUtils.delimitedListToStringArray(tableNames, ","));
         if (StringUtils.isEmpty(tableNames)) {
-            List<String> resultNames = new ArrayList<>();
-            names = reflectFindBySqlMethod();
-            for (String name : names) {
-                if (SqlConstant.needIgnoreEntity.contains(name))
-                    continue;
-                resultNames.add(name);
-            }
-            names = resultNames;
+            names = getAllTableNames();
         }
         for (int i = 0; i < names.size(); i++) {
             String entityName = SqlConstant.EntityToSqlMap.get(names.get(i));
@@ -83,6 +73,7 @@ public class ExcelUtil {
                 list = ExcelUtils.getInstance().readExcel2Objects(file.getInputStream(), clazz, i);
             }
             for (Object st : list) {
+                System.out.println(st);
                 CopyUtil.copyVo(Arrays.asList(st), entityName, update, true);
             }
         }
@@ -100,6 +91,31 @@ public class ExcelUtil {
         for (Object st : list) {
             CopyUtil.copyVo(Arrays.asList(st), entityName, update, true);
         }
+    }
+
+    private static List<String> getAllTableNames() {
+        List<String> names;
+        names = reflectFindBySqlMethod();
+        List<String> resultNames = new ArrayList<>();
+        for (String name : names) {
+            if (SqlConstant.needIgnoreEntity.contains(name))
+                continue;
+            resultNames.add(name);
+        }
+        names = sortTableNames(resultNames);
+        return names;
+    }
+
+    private static List<String> sortTableNames(List<String> names) {
+        names.remove("user_role");
+        names.remove("dispms");
+        names.remove("routers");
+        names.remove("tags");
+        names.add("routers");
+        names.add("dispms");
+        names.add("tags");
+        names.add("user_role");
+        return names;
     }
 
     private static List reflectFindAllMethod(String entityName) throws Exception {

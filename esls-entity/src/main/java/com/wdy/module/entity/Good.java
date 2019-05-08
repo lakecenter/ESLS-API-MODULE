@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.*;
 import com.github.crab2died.annotation.ExcelField;
 import com.wdy.module.converter.*;
 import lombok.Data;
+import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Proxy;
 
 import javax.persistence.*;
@@ -21,81 +22,82 @@ import java.util.Collection;
 public class Good implements Serializable {
     @Id
     @Column(name = "id", nullable = false)
-    @GeneratedValue(strategy = GenerationType.IDENTITY)//自增主键
-    @ExcelField(title = "id", order = 1, readConverter = StringToLongConverter.class)
+    @GeneratedValue(strategy = GenerationType.IDENTITY, generator = "idOrGenerate")
+    @GenericGenerator(name = "idOrGenerate", strategy = "com.wdy.module.serviceUtil.IdOrGenerate")
+    @ExcelField(title = "主键", order = 1, readConverter = StringToLongConverter.class)
     private Long id;
     @Column(name = "name")
-    @ExcelField(title = "name", order = 2)
+    @ExcelField(title = "商品名字", order = 2)
     private String name;
     @Column(name = "origin")
-    @ExcelField(title = "origin", order = 3)
+    @ExcelField(title = "商品产地", order = 3)
     private String origin;
     @Column(name = "provider")
-    @ExcelField(title = "provider", order = 4)
+    @ExcelField(title = "商品提供商", order = 4)
     private String provider;
     @Column(name = "unit")
-    @ExcelField(title = "unit", order = 5)
+    @ExcelField(title = "商品单位", order = 5)
     private String unit;
     @Column(name = "barCode")
-    @ExcelField(title = "barCode", order = 6)
+    @ExcelField(title = "条形码", order = 6)
     private String barCode;
     @Column(name = "qrCode")
-    @ExcelField(title = "qrCode", order = 7)
+    @ExcelField(title = "二维码", order = 7)
     private String qrCode;
     @Column(name = "operator")
-    @ExcelField(title = "operator", order = 8)
+    @ExcelField(title = "操作员", order = 8)
     private String operator;
     @Column(name = "importTime")
-    @ExcelField(title = "importTime", order = 9, readConverter = StringToTimestampConverter.class)
+    @ExcelField(title = "商品导入时间", order = 9, readConverter = StringToTimestampConverter.class)
     private Timestamp importTime;
     @Column(name = "promotionReason")
-    @ExcelField(title = "promotionReason", order = 10)
+    @ExcelField(title = "促销理由", order = 10)
     private String promotionReason;
-    @Column(name = "status")
-    @ExcelField(title = "status", order = 11, readConverter = StringToIntegerConverter.class)
-    private Integer status;
     @Column(name = "price")
-    @ExcelField(title = "price", order = 12)
+    @ExcelField(title = "商品原价格", order = 12)
     private String price;
     @Column(name = "promotePrice")
-    @ExcelField(title = "promotePrice", order = 13)
+    @ExcelField(title = "商品促销价格", order = 13)
     private String promotePrice;
     @Column(name = "imageUrl")
-    @ExcelField(title = "imageUrl", order = 14)
+    @ExcelField(title = "图片URL", order = 14)
     private String imageUrl;
     @Column(name = "waitUpdate")
-    @ExcelField(title = "waitUpdate", order = 15, readConverter = StringToIntegerConverter.class)
+    @ExcelField(title = "是否等待更新", order = 15, readConverter = StringToIntegerConverter.class)
     private Integer waitUpdate;
     @Column(name = "shelfNumber")
-    @ExcelField(title = "shelfNumber", order = 16)
+    @ExcelField(title = "货号", order = 16)
     private String shelfNumber;
     @Column(name = "spec")
-    @ExcelField(title = "spec", order = 17)
+    @ExcelField(title = "规格", order = 17)
     private String spec;
     @Column(name = "category")
-    @ExcelField(title = "category", order = 18)
+    @ExcelField(title = "类别", order = 18)
     private String category;
     @Column(name = "rfu01")
-    @ExcelField(title = "rfu01", order = 19)
+    @ExcelField(title = "自定义字段1", order = 19)
     private String rfu01;
     @Column(name = "rfu02")
-    @ExcelField(title = "rfu02", order = 20)
+    @ExcelField(title = "自定义字段2", order = 20)
     private String rfu02;
     @Column(name = "rfus01")
-    @ExcelField(title = "rfus01", order = 21)
+    @ExcelField(title = "自定义字段3", order = 21)
     private String rfus01;
     @Column(name = "rfus02")
-    @ExcelField(title = "rfus02", order = 22)
+    @ExcelField(title = "自定义字段4", order = 22)
     private String rfus02;
     @Column(name = "regionNames")
-    @ExcelField(title = "regionNames", order = 23)
+    @ExcelField(title = "改价区域名集合", order = 23)
     private String regionNames;
     @Column(name = "stock")
-    @ExcelField(title = "stock", order = 24)
+    @ExcelField(title = "库存量", order = 24)
     private String stock;
     @Column(name = "isPromote")
-    @ExcelField(title = "isPromote", order = 25, readConverter = StringToByteConverter.class)
+    @ExcelField(title = "是否促销", order = 25, readConverter = StringToByteConverter.class)
     private Byte isPromote;
+    @Column(name = "promoteTimeGap")
+    @ExcelField(title = "促销时间起止时间", order = 26)
+    private String promoteTimeGap;
     @OneToMany(mappedBy = "good", fetch = FetchType.EAGER)
     @JsonIgnore
     private Collection<Tag> tags;

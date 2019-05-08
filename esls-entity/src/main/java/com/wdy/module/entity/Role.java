@@ -5,6 +5,7 @@ import com.github.crab2died.annotation.ExcelField;
 import com.wdy.module.converter.StringToLongConverter;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
 import java.util.List;
@@ -20,14 +21,15 @@ import java.util.List;
 public class Role {
     @Id
     @Column(name = "id", nullable = false)
-    @GeneratedValue(strategy = GenerationType.IDENTITY)//自增主键
-    @ExcelField(title = "id", order = 1, readConverter = StringToLongConverter.class)
+    @GeneratedValue(strategy = GenerationType.IDENTITY, generator = "idOrGenerate")
+    @GenericGenerator(name = "idOrGenerate", strategy = "com.wdy.module.serviceUtil.IdOrGenerate")
+    @ExcelField(title = "主键", order = 1, readConverter = StringToLongConverter.class)
     private Long id;
     @Column(name = "type")
-    @ExcelField(title = "type", order = 2)
+    @ExcelField(title = "角色类型", order = 2)
     private String type;
     @Column(name = "name")
-    @ExcelField(title = "name", order = 3)
+    @ExcelField(title = "角色描述", order = 3)
     private String name;
     //角色 -- 权限关系：多对多关系;
     @ManyToMany(fetch = FetchType.EAGER)

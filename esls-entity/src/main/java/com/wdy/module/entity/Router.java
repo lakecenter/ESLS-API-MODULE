@@ -3,6 +3,7 @@ package com.wdy.module.entity;
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import lombok.Data;
+import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
 import java.io.Serializable;
@@ -18,7 +19,8 @@ import java.util.Objects;
 public class Router implements Serializable {
     @Id
     @Column(name = "id", nullable = false)
-    @GeneratedValue(strategy = GenerationType.IDENTITY)//自增主键
+    @GeneratedValue(strategy = GenerationType.IDENTITY, generator = "idOrGenerate")
+    @GenericGenerator(name = "idOrGenerate", strategy = "com.wdy.module.serviceUtil.IdOrGenerate")
     private long id;
     @Column(name = "mac")
     private String mac;

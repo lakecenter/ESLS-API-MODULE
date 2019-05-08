@@ -1,12 +1,11 @@
 package com.wdy.module.controller;
 
+import com.wdy.module.aop.Log;
 import com.wdy.module.common.constant.PublicResultConstant;
 import com.wdy.module.config.ResponseHelper;
 import com.wdy.module.config.ResponseModel;
-import com.wdy.module.mybatis.mybatisService.ISmsVerifyService;
 import com.wdy.module.serviceUtil.*;
 import io.swagger.annotations.*;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -24,11 +23,10 @@ import javax.servlet.http.HttpServletResponse;
 @Api(description = "excel导入导出模块")
 @CrossOrigin(origins = "*", maxAge = 3600)
 public class ExcelController {
-    @Autowired
-    private ISmsVerifyService iSmsVerifyService;
 
     @ApiOperation(value = "Excel导出")
     @GetMapping(value = "/excelExport")
+    @Log("Excel导出")
     public ResponseModel excelExport(@RequestParam(required = false) @ApiParam("数据表表名集合按照sheet顺序以小写逗号隔开") String tableNames, HttpServletRequest request, HttpServletResponse response) throws Exception {
 //        System.out.println(iSmsVerifyService.findAll());
         ExcelUtil.excelExport(tableNames, "数据表", request, response);
@@ -37,16 +35,17 @@ public class ExcelController {
 
     @ApiOperation(value = "Esv导出(仅支持单表)")
     @GetMapping(value = "/csvExport")
-    public ResponseModel scvExport(@RequestParam(required = false) @ApiParam("表名") String tableName, HttpServletRequest request, HttpServletResponse response) throws Exception {
+    public ResponseModel csvExport(@RequestParam(required = false) @ApiParam("表名") String tableName, HttpServletRequest request, HttpServletResponse response) throws Exception {
         ExcelUtil.csvExport(tableName, request, response);
         return ResponseHelper.buildResponseModel(PublicResultConstant.SUCCEED);
     }
 
     @ApiOperation(value = "Excel导入")
     @PostMapping(value = "/excelImport")
-    public ResponseModel excelImport(@ApiParam(value = "文件信息", required = true) @RequestParam("file") MultipartFile file, @RequestParam(required = false) @ApiParam("数据表表名集合按照sheet顺序以小写逗号隔开") String tableNames, @RequestParam @ApiParam("0添加导入1更新导入") Integer update) throws Exception {
+    @Log("Excel导入")
+    public ResponseModel excelImport(@ApiParam(value = "文件信息", required = true) @RequestParam("file") MultipartFile file, @RequestParam(required = false) @ApiParam("数据表表名集合按照sheet顺序以小写逗号隔开") String tableNames) throws Exception {
 //        List<List<String>> lists = ExcelUtils.getInstance().readExcel2List(file.getInputStream(), 1, 2, 0);
-        ExcelUtil.excelImport(tableNames, file, update);
+        ExcelUtil.excelImport(tableNames, file, 0);
         return ResponseHelper.buildResponseModel(PublicResultConstant.SUCCEED);
     }
 

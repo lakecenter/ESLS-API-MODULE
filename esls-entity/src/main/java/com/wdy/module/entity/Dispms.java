@@ -3,6 +3,7 @@ package com.wdy.module.entity;
 import com.fasterxml.jackson.annotation.*;
 import lombok.Data;
 import lombok.ToString;
+import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
 import java.io.Serializable;
@@ -18,7 +19,8 @@ import java.util.Objects;
 public class Dispms implements Serializable {
     @Id
     @Column(name = "id", nullable = false)
-    @GeneratedValue(strategy = GenerationType.IDENTITY)//自增主键
+    @GeneratedValue(strategy = GenerationType.IDENTITY, generator = "idOrGenerate")
+    @GenericGenerator(name = "idOrGenerate", strategy = "com.wdy.module.serviceUtil.IdOrGenerate")
     private long id;
     @Column(name = "name")
     private String name;
@@ -57,7 +59,7 @@ public class Dispms implements Serializable {
     @Column(name = "backup")
     private String backup;
     @Column(name = "regionId")
-    private String regionId;
+    private Long regionId;
     @ManyToOne
     @JoinColumn(name = "styleid", referencedColumnName = "id")
     @JsonIgnore

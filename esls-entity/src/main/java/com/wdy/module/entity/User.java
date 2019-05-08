@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import lombok.*;
 import org.apache.commons.lang3.builder.ToStringExclude;
+import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
 import java.io.Serializable;
@@ -14,7 +15,7 @@ import java.util.List;
         generator = ObjectIdGenerators.PropertyGenerator.class,
         property = "id")
 @Entity
-@Table(name = "T_User", schema = "tags", catalog = "")
+@Table(name = "t_user", schema = "tags", catalog = "")
 @Builder
 @Data
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
@@ -22,7 +23,8 @@ import java.util.List;
 public class User implements Serializable {
     @Id
     @Column(name = "id", nullable = false)
-    @GeneratedValue(strategy = GenerationType.IDENTITY)//自增主键
+    @GeneratedValue(strategy = GenerationType.IDENTITY, generator = "idOrGenerate")
+    @GenericGenerator(name = "idOrGenerate", strategy = "com.wdy.module.serviceUtil.IdOrGenerate")
     private Long id;
     @Column(name = "name")
     private String name;
@@ -71,3 +73,6 @@ public class User implements Serializable {
                 '}';
     }
 }
+
+
+

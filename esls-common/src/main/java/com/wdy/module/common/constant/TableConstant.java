@@ -1,7 +1,7 @@
 package com.wdy.module.common.constant;
 
 public class TableConstant {
-    public final static String TABLE_USER = "users";
+    public final static String TABLE_USER = "T_User";
     public final static String TABLE_ROUTERS = "routers";
     public final static String TABLE_TAGS = "tags";
     public final static String TABLE_DISPMS = "dispms";

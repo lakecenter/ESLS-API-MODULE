@@ -37,7 +37,6 @@ public class ShopController {
             @ApiImplicitParam(name = "count", value = "数量", dataType = "int", paramType = "query")
     })
     @GetMapping("/shops")
-    @Log("获取店铺信息")
     @RequiresPermissions("系统菜单")
     public ResponseEntity<ResultBean> getShops(@RequestParam(required = false) String query, @RequestParam(required = false) String queryString, @Min(message = "data.page.min", value = 0)@RequestParam(required = false) Integer page, @Min(message = "data.count.min", value = 0) @RequestParam(required = false) Integer count) {
         String result = ConditionUtil.judgeArgument(query, queryString, page, count);
@@ -75,7 +74,6 @@ public class ShopController {
 
     @ApiOperation(value = "获取指定ID的店铺信息")
     @GetMapping("/shop/{id}")
-    @Log("获取指定ID的店铺信息")
     @RequiresPermissions("获取指定ID的信息")
     public ResponseEntity<ResultBean> getShopById(@PathVariable Long id) {
         Optional<Shop> result = shopService.findById(id);
@@ -89,7 +87,6 @@ public class ShopController {
 
     @ApiOperation(value = "添加或修改店铺信息")
     @PostMapping("/shop")
-    @Log("添加或修改店铺信息")
     @RequiresPermissions("添加或修改信息")
     public ResponseEntity<ResultBean> saveShop(@RequestBody @ApiParam(value = "店铺信息json格式") ShopVo shopVo) {
         Shop shop = new Shop();

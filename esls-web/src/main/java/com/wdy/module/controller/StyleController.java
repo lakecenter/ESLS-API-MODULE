@@ -49,7 +49,6 @@ public class StyleController {
             @ApiImplicitParam(name = "count", value = "数量", dataType = "int", paramType = "query")
     })
     @GetMapping("/styles")
-    @Log("获取样式数据")
     @RequiresPermissions("系统菜单")
     public ResponseEntity<ResultBean> getStyles(@RequestParam(required = false) String query, @RequestParam(required = false) String queryString, @Min(message = "data.page.min", value = 0) @RequestParam(required = false) Integer page, @Min(message = "data.count.min", value = 0) @RequestParam(required = false) Integer count) {
         String result = ConditionUtil.judgeArgument(query, queryString, page, count);
@@ -86,7 +85,6 @@ public class StyleController {
 
     @ApiOperation(value = "获取指定ID的样式信息")
     @GetMapping("/style/{id}")
-    @Log("获取指定ID的样式信息")
     @RequiresPermissions("获取指定ID的信息")
     public ResponseEntity<ResultBean> getStyleById(@PathVariable Long id) {
         Optional<Style> result = styleService.findById(id);
@@ -101,7 +99,6 @@ public class StyleController {
 
     @ApiOperation("获得指定ID的样式的所有小样式信息")
     @GetMapping("/style/dispms/{id}")
-    @Log("获得指定ID的样式的所有小样式信息")
     public ResponseEntity<ResultBean> getDispmses(@PathVariable Long id) {
         List<Dispms> dispmses = dispmsService.findByArrtribute(TableConstant.TABLE_DISPMS, ArrtributeConstant.TAG_STYLEID, String.valueOf(id), Dispms.class);
         ResponseEntity<ResultBean> result;
@@ -111,7 +108,6 @@ public class StyleController {
 
     @ApiOperation(value = "添加样式信息")
     @GetMapping("/style")
-    @Log("添加或修改样式信息")
     @RequiresPermissions("添加或修改信息")
     public ResponseEntity<ResultBean> saveStyleByStyleType(@RequestParam String styleType) {
         List<Style> result = styleService.saveOne(styleType);
@@ -120,7 +116,6 @@ public class StyleController {
 
     @ApiOperation(value = "获得促销或非促销的样式信息")
     @GetMapping("/style/promote")
-    @Log("获得指定样式的内容")
     public ResponseEntity<ResultBean> getStyleByStyleNumberAndType(@RequestParam String styleNumber, @RequestParam Byte isPromote) {
         return new ResponseEntity<>(ResultBean.success(styleService.findByStyleNumberAndIsPromote(styleNumber, isPromote)), HttpStatus.OK);
     }
@@ -167,7 +162,6 @@ public class StyleController {
 //    }
     @ApiOperation(value = "新建或修改样式同时绑定小样式")
     @PostMapping("/style/new")
-    @Log("新建或修改样式同时绑定小样式")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "mode", value = "0为添加 1为修改", dataType = "int", paramType = "query"),
             @ApiImplicitParam(name = "update", value = "是否需要更新样式对应的标签(0不需要 1需要)", dataType = "int", paramType = "query"),
@@ -194,7 +188,6 @@ public class StyleController {
 
     @ApiOperation("生成指定ID样式的所有小样式图片")
     @GetMapping("/style/photo/{id}")
-    @Log("生成指定ID样式的所有小样式图片")
     @RequiresPermissions("生成指定ID样式的所有小样式图片")
     public ResponseEntity<ResultBean> createStyle(@PathVariable long id, @RequestParam Long goodId) {
         Style style = styleService.findById(id).get();
@@ -208,7 +201,6 @@ public class StyleController {
 
     @ApiOperation("生成指定ID样式的所有小样式图片")
     @GetMapping("/style/dism/photo/{id}")
-    @Log("生成指定ID样式的所有小样式图片")
     @RequiresPermissions("生成指定ID样式的所有小样式图片")
     public ResponseEntity<ResultBean> createDism(@PathVariable long id, @RequestParam Long goodId, @RequestParam String styleNumber) {
         Dispms dispms = dispmsService.findById(id).get();

@@ -17,7 +17,6 @@ public class ShopVo {
     private String manager;
     private String address;
     private String account;
-    private String password;
     private String phone;
     private List<Long> routerIds = new ArrayList();
     private List<Long> userIds = new ArrayList();

@@ -68,10 +68,10 @@ public class ESLSApplicationTests {
             System.out.println(good.getPrice().substring(0, good.getPrice().indexOf(".") + 3));
 
     }
+
     @Test
     public void testSyleService() {
-        Style byStyleNumberAndIsPromote = styleDao.findByStyleNumberAndIsPromote("2901", (byte) 0);
-        System.out.println(byStyleNumberAndIsPromote);
-
+        Style style = Style.builder().id((long) 350).styleType("名字").isPromote((byte) 0).styleNumber("2988").width(250).height(250).build();
+        styleDao.save(style);
     }
 }

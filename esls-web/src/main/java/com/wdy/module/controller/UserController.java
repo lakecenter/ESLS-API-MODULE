@@ -61,7 +61,6 @@ public class UserController {
             @ApiImplicitParam(name = "count", value = "数量", dataType = "int", paramType = "query")
     })
     @GetMapping("/users")
-    @Log("获取用户信息")
     @RequiresPermissions("系统菜单")
     public ResponseEntity<ResultBean> getGoods(@RequestParam(required = false) String query, @RequestParam(required = false) String queryString, @Min(message = "data.page.min", value = 0) @RequestParam(required = false) Integer page, @RequestParam(required = false) @Min(message = "data.count.min", value = 0) Integer count) {
         String result = ConditionUtil.judgeArgument(query, queryString, page, count);
@@ -100,7 +99,6 @@ public class UserController {
 
     @ApiOperation(value = "获取指定ID的用户信息")
     @GetMapping("/users/{id}")
-    @Log("获取指定ID的用户信息")
     @Transactional
     @RequiresPermissions("获取指定ID的信息")
     public ResponseEntity<ResultBean> getGoodById(@PathVariable Long id) {
@@ -125,7 +123,6 @@ public class UserController {
 
     @ApiOperation(value = "根据用户ID获得用户角色")
     @GetMapping("/user/role/{id}")
-    @Log("根据用户ID获得用户角色")
     public ResponseEntity<ResultBean> getRolesByUserId(@PathVariable Long id) {
         User user = userService.findById(id);
         if (user == null)
@@ -137,7 +134,6 @@ public class UserController {
 
     @ApiOperation(value = "根据用户ID删除用户角色")
     @PostMapping("/user/delete/{id}")
-    @Log("根据用户ID删除用户角色")
     public ResponseEntity<ResultBean> getRolesByUserId(@PathVariable Long id, @RequestBody @ApiParam("用户ID集合") List<Long> roleIds) {
         User user = userService.findById(id);
         int successNumber = 0;
@@ -237,7 +233,6 @@ public class UserController {
 
     @ApiOperation(value = "向指定的用户手机号发送验证码")
     @PostMapping("/user/sendIdentifyCode")
-    @Log("向指定的用户手机号发送验证码")
     public ResponseEntity<ResultBean> sendIdentifyCode(@RequestParam @ApiParam("手机号") String phoneNumber) throws Exception {
         User user = userService.findByTelephone(phoneNumber);
         if (user == null)
@@ -247,12 +242,10 @@ public class UserController {
 
     @ApiOperation(value = "验证手机验证码的正确性")
     @PostMapping("/user/identifyCode")
-    @Log("验证手机验证码的正确性")
     public ResponseEntity<ResultBean> identifyCode(@RequestParam @ApiParam("手机号") String phoneNumber, @RequestParam @ApiParam("验证码") String code, @RequestParam(required = false) @ApiParam("用户重置的密码") String password) {
         String realCode = (String) redisUtil.sentinelGet(phoneNumber, String.class);
         if (realCode == null)
             throw new ServiceException(ResultEnum.VERTIFY_EXPIRE);
-        System.out.println(realCode);
         User user = userService.findByTelephone(phoneNumber);
         Admin admin = new Admin(user.getName(), user.getRawPasswd());
         if (code.equals(realCode)) {
@@ -270,6 +263,7 @@ public class UserController {
     @ApiOperation("切换指定ID的用户的状态（0禁用1启用）")
     @PutMapping("/user/status/{id}")
     @RequiresPermissions("切换状态")
+    @Log("切换用户禁用状态")
     public ResponseEntity<ResultBean> forbidUserById(@PathVariable Long id) {
         User user = userService.findById(id);
         if (user != null) {

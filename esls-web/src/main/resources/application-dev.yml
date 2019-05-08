@@ -29,7 +29,7 @@ spring:
     publisher-confirms: true
   #datasource start
   datasource:
-    url: jdbc:mysql://${outNetIp}:3306/tags?characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&autoReconnect=true
+    url: jdbc:mysql://localhost:3306/tags?characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&autoReconnect=true
     username: ${mysql.userName}
     password: ${mysql.passWord}
     driver-class-name: com.mysql.jdbc.Driver

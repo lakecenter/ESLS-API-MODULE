@@ -3,9 +3,9 @@ package com.wdy.module.entity;
 import com.fasterxml.jackson.annotation.*;
 import com.github.crab2died.annotation.ExcelField;
 import com.wdy.module.converter.*;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.apache.commons.lang3.builder.ToStringExclude;
+import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
 import java.io.Serializable;
@@ -18,26 +18,29 @@ import java.util.Collection;
 @Table(name = "styles", schema = "tags", catalog = "")
 @Data
 @NoArgsConstructor
+@Builder
+@AllArgsConstructor
 public class Style implements Serializable {
     @Id
     @Column(name = "id", nullable = false)
-    @GeneratedValue(strategy = GenerationType.IDENTITY)//自增主键
-    @ExcelField(title = "id", order = 1, readConverter = StringToLongConverter.class)
+    @ExcelField(title = "主键", order = 1, readConverter = StringToLongConverter.class)
+    @GeneratedValue(strategy = GenerationType.IDENTITY, generator = "idOrGenerate")
+    @GenericGenerator(name = "idOrGenerate", strategy = "com.wdy.module.serviceUtil.IdOrGenerate")
     private Long id;
     @Column(name = "styleNumber")
-    @ExcelField(title = "styleNumber", order = 2)
+    @ExcelField(title = "样式编码", order = 2)
     private String styleNumber;
     @Column(name = "styleType")
-    @ExcelField(title = "styleType", order = 3)
+    @ExcelField(title = "样式名字", order = 3)
     private String styleType;
     @Column(name = "width")
-    @ExcelField(title = "width", order = 4, readConverter = StringToIntegerConverter.class)
+    @ExcelField(title = "宽度", order = 4, readConverter = StringToIntegerConverter.class)
     private Integer width;
     @Column(name = "height")
-    @ExcelField(title = "height", order = 5, readConverter = StringToIntegerConverter.class)
+    @ExcelField(title = "高度", order = 5, readConverter = StringToIntegerConverter.class)
     private Integer height;
     @Column(name = "isPromote")
-    @ExcelField(title = "isPromote", order = 6, readConverter = StringToByteConverter.class)
+    @ExcelField(title = "是否促销样式", order = 6, readConverter = StringToByteConverter.class)
     private Byte isPromote;
     @OneToMany(mappedBy = "style")
     @JsonIgnore

@@ -5,7 +5,6 @@ import com.github.qcloudsms.SmsSingleSenderResult;
 import com.wdy.module.common.exception.ResultEnum;
 import com.wdy.module.common.exception.ServiceException;
 import com.wdy.module.entity.*;
-import com.wdy.module.utils.HttpRequestUtils;
 import com.wdy.module.utils.RedisUtil;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.CollectionUtils;

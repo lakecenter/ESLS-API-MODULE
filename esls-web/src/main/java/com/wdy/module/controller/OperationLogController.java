@@ -27,7 +27,7 @@ import java.util.List;
  * @create: 2019-04-27 18:47
  */
 @RestController
-@Api(description = "短信模块")
+@Api(description = "日志模块")
 @CrossOrigin(origins = "*", maxAge = 3600)
 public class OperationLogController {
     @Autowired
@@ -42,7 +42,6 @@ public class OperationLogController {
     })
     @GetMapping("/operationLogs")
     @RequiresPermissions("系统菜单")
-    @Log("根据条件获取日志信息")
     public ResponseEntity<ResultBean> getAll(@RequestParam(required = false) String query, @RequestParam(required = false) String queryString, @Min(message = "data.page.min", value = 0) @RequestParam(required = false) Integer page, @Min(message = "data.count.min", value = 0) @RequestParam(required = false) Integer count) {
         String result = ConditionUtil.judgeArgument(query, queryString, page, count);
         if (result == null)

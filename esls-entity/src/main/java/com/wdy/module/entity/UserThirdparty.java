@@ -35,43 +35,43 @@ public class UserThirdparty extends Model<UserThirdparty> {
      * 自增id
      */
     @TableId(value = "id", type = IdType.AUTO)
-    @ExcelField(title = "id", order = 1, readConverter = StringToLongConverter.class)
+    @ExcelField(title = "主键", order = 1, readConverter = StringToLongConverter.class)
     private Long id;
     /**
      * 第三方Id
      */
     @TableField("openId")
-    @ExcelField(title = "openId", order = 2)
+    @ExcelField(title = "第三方Id", order = 2)
     private String openId;
     /**
      * 绑定用户的id
      */
     @TableField("userName")
-    @ExcelField(title = "userName", order = 3)
+    @ExcelField(title = "绑定用户名", order = 3)
     private String userName;
     /**
      * 第三方token
      */
     @TableField("accessToken")
-    @ExcelField(title = "accessToken", order = 4)
+    @ExcelField(title = "第三方token", order = 4)
     private String accessToken;
     /**
      * 第三方类型 qq:QQ 微信:WX 微博:SINA
      */
     @TableField("providerType")
-    @ExcelField(title = "providerType", order = 5)
+    @ExcelField(title = "第三方类型 qq:QQ 微信:WX 微博:SINA", order = 5)
     private String providerType;
     /**
      * 状态值（1：启用，2：禁用，3：删除）
      */
     @TableField("status")
-    @ExcelField(title = "status", order = 6, readConverter = StringToIntegerConverter.class)
+    @ExcelField(title = "状态值（1：启用，2：禁用，3：删除）", order = 6, readConverter = StringToIntegerConverter.class)
     private Integer status;
     /**
      * 创建时间
      */
     @TableField("createTime")
-    @ExcelField(title = "createTime", order = 7, readConverter = StringToLongConverter.class)
+    @ExcelField(title = "创建时间", order = 7, readConverter = StringToLongConverter.class)
     private Long createTime;
 
     @Override

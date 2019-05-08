@@ -39,7 +39,6 @@ public class CycleJobController {
             @ApiImplicitParam(name = "count", value = "数量", dataType = "int", paramType = "query")
     })
     @GetMapping("/cyclejobs")
-    @Log("获取定期任务信息")
     @RequiresPermissions("系统菜单")
     public ResponseEntity<ResultBean> getGoods(@RequestParam(required = false) String query, @RequestParam(required = false) String queryString, @Min(message = "data.page.min", value = 0)@RequestParam(required = false) Integer page, @RequestParam(required = false) @Min(message = "data.count.min", value = 0)Integer count) {
         String result = ConditionUtil.judgeArgument(query, queryString, page, count);
@@ -76,7 +75,6 @@ public class CycleJobController {
     }
     @ApiOperation(value = "获取指定ID的定期任务信息")
     @GetMapping("/cyclejobs/{id}")
-    @Log("获取指定ID的定期任务信息")
     @Transactional
     @RequiresPermissions("获取指定ID的信息")
     public ResponseEntity<ResultBean> getGoodById(@PathVariable Long id) {
@@ -90,7 +88,6 @@ public class CycleJobController {
 
     @ApiOperation(value = "添加或修改定期任务信息")
     @PostMapping("/cyclejob")
-    @Log("添加或修改定期任务信息")
     @RequiresPermissions("添加或修改信息")
     public ResponseEntity<ResultBean> saveGood(@RequestBody @ApiParam(value = "定期任务json格式") CycleJob cycleJob) {
         if(cycleJob.getMode() == -1 && cycleJob.getType()!=7 && cycleJob.getId()==0)
@@ -104,7 +101,6 @@ public class CycleJobController {
 
     @ApiOperation(value = "根据ID删除定期任务信息")
     @DeleteMapping("/cyclejob/{id}")
-    @Log("根据ID删除定期任务信息")
     @RequiresPermissions("删除指定ID的信息")
     public ResponseEntity<ResultBean> deleteGoodById(@PathVariable Long id) {
         CycleJob cycleJob = cycleJobService.findById(id);

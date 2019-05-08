@@ -25,6 +25,7 @@ public class MailSender {
         javaMailSender.setDefaultEncoding(mailConstant.getDEFAULTENCODING());
         javaMailSender.setUsername(mailConstant.getFROM());
         javaMailSender.setPassword(mailConstant.getPASSWORD());
+        javaMailSender.setPort(465);
         //创建一个简单邮件信息对象
         MimeMessage message = javaMailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true);

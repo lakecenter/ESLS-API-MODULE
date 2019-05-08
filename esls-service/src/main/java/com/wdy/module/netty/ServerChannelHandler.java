@@ -3,8 +3,10 @@ package com.wdy.module.netty;
 import com.wdy.module.common.constant.TableConstant;
 import com.wdy.module.common.request.RequestBean;
 import com.wdy.module.common.request.RequestItem;
+import com.wdy.module.entity.Router;
 import com.wdy.module.netty.command.CommandConstant;
 import com.wdy.module.netty.executor.AsyncTask;
+import com.wdy.module.service.RouterService;
 import com.wdy.module.service.Service;
 import com.wdy.module.serviceUtil.ByteUtil;
 import com.wdy.module.serviceUtil.SocketChannelHelper;
@@ -67,7 +69,7 @@ public class ServerChannelHandler extends SimpleChannelInboundHandler<Object> {
                     String id = ctx.channel().id().toString();
                     SocketChannelHelper.heartBeanMap.put(id, SocketChannelHelper.heartBeanMap.get(id) == null ? 0 : SocketChannelHelper.heartBeanMap.get(id) + 1);
                     // 重试2次无响应则断开
-                    if (SocketChannelHelper.heartBeanMap.get(id) + 1 == 2) {
+                    if (SocketChannelHelper.heartBeanMap.get(id) + 1 > 2) {
                         removeWorkingRouter(ctx.channel());
                         SocketChannelHelper.heartBeanMap.remove(id);
                         log.info("【" + ctx.channel().remoteAddress() + "】客户端断开");
@@ -78,7 +80,7 @@ public class ServerChannelHandler extends SimpleChannelInboundHandler<Object> {
                 case WRITER_IDLE:
                     byte[] heartBeat = CommandConstant.COMMAND_BYTE.get(CommandConstant.ROUTERHEARTBEAN);
                     ctx.channel().writeAndFlush(Unpooled.wrappedBuffer(heartBeat));
-                    log.info("【" + ctx.channel().id().toString() + "】发送心跳包");
+                    log.info(ctx.channel().id().toString() + "发送心跳包");
                     break;
                 case ALL_IDLE:
                     break;
@@ -227,15 +229,13 @@ public class ServerChannelHandler extends SimpleChannelInboundHandler<Object> {
     }
 
     public void removeWorkingRouter(Channel channel) {
-        InetSocketAddress socketAddress = (InetSocketAddress) channel.remoteAddress();
-        RequestBean source = new RequestBean();
-        RequestItem itemSource = new RequestItem("ip", socketAddress.getAddress().getHostAddress());
-        source.getItems().add(itemSource);
-        RequestBean target = new RequestBean();
-        RequestItem itemTarget = new RequestItem("isWorking", String.valueOf(0));
-        target.getItems().add(itemTarget);
+        Router router = SocketChannelHelper.getRouterByChannel(channel);
+        if (router == null)
+            return;
+        RouterService routerService = (RouterService) SpringContextUtil.getBean("RouterService");
+        router.setIsWorking((byte) 0);
+        routerService.saveOne(router);
         // 更新记录数
-        ((Service) SpringContextUtil.getBean("BaseService")).updateByArrtribute(TableConstant.TABLE_ROUTERS, source, target);
         channel.close();
     }
 }

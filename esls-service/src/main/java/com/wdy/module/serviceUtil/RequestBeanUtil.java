@@ -39,7 +39,7 @@ public class RequestBeanUtil {
             List<Tag> tagItem = service.findByArrtribute(TableConstant.TABLE_TAGS, items.getQuery(), items.getQueryString(), Tag.class);
             for (Tag tag : tagItem)
                 // 标签启用
-                if (tag.getForbidState() != 0)
+                if (tag.getForbidState() != null && tag.getForbidState() != 0)
                     tags.add(tag);
         }
         return tags;
@@ -51,7 +51,7 @@ public class RequestBeanUtil {
         for (RequestItem items : requestBean.getItems()) {
             List<Router> routerItem = service.findByArrtribute(TableConstant.TABLE_ROUTERS, items.getQuery(), items.getQueryString(), Router.class);
             for (Router r : routerItem)
-                if (r.getState() == 1)
+                if (r.getState()!=null && r.getState() == 1)
                     routers.add(r);
         }
         return routers;

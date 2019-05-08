@@ -10,44 +10,44 @@ import java.sql.Timestamp;
 @Data
 @ToString
 public class TagVo {
-    @ExcelField(title = "id", order = 1, readConverter = StringToLongConverter.class)
+    @ExcelField(title = "主键", order = 1, readConverter = StringToLongConverter.class)
     private Long id;
-    @ExcelField(title = "power", order = 2)
+    @ExcelField(title = "电量", order = 2)
     private String power;
-    @ExcelField(title = "tagRssi", order = 3)
+    @ExcelField(title = "标签Rssi", order = 3)
     private String tagRssi;
-    @ExcelField(title = "apRssi", order = 4)
+    @ExcelField(title = "路由器Rssi", order = 4)
     private String apRssi;
-    @ExcelField(title = "state", order = 5, readConverter = StringToByteConverter.class)
+    @ExcelField(title = "绑定状态", order = 5, readConverter = StringToByteConverter.class)
     private Byte state;
-    @ExcelField(title = "hardwareVersion", order = 6)
+    @ExcelField(title = "硬件版本号", order = 6)
     private String hardwareVersion;
-    @ExcelField(title = "softwareVersion", order = 7)
+    @ExcelField(title = "软件版本号", order = 7)
     private String softwareVersion;
-    @ExcelField(title = "forbidState", order = 8, readConverter = StringToIntegerConverter.class)
+    @ExcelField(title = "禁用状态", order = 8, readConverter = StringToIntegerConverter.class)
     private Integer forbidState;
-    @ExcelField(title = "waitUpdate", order = 9, readConverter = StringToIntegerConverter.class)
+    @ExcelField(title = "是否等待更新", order = 9, readConverter = StringToIntegerConverter.class)
     private Integer waitUpdate;
-    @ExcelField(title = "execTime", order = 10, readConverter = StringToIntegerConverter.class)
+    @ExcelField(title = "最近命令执行时间", order = 10, readConverter = StringToIntegerConverter.class)
     private Integer execTime;
-    @ExcelField(title = "completeTime", order = 11, readConverter = StringToTimestampConverter.class)
+    @ExcelField(title = "最近命令完成时间", order = 11, readConverter = StringToTimestampConverter.class)
     private Timestamp completeTime;
-    @ExcelField(title = "barCode", order = 12)
+    @ExcelField(title = "条形码", order = 12)
     private String barCode;
-    @ExcelField(title = "tagAddress", order = 13)
+    @ExcelField(title = "标签地址", order = 13)
     private String tagAddress;
-    @ExcelField(title = "screenType", order = 14)
+    @ExcelField(title = "屏幕类型", order = 14)
     private String screenType;
-    @ExcelField(title = "resolutionWidth", order = 15)
+    @ExcelField(title = "分辨率宽", order = 15)
     private String resolutionWidth;
-    @ExcelField(title = "resolutionHeight", order = 16)
+    @ExcelField(title = "分辨率高", order = 16)
     private String resolutionHeight;
-    @ExcelField(title = "isWorking", order = 17, readConverter = StringToByteConverter.class)
+    @ExcelField(title = "巡检标志", order = 17, readConverter = StringToByteConverter.class)
     private Byte isWorking;
-    @ExcelField(title = "goodId", order = 18, readConverter = StringToLongConverter.class)
+    @ExcelField(title = "外键商品ID", order = 18, readConverter = StringToLongConverter.class)
     private Long goodId;
-    @ExcelField(title = "styleId", order = 19, readConverter = StringToLongConverter.class)
+    @ExcelField(title = "外键样式ID", order = 19, readConverter = StringToLongConverter.class)
     private Long styleId;
-    @ExcelField(title = "routerId", order = 20, readConverter = StringToLongConverter.class)
+    @ExcelField(title = "外键路由ID", order = 20, readConverter = StringToLongConverter.class)
     private Long routerId;
 }

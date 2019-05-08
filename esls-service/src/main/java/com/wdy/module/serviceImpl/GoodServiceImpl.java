@@ -13,7 +13,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 import com.wdy.module.service.CycleJobService;
@@ -55,6 +54,11 @@ public class GoodServiceImpl extends BaseServiceImpl implements GoodService {
 
     @Override
     public Good save(Good good) {
+        return goodDao.saveAndFlush(good);
+    }
+
+    @Override
+    public Good saveOne(Good good, Integer mode) {
         return goodDao.save(good);
     }
 
@@ -182,7 +186,8 @@ public class GoodServiceImpl extends BaseServiceImpl implements GoodService {
                 || value.equals("rfus01")
                 || value.equals("rfus02")
                 || value.equals("regionNames")
-                || value.equals("status"))
+                || value.equals("status")
+                || value.equals("isPromote"))
             return true;
         return false;
     }

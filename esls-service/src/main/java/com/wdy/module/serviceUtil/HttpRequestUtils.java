@@ -1,4 +1,4 @@
-package com.wdy.module.utils;
+package com.wdy.module.serviceUtil;
 
 import org.springframework.http.*;
 import org.springframework.stereotype.Component;

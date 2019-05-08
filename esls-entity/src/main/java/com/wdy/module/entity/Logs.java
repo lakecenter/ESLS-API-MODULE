@@ -5,6 +5,7 @@ import com.wdy.module.converter.StringToLongConverter;
 import com.wdy.module.converter.StringToTimestampConverter;
 import lombok.Data;
 import lombok.ToString;
+import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
 import java.io.Serializable;
@@ -18,29 +19,30 @@ import java.util.Objects;
 public class Logs implements Serializable {
     @Id
     @Column(name = "id", nullable = false)
-    @GeneratedValue(strategy = GenerationType.IDENTITY)//自增主键
-    @ExcelField(title = "id", order = 1, readConverter = StringToLongConverter.class)
+    @GeneratedValue(strategy = GenerationType.IDENTITY, generator = "idOrGenerate")
+    @GenericGenerator(name = "idOrGenerate", strategy = "com.wdy.module.serviceUtil.IdOrGenerate")
+    @ExcelField(title = "主键", order = 1, readConverter = StringToLongConverter.class)
     private Long id;
     @Column(name = "username")
-    @ExcelField(title = "createDate", order = 2)
+    @ExcelField(title = "用户名", order = 2)
     private String username;
     @Column(name = "operation")
-    @ExcelField(title = "operation", order = 3)
+    @ExcelField(title = "操作", order = 3)
     private String operation;
     @Column(name = "method")
-    @ExcelField(title = "method", order = 4)
+    @ExcelField(title = "方法名", order = 4)
     private String method;
     @Column(name = "params")
-    @ExcelField(title = "params", order = 5)
+    @ExcelField(title = "参数", order = 5)
     private String params;
     @Column(name = "ip")
-    @ExcelField(title = "ip", order = 6)
+    @ExcelField(title = "用户访问IP", order = 6)
     private String ip;
     @Column(name = "runningTime")
-    @ExcelField(title = "runningTime", order = 7)
+    @ExcelField(title = "运行时间", order = 7)
     private String runningTime;
     @Column(name = "createDate")
-    @ExcelField(title = "createDate", order = 8, readConverter = StringToTimestampConverter.class)
+    @ExcelField(title = "创建时间", order = 8, readConverter = StringToTimestampConverter.class)
     private Timestamp createDate;
 
     @Override

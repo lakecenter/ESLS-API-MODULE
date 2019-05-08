@@ -30,7 +30,7 @@ public class BalanceServiceImpl extends BaseServiceImpl<Balance> implements Bala
     @Override
 //    @Cacheable(value = RedisConstant.CACHE_LOGS)
     public Balance saveOne(Balance balance) {
-        return balanceDao.save(balance);
+        return balanceDao.saveAndFlush(balance);
     }
 
     @Override

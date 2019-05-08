@@ -47,7 +47,6 @@ public class RoleController {
             @ApiImplicitParam(name = "count", value = "数量", dataType = "int", paramType = "query")
     })
     @GetMapping("/roles")
-    @Log("获取角色数据")
     @RequiresPermissions("系统菜单")
     public ResponseEntity<ResultBean> getRoles(@RequestParam(required = false) String query, @RequestParam(required = false) String queryString, @Min(message = "data.page.min", value = 0)@RequestParam(required = false) Integer page, @Min(message = "data.count.min", value = 0) @RequestParam(required = false) Integer count) {
         String result = ConditionUtil.judgeArgument(query, queryString, page, count);
@@ -82,7 +81,6 @@ public class RoleController {
 
     @ApiOperation(value = "获取指定ID的角色信息")
     @GetMapping("/role/{id}")
-    @Log("获取指定ID的角色信息")
     @RequiresPermissions("获取指定ID的信息")
     public ResponseEntity<ResultBean> getRoleById(@PathVariable Long id) {
         Optional<Role> result = roleService.findById(id);
@@ -94,7 +92,6 @@ public class RoleController {
 
     @ApiOperation(value = "添加或修改角色信息")
     @PostMapping("/role")
-    @Log("添加或修改角色信息")
     @RequiresPermissions("添加或修改信息")
     public ResponseEntity<ResultBean> saveRole(@ApiParam("角色描述") @RequestParam String name, @ApiParam("角色类型")  @RequestParam String type) {
         Role role = new Role(name,type);
@@ -121,6 +118,7 @@ public class RoleController {
     @ApiOperation("为指定ID的角色添加权限")
     @PostMapping("/role/addPerm")
     @RequiresPermissions("为指定ID的角色添加权限")
+    @Log("为指定ID的角色添加权限")
     public ResponseEntity<ResultBean> addRoleAndPermission(@RequestBody @ApiParam("角色权限ID集合") RoleRequest roleRequest) {
         Map<Integer,Integer> sumResult = new HashMap<>(16);
         List<Long> ids = roleRequest.getIds();
@@ -155,6 +153,7 @@ public class RoleController {
     @ApiOperation("删除指定ID的角色的对应权限")
     @DeleteMapping("/role/delPerm")
     @RequiresPermissions("删除指定ID的角色的对应权限")
+    @Log("删除指定ID的角色的对应权限")
     public ResponseEntity<ResultBean> deleteRoleAndPermission(@RequestBody @ApiParam("角色权限ID集合") RoleRequest roleRequest) {
         Map<Integer,Integer> sumResult = new HashMap<>(16);
         List<Long> ids = roleRequest.getIds();

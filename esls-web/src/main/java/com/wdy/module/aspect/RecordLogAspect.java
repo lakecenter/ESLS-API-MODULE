@@ -87,7 +87,6 @@ public class RecordLogAspect extends AbstractAspectManager {
             User user = (User) redisUtil.sentinelGet(token, User.class);
             if (user != null) {
                 operationLog.setUserName(user.getName());
-                ContextUtil.setUser(user);
             } else
                 operationLog.setUserName("token过期用户");
 
@@ -166,7 +165,7 @@ public class RecordLogAspect extends AbstractAspectManager {
                 operationLog.setActionArgs(sb.deleteCharAt(sb.length() - 1).toString());
         }
         logger.info("执行方法信息:" + JSONObject.toJSON(operationLog));
-        // operationLogService.insert(operationLog);
+        operationLogService.insert(operationLog);
     }
 
 
