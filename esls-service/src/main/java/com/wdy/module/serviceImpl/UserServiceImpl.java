@@ -119,11 +119,15 @@ public class UserServiceImpl extends BaseServiceImpl implements UserService {
             user.setActivateStatus((byte) 0);
             user.setCreateTime(new Timestamp(System.currentTimeMillis()));
             String code = "ACTIVATEUSER_" + UUID.randomUUID();
-            redisUtil.set(code, user, (long) (60000 * 5));
+            redisUtil.sentinelSet(code, user, (long) (60000 * 5));
             String content = "<html><head></head><body><h1>亲爱的用户" + user.getName() + "，这是一封激活邮件,请5分钟内进行激活，否则邮件失效，点击以下链接即可激活</h1><h3><a href='http://" + SystemVersionArgs.outNetIp + ":8086/user/activate?code="
                     + code + "'>http://" + SystemVersionArgs.outNetIp + ":8086/user/activate?code=" + code
                     + "</href></h3></body></html>";
-            mailSender.sendMail(user.getMail(), "ESLS系统激活邮件", content, true);
+            try {
+                mailSender.sendSSLMail(user.getMail(), "ESLS系统激活邮件", content);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
             return user;
         }
     }

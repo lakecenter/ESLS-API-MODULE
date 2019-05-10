@@ -1,7 +1,7 @@
 outNetIp: 39.108.106.167
 mysql:
- userName: root
- passWord: 123
+  userName: root
+  passWord: 123
 
   # 开发环境配置
 server:
@@ -29,7 +29,7 @@ spring:
     publisher-confirms: true
   #datasource start
   datasource:
-    url: jdbc:mysql://localhost:3306/tags?characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&autoReconnect=true
+    url: jdbc:mysql://${outNetIp}:3306/tags?characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&autoReconnect=true
     username: ${mysql.userName}
     password: ${mysql.passWord}
     driver-class-name: com.mysql.jdbc.Driver
@@ -40,7 +40,7 @@ spring:
     encoding: UTF-8
     cache: false
     mode: HTML5
-   #thymeleaf end
+    #thymeleaf end
   #JPA start
   jpa:
     hibernate:

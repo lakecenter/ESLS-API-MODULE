@@ -16,7 +16,7 @@ import org.springframework.util.CollectionUtils;
 
 import javax.swing.*;
 import java.sql.Timestamp;
-import java.util.List;
+import java.util.*;
 
 @Component("handler21")
 @Slf4j
@@ -87,20 +87,7 @@ public class Handler21 implements ServiceHandler {
             if (!CollectionUtils.isEmpty(style))
                 tag.setStyle(style.get(0));
             else {
-                Integer type = ImageHelper.getTypeByStyleNumber(styleNumber);
-                switch (type) {
-                    case 0:
-                        tag.setStyle(styleService.findByStyleNumberAndIsPromote("2101", (byte) 0));
-                        break;
-                    case 1:
-                        tag.setStyle(styleService.findByStyleNumberAndIsPromote("2901", (byte) 0));
-                        break;
-                    case 2:
-                        tag.setStyle(styleService.findByStyleNumberAndIsPromote("4201", (byte) 0));
-                        break;
-                    default:
-                        break;
-                }
+                TagUtil.setBaseTagStyle(Arrays.asList(tag));
             }
             tagService.saveOne(tag);
         } catch (Exception e) {

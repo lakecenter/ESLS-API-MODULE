@@ -97,7 +97,7 @@ public class AsyncServiceTask {
                     mailSender.sendMail(user.getMail(), "ESLS变价通知信息邮件", sb.toString(), false);
                 }
             } catch (Exception e) {
-                log.info("发送ESLS变价通知信息邮件失败");
+                log.info("发送ESLS变价通知信息邮件失败" + e);
             }
         }
         ListenableFuture<Integer> integerListenableFuture = updateTagStyle(successAndFailList.getNoSuccessTags(), tagsAll, begin, --depth, isNeedSending);

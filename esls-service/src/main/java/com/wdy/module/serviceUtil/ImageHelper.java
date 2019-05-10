@@ -131,7 +131,7 @@ public class ImageHelper {
     public static ByteAndRegion getImageByType1(Dispms dispM, String styleNumber, Good good) throws Exception {
         Dispms returnDispms = new Dispms();
         BeanUtils.copyProperties(dispM, returnDispms);
-        returnDispms.setId(0);
+        returnDispms.setId((long) 0);
         // 宽 高 columnType backgroundColor fontColor（非文字）
         String columnType = dispM.getColumnType();
         int imageWidth = dispM.getWidth(), imageHeight = dispM.getHeight();
@@ -198,7 +198,7 @@ public class ImageHelper {
         DispmsService dispmsService = (DispmsService) SpringContextUtil.getBean("DispmsService");
         Dispms returnDispms = new Dispms();
         BeanUtils.copyProperties(dispM, returnDispms);
-        returnDispms.setId(0);
+        returnDispms.setId((long) 0);
         // 文本宽 高 columnType backgroundColor fontColor（非文字）
         String columnType = dispM.getColumnType();
         int fontType = ColorUtil.getFontType(dispM.getFontType());
@@ -278,7 +278,7 @@ public class ImageHelper {
         Good good = tag.getGood();
         List<Dispms> dispmses = (List<Dispms>) styleService.findByStyleNumberAndIsPromote(tag.getStyle().getStyleNumber(), good.getIsPromote() == null ? 0 : good.getIsPromote()).getDispmses();
         String regionNames = good.getRegionNames();
-        boolean isRegion = !StringUtil.isEmpty(regionNames) ? true : false;
+        boolean isRegion = !StringUtil.isEmpty(regionNames) && !regionNames.contains("isPromote") ? true : false;
         ByteResponse byteResponse;
         // 改价只更改区域
         if (isRegion) {

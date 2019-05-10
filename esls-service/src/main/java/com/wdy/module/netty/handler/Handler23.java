@@ -4,8 +4,7 @@ import com.wdy.module.entity.Router;
 import com.wdy.module.netty.command.CommandCategory;
 import com.wdy.module.netty.command.CommandConstant;
 import com.wdy.module.service.RouterService;
-import com.wdy.module.serviceUtil.ByteUtil;
-import com.wdy.module.serviceUtil.SpringContextUtil;
+import com.wdy.module.serviceUtil.*;
 import io.netty.channel.Channel;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -41,7 +40,8 @@ public class Handler23 implements ServiceHandler {
             System.out.println("ip:" + ip);
             System.out.println("端口:" + socketAddress.getPort());
             Router router = routerService.findByBarCode(routerBarCode);
-            // SocketChannelHelper.channelIdGroup.put(routerBarCode,channel);
+            if (!SocketChannelHelper.channelIdGroup.containsKey(ip + socketAddress.getPort()))
+                SocketChannelHelper.channelIdGroup.put(ip + socketAddress.getPort(), channel);
             // 为空则新增，否则更新
             Router r = router == null ? new Router() : router;
             r.setMac(routerMac);

@@ -281,8 +281,7 @@ public class PoiUtil {
             Method saveOne;
             if (mode == 0) {
                 saveOne = serviceObj.getClass().getMethod("saveOne", clazz);
-            }
-            else
+            } else
                 saveOne = serviceObj.getClass().getMethod("updateGood", clazz);
             saveOne.invoke(serviceObj, o);
         } catch (Exception e) {
@@ -458,6 +457,8 @@ public class PoiUtil {
         } else if ("int".equals(type) || Integer.class.getTypeName().equals(type)) {
             return Integer.valueOf(StringUtil.isEmpty(value) ? "0" : value);
         } else if ("byte".equals(type) || Byte.class.getTypeName().equals(type)) {
+            if (StringUtil.isEmpty(value))
+                value = "0";
             if (!StringUtil.isEmpty(value) && value.contains("."))
                 value = value.substring(0, value.indexOf("."));
             return Byte.valueOf(value);

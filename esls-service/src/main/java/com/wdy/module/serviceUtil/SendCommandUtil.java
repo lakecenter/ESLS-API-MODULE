@@ -16,7 +16,9 @@ import org.springframework.util.StringUtils;
 import org.springframework.util.concurrent.ListenableFuture;
 import com.wdy.module.service.RouterService;
 import com.wdy.module.serviceImpl.AsyncServiceTask;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -41,6 +43,70 @@ public class SendCommandUtil {
             log.info("SendCommandUtil - sendCommandWithRouters : " + e);
         }
         return new ResponseBean(sum, sum);
+    }
+
+    public static ResponseBean sendCommandWithRouters(List<Router> routers, byte[] message) {
+        int sum = routers.size();
+        ArrayList<ListenableFuture<Integer>> listenableFutures = new ArrayList<>();
+        byte[] realMessage = CommandConstant.getBytesByType(null, message, CommandConstant.COMMANDTYPE_ROUTER);
+        for (Router router : routers) {
+            // 路由器未连接或禁用
+            if (router.getState() != null && router.getState() == 0) continue;
+            Channel channel = SocketChannelHelper.getChannelByRouter(router);
+            if (channel == null) continue;
+            // 广播命令只发一次 广播命令没有响应
+            ListenableFuture<Integer> result = ((AsyncServiceTask) SpringContextUtil.getBean("AsyncServiceTask")).sendMessageWithRepeat(channel, realMessage, router, System.currentTimeMillis(), 1);
+            listenableFutures.add(result);
+        }
+        return new ResponseBean(sum, sum);
+    }
+
+    public static ResponseBean sendCommandWithRoutersUpdate(List<Router> routers, MultipartFile file) throws IOException {
+        int sum = routers.size();
+        ArrayList<ListenableFuture<Integer>> listenableFutures = new ArrayList<>();
+        int ack;
+        Router router = routers.get(0);
+        // 路由器未连接或禁用
+        Channel channel = SocketChannelHelper.getChannelByRouter(router);
+        if (channel == null)
+            throw new ServiceException(ResultEnum.COMMUNITICATION_ERROR);
+        // 广播命令只发一次 广播命令没有响应
+        // 发送升级包大小
+        long length = file.getSize();
+        byte[] content = new byte[7];
+        content[0] = 0x0c;
+        content[1] = 0x01;
+        content[2] = 4;
+        byte[] lengthByte = SpringContextUtil.int2ByteArr((int) length, 4);
+        content[3] = lengthByte[0];
+        content[4] = lengthByte[1];
+        content[5] = lengthByte[2];
+        content[6] = lengthByte[3];
+        byte[] realMessage = CommandConstant.getBytesByType(null, content, CommandConstant.COMMANDTYPE_ROUTER);
+        ListenableFuture<Integer> result = ((AsyncServiceTask) SpringContextUtil.getBean("AsyncServiceTask")).sendMessageWithRepeat(channel, realMessage, router, System.currentTimeMillis(), 1);
+        listenableFutures.add(result);
+        ack = waitAllThread(listenableFutures);
+        listenableFutures = new ArrayList<>();
+        if (ack == 1) {
+            realMessage = CommandConstant.COMMAND_BYTE.get(CommandConstant.ROUTER_UPDATE_BEGIN);
+            result = ((AsyncServiceTask) SpringContextUtil.getBean("AsyncServiceTask")).sendMessageWithRepeat(channel, realMessage, router, System.currentTimeMillis(), 1);
+            listenableFutures.add(result);
+            ack = waitAllThread(listenableFutures);
+        }
+        listenableFutures = new ArrayList<>();
+        if (ack == 1) {
+            InputStream inputStream = file.getInputStream();
+            ByteArrayOutputStream out = new ByteArrayOutputStream(1000);
+            byte[] b = new byte[1024];
+            int n;
+            while ((n = inputStream.read(b)) != -1) {
+                out.write(b, 0, n);
+            }
+            result = ((AsyncServiceTask) SpringContextUtil.getBean("AsyncServiceTask")).sendMessageWithRepeat(channel, out.toByteArray(), router, System.currentTimeMillis(), 1);
+            listenableFutures.add(result);
+            ack = waitAllThread(listenableFutures);
+        }
+        return new ResponseBean(sum, ack);
     }
 
     public static ResponseBean sendCommandWithTags(List<Tag> tags, String contentType, Integer messageType) {

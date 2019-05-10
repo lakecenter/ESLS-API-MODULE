@@ -51,7 +51,7 @@ public class TagServiceImpl extends BaseServiceImpl<Tag> implements TagService<T
             boolean isRegion = !StringUtil.isEmpty(regionNames) ? true : false;
             ByteResponse byteResponse = ImageHelper.getByteResponse(tag);
             if (byteResponse == null)
-                return new ResponseBean(1, 0);
+                throw new ServiceException(ResultEnum.TAG_EMPTY_STYLES);
             String resultString;
             // 样式具体内容分包
             List<byte[]> byteList = byteResponse.getByteList();
@@ -219,6 +219,8 @@ public class TagServiceImpl extends BaseServiceImpl<Tag> implements TagService<T
         tags.add(tag);
         // 换绑
         if ("2".equals(mode)) {
+            Style style = styleDao.findByStyleNumberAndIsPromote(tag.getStyle().getStyleNumber(), good.getIsPromote());
+            tag.setStyle(style);
             tag.setState((byte) 1);
             tag.setGood(good);
             saveOne(tag);
@@ -234,6 +236,8 @@ public class TagServiceImpl extends BaseServiceImpl<Tag> implements TagService<T
         try {
             // 绑定
             if (mode.equals("1")) {
+                Style style = styleDao.findByStyleNumberAndIsPromote(tag.getStyle().getStyleNumber(), good.getIsPromote());
+                tag.setStyle(style);
                 tag.setState((byte) 1);
                 saveOne(tag);
                 String contentType = CommandConstant.TAGBIND;
@@ -242,6 +246,8 @@ public class TagServiceImpl extends BaseServiceImpl<Tag> implements TagService<T
             }
             // 解绑
             else if (mode.equals("0")) {
+                good.setWaitUpdate(1);
+                goodDao.save(good);
                 tag.setState((byte) 0);
                 tag.setWaitUpdate(1);
                 tag.setGood(null);

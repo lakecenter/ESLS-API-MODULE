@@ -22,6 +22,9 @@ public class NettyUtil {
     public String sendMessageWithRepeat(Channel channel, byte[] message, int time, int waitingTime) {
         SocketChannelHelper.addWorkingChannel(channel.id().toString());
         String result = sendMessage(channel, message, waitingTime);
+        // 1次就成功
+        if ("成功".equals(result))
+            return result;
         for (int i = 0; i < time - 1; i++) {
             if (result == null || result.equals("失败")) {
                 result = sendMessage(channel, message, waitingTime);

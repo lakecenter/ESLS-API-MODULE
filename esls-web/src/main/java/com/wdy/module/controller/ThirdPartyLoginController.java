@@ -29,7 +29,6 @@ import java.util.Map;
  * Created by liugh on 2018/7/24.
  */
 @Controller
-@ApiIgnore
 @RequestMapping("/thirdPartyLogin")
 public class ThirdPartyLoginController {
 

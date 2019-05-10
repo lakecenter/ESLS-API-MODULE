@@ -205,7 +205,7 @@ public class UserController {
     @ApiOperation(value = "用户激活")
     @GetMapping("/user/activate")
     public ResponseEntity<ResultBean> activateUser(@RequestParam @ApiParam("用户激活码") String code) {
-        User user = (User) redisUtil.get(code);
+        User user = (User) redisUtil.sentinelGet(code, User.class);
         if (user == null)
             throw new ServiceException(ResultEnum.ACTIVATE_EXPIRE);
         user.setActivateStatus((byte) 1);
@@ -219,6 +219,7 @@ public class UserController {
     @ApiOperation(value = "用户修改密码")
     @PostMapping("/user/changePassword")
     @Log("用户修改密码")
+    @RequiresPermissions("用户修改密码")
     public ResponseEntity<ResultBean> changePassword(@RequestBody @ApiParam("用户信息集合") RequestBean requestBean, @RequestParam("新密码") String newPassword) {
         List<User> users = RequestBeanUtil.getUsersByRequestBean(requestBean);
         if (users == null || users.size() == 0)
@@ -233,11 +234,11 @@ public class UserController {
 
     @ApiOperation(value = "向指定的用户手机号发送验证码")
     @PostMapping("/user/sendIdentifyCode")
-    public ResponseEntity<ResultBean> sendIdentifyCode(@RequestParam @ApiParam("手机号") String phoneNumber) throws Exception {
+    public ResponseEntity<ResultBean> sendIdentifyCode(@RequestParam @ApiParam("手机号") String phoneNumber) {
         User user = userService.findByTelephone(phoneNumber);
         if (user == null)
             throw new ServiceException(ResultEnum.USER_NOT_EXIST);
-        return new ResponseEntity<>(ResultBean.success(MessageSender.sendMsgByTxPlatform(phoneNumber)), HttpStatus.OK);
+        return new ResponseEntity<>(ResultBean.success(MessageSender.sendAuthCode(phoneNumber)), HttpStatus.OK);
     }
 
     @ApiOperation(value = "验证手机验证码的正确性")

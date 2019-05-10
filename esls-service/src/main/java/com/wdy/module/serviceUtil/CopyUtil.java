@@ -85,6 +85,8 @@ public class CopyUtil {
             if (flag) {
                 DispmsVo dispmsVo = new DispmsVo();
                 BeanUtils.copyProperties(item, dispmsVo);
+                if (item.getStyle() != null)
+                    dispmsVo.setStyleId(item.getStyle().getId());
                 resultList.add(dispmsVo);
             }
         });

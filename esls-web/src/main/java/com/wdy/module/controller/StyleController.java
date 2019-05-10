@@ -103,6 +103,16 @@ public class StyleController {
         List<Dispms> dispmses = dispmsService.findByArrtribute(TableConstant.TABLE_DISPMS, ArrtributeConstant.TAG_STYLEID, String.valueOf(id), Dispms.class);
         ResponseEntity<ResultBean> result;
         if ((result = ResponseUtil.testListSize("没有对应ID的小样式", dispmses)) != null) return result;
+        String dispmsesSort = "name line price promotePrice category origin provider shelfNumber spec stock unit barCode qrCode imageUrl 0";
+        for (int i = 1; i < dispmses.size(); i++) {
+            int last = dispmsesSort.indexOf(dispmses.get(i - 1).getSourceColumn());
+            int now = dispmsesSort.indexOf(dispmses.get(i).getSourceColumn());
+            if (now < last) {
+                Dispms temp = dispmses.get(i);
+                dispmses.set(i, dispmses.get(i - 1));
+                dispmses.set(i - 1, temp);
+            }
+        }
         return new ResponseEntity<>(ResultBean.success(CopyUtil.copyDispms(dispmses)), HttpStatus.OK);
     }
 

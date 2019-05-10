@@ -34,6 +34,19 @@
         <velocity.version>1.7</velocity.version>
     </properties>
     <dependencies>
+        <!--阿里云短信接口-->
+        <dependency>
+            <groupId>com.aliyun</groupId>
+            <artifactId>aliyun-java-sdk-core</artifactId>
+            <version>4.1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.aliyun</groupId>
+            <artifactId>aliyun-java-sdk-dysmsapi</artifactId>
+            <version>1.1.0</version>
+        </dependency>
+
+
         <!--证书-->
         <dependency>
             <groupId>de.schlichtherle.truelicense</groupId>

@@ -3,8 +3,7 @@ package com.wdy.module.serviceUtil;
 
 import com.wdy.module.dto.TagsAndRouter;
 import com.wdy.module.entity.*;
-import com.wdy.module.service.RouterService;
-import com.wdy.module.service.TagService;
+import com.wdy.module.service.*;
 import com.wdy.module.utils.SettingUtil;
 
 import java.sql.Timestamp;
@@ -121,5 +120,30 @@ public class TagUtil {
         if (resolutionWidth.substring(0, 2).equals(styleNumber.substring(0, 2)))
             return true;
         return false;
+    }
+
+    public static void setBaseTagStyle(List<Tag> tags) {
+        for (Tag tag : tags) {
+            Style style = getBaseStyleByTag(tag);
+            if (style != null)
+                tag.setStyle(style);
+        }
+    }
+
+    private static Style getBaseStyleByTag(Tag tag) {
+        StyleService styleService = (StyleService) SpringContextUtil.getBean("StyleService");
+        Style style;
+        switch (tag.getResolutionWidth()) {
+            case "400":
+                style = styleService.findByStyleNumberAndIsPromote("4201", (byte) 0);
+                break;
+            case "296":
+                style = styleService.findByStyleNumberAndIsPromote("2901", (byte) 0);
+                break;
+            default:
+                style = styleService.findByStyleNumberAndIsPromote("2101", (byte) 0);
+                break;
+        }
+        return style;
     }
 }

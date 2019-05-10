@@ -63,11 +63,13 @@ public class BaseServiceImpl<T> implements Service<T> {
     }
 
     @Override
+    @Transactional
     public void save(T bean) {
         baseDao.save(bean);
     }
 
     @Override
+    @Transactional
     public void update(T bean) {
         baseDao.update(bean);
     }
@@ -90,6 +92,12 @@ public class BaseServiceImpl<T> implements Service<T> {
     @Override
     public List<T> findAlls(Integer page, Integer pageSize) {
         return baseDao.findAll(page, pageSize, getEntityClass());
+    }
+
+    @Override
+    @Transactional
+    public void refreshSession(Object o) {
+        baseDao.refreshSession(o);
     }
 
     @Override

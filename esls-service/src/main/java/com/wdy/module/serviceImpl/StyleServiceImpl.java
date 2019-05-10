@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import java.util.*;
@@ -73,6 +74,7 @@ public class StyleServiceImpl extends BaseServiceImpl implements StyleService {
     }
 
     @Override
+    @Transactional
     public ResponseBean newStyleById(long styleId, List<Dispms> dispms, Style style, Integer mode, Integer update) {
         int sum = dispms.size();
         int successnumber = 0;
@@ -82,12 +84,14 @@ public class StyleServiceImpl extends BaseServiceImpl implements StyleService {
             return new ResponseBean(sum, successnumber);
         // 0添加
         if (mode == 0) {
-            for (Dispms dispm : dispms) {
+            for (int i = 0; i < dispms.size(); i++) {
                 try {
+                    Dispms dispm = dispms.get(i);
                     if (dispm.getId() != 0)
                         continue;
                     dispm.setStyle(style);
-                    dispmsDao.save(dispm);
+                    dispmsDao.saveAndFlush(dispm);
+                    refreshSession(dispm);
                     successnumber++;
                 } catch (Exception e) {
                     System.out.println("StyleService - updateStyleById : " + e);
@@ -242,6 +246,10 @@ public class StyleServiceImpl extends BaseServiceImpl implements StyleService {
     public boolean deleteById(Long id) {
         Optional<Style> style = findById(id);
         if (!style.isPresent()) return false;
+        List<Tag> tagList = findTagsByStyle(style.get());
+        if (!CollectionUtils.isEmpty(tagList)) {
+            TagUtil.setBaseTagStyle(tagList);
+        }
         if ("2101 2102 2901 2902 4201 4202".contains(style.get().getStyleNumber()))
             return false;
         List<Dispms> dispmsIds = dispmsDao.findByStyleId(id);
@@ -262,6 +270,10 @@ public class StyleServiceImpl extends BaseServiceImpl implements StyleService {
         List<Style> styles = findByStyleNumber(styleNumber);
         if (CollectionUtils.isEmpty(styles))
             return responseBean;
+        List<Tag> tagList = findTagsByStyle(styles.get(0));
+        if (!CollectionUtils.isEmpty(tagList)) {
+            TagUtil.setBaseTagStyle(tagList);
+        }
         sum = styles.size();
         for (Style s : styles) {
             boolean b = deleteById(s.getId());

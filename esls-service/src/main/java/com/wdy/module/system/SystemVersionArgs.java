@@ -271,8 +271,10 @@ public class SystemVersionArgs {
         List<Router> routers = routerService.findAll();
         for (Router r : routers) {
             Channel channel = SocketChannelHelper.getChannelByRouter(r);
-            if (channel == null)
+            if (channel == null) {
                 r.setIsWorking((byte) 0);
+                routerService.saveOne(r);
+            }
         }
     }
 }

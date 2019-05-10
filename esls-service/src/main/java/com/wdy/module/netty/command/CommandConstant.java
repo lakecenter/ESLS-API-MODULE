@@ -59,6 +59,11 @@ public class CommandConstant {
     public static String INKSCREENCOMMAND4 = "墨水瓶测试命令4";
     public static String INKSCREENCOMMAND5 = "墨水瓶测试命令5";
 
+
+    // 路由器在线升级
+    public static String ROUTER_UPDATE = "在线升级命令";
+    public static String ROUTER_UPDATE_BEGIN = "开始发送升级程序数据命令";
+
     @PostConstruct
     public static void init() {
         COMMAND_BYTE = new HashMap<>();
@@ -113,7 +118,9 @@ public class CommandConstant {
         COMMAND_BYTE.put(INKSCREENCOMMAND3, getBytes(0x09, 0x0A));
         COMMAND_BYTE.put(INKSCREENCOMMAND4, getBytes(0x09, 0x0B));
         COMMAND_BYTE.put(INKSCREENCOMMAND5, getBytes(0x09, 0x0C));
-
+        // 路由器在线升级
+        COMMAND_BYTE.put(ROUTER_UPDATE, getBytes(0x0C, 0x01));
+        COMMAND_BYTE.put(ROUTER_UPDATE_BEGIN, getBytes(0x0C, 0x02, CommandConstant.COMMANDTYPE_ROUTER));
     }
 
     private static byte[] getBytes(int _0, int _1, int type) {
@@ -139,13 +146,27 @@ public class CommandConstant {
         return bytes;
     }
 
-    private static byte[] getBytes(int _0, int _1) {
-        byte[] bytes = new byte[3];
-        bytes[0] = (byte) _0;
-        bytes[1] = (byte) _1;
-        bytes[2] = 0;
-        return bytes;
-    }
+//    public static byte[] getRouterUpdateByte(byte[] message) {
+//        byte[] bytes = new byte[10 + message.length];
+//        // 通讯对象
+//        bytes[0] = 0x11;
+//        bytes[1] = 0x11;
+//        // 长度
+//        int length = 4 + message.length;
+//        bytes[2] = (byte) (length >> 8);
+//        bytes[3] = (byte) (length >> 0);
+//        // 地址
+//        bytes[4] = (byte) 0xff;
+//        bytes[5] = (byte) 0xff;
+//        bytes[6] = (byte) 0xff;
+//        bytes[7] = (byte) 0xff;
+//        bytes[8] = (byte) 0x0C;
+//        bytes[9] = (byte) 0x03;
+//        bytes[10] = (byte) message.length;
+//        System.arraycopy(message, 0, bytes, 10, message.length);
+//        //数据段
+//        return bytes;
+//    }
 
     public static byte[] getBytesByType(byte[] address, byte[] message, int type) {
         byte[] bytes = new byte[8 + message.length];
@@ -200,7 +221,16 @@ public class CommandConstant {
         }
         return bytes;
     }
-    public static String getInkScreenType(Integer type){
+
+    private static byte[] getBytes(int _0, int _1) {
+        byte[] bytes = new byte[3];
+        bytes[0] = (byte) _0;
+        bytes[1] = (byte) _1;
+        bytes[2] = 0;
+        return bytes;
+    }
+
+    public static String getInkScreenType(Integer type) {
         String contentType;
         switch (type) {
             case 1:
@@ -228,4 +258,5 @@ public class CommandConstant {
         }
         return contentType;
     }
+
 }

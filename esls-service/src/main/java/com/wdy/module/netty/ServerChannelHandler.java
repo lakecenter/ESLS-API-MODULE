@@ -1,13 +1,9 @@
 package com.wdy.module.netty;
 
-import com.wdy.module.common.constant.TableConstant;
-import com.wdy.module.common.request.RequestBean;
-import com.wdy.module.common.request.RequestItem;
 import com.wdy.module.entity.Router;
 import com.wdy.module.netty.command.CommandConstant;
 import com.wdy.module.netty.executor.AsyncTask;
 import com.wdy.module.service.RouterService;
-import com.wdy.module.service.Service;
 import com.wdy.module.serviceUtil.ByteUtil;
 import com.wdy.module.serviceUtil.SocketChannelHelper;
 import com.wdy.module.serviceUtil.SpringContextUtil;
@@ -101,7 +97,6 @@ public class ServerChannelHandler extends SimpleChannelInboundHandler<Object> {
         header[0] = req[8];
         header[1] = req[9];
         String handlerName = "handler" + header[0] + "" + header[1];
-//        if (CommandConstant.ACK.equals(CommandCategory.getCommandCategory(header))) {
         // ACK
         if (header[0] == 0x01 && header[1] == 0x01) {
             if (req[11] == 0x0B && req[12] == 0x01) {
@@ -112,10 +107,7 @@ public class ServerChannelHandler extends SimpleChannelInboundHandler<Object> {
             }
             String key = ctx.channel().id().toString() + "-" + req[11] + req[12];
             SpringContextUtil.printBytes("key = " + key + " 接收ACK消息", req);
-            if (SocketChannelHelper.promiseMap.containsKey(key)) {
-                SocketChannelHelper.dataMap.put(key, "成功");
-                SocketChannelHelper.promiseMap.get(key).setSuccess();
-            }
+            setPromiseSuccess(key);
         }
         // NACK
         else if (header[0] == 0x01 && header[1] == 0x02) {
@@ -124,45 +116,28 @@ public class ServerChannelHandler extends SimpleChannelInboundHandler<Object> {
             SocketChannelHelper.dataMap.put(key, "失败");
             SocketChannelHelper.promiseMap.get(key).setSuccess();
         }
-//        // 通讯超时
-//        else if (SocketChannelHelper.promiseMap.size()>0 && CommandConstant.OVERTIME.equals(CommandCategory.getCommandCategory(header))) {
-//            String key = ctx.channel().id().toString()+"-"+req[11]+req[12]+"-"+SpringContextUtil.toHex(req[13])+SpringContextUtil.toHex(req[14])+SpringContextUtil.toHex(req[15])+SpringContextUtil.toHex(req[16]);
-//            SpringContextUtil.printBytes("key = "+key+" 接收通讯超时消息",req);
-//            SocketChannelHelper.dataMap.put(key,"通讯超时");
-//            SocketChannelHelper.promiseMap.get(key).setSuccess();
-//        }
-//        else if(CommandConstant.TAGRESPONSE.equals(CommandCategory.getCommandCategory(header))){
         // tag巡检应答包
         else if (header[0] == 0x05 && header[1] == 0x01) {
             byte[] bytes = ByteUtil.splitByte(req, 11, req[10]);
             String key = SocketChannelHelper.getSendKeyByChannelId(ctx.channel().id().toString(), req);
             ((AsyncTask) SpringContextUtil.getBean("AsyncTask")).execute(handlerName, ctx.channel(), header, bytes);
             SpringContextUtil.printBytes("key = " + key + " 接收tag巡检应答包", req);
-            if (SocketChannelHelper.promiseMap.containsKey(key)) {
-                SocketChannelHelper.dataMap.put(key, "成功");
-                SocketChannelHelper.promiseMap.get(key).setSuccess();
-            }
+            setPromiseSuccess(key);
         }
-//        else if(CommandConstant.ROUTERRESPONSE.equals(CommandCategory.getCommandCategory(header))){
         // router巡检应答包
         else if (header[0] == 0x05 && header[1] == 0x02) {
             String key = SocketChannelHelper.getSendKeyByChannelId(ctx.channel().id().toString(), req);
             ((AsyncTask) SpringContextUtil.getBean("AsyncTask")).execute("handler23", ctx.channel(), header, ByteUtil.splitByte(req, 11, req[10]));
             SpringContextUtil.printBytes("key = " + key + " 接收router巡检应答包", req);
-            if (SocketChannelHelper.promiseMap.containsKey(key)) {
-                SocketChannelHelper.dataMap.put(key, "成功");
-                SocketChannelHelper.promiseMap.get(key).setSuccess();
-            }
+            setPromiseSuccess(key);
         }
-//        else  if(CommandConstant.APREAD.equals(CommandCategory.getCommandCategory(header))){
         // AP读取应答包
         else if (header[0] == 0x09 && header[1] == 0x12) {
             byte[] bytes = ByteUtil.splitByte(req, 11, req[10]);
             String key = SocketChannelHelper.getSendKeyByChannelId(ctx.channel().id().toString(), req);
             ((AsyncTask) SpringContextUtil.getBean("AsyncTask")).execute(handlerName, ctx.channel(), header, bytes);
             SpringContextUtil.printBytes("key = " + key + " 接收AP读取应答包消息", req);
-            SocketChannelHelper.dataMap.put(key, "成功");
-            SocketChannelHelper.promiseMap.get(key).setSuccess();
+            setPromiseSuccess(key);
         }
         // 历史连接IP列表
         else if (header[0] == 0x0a && header[1] == 0x03) {
@@ -170,8 +145,7 @@ public class ServerChannelHandler extends SimpleChannelInboundHandler<Object> {
             SpringContextUtil.printBytes("key = " + key + " 接收到查询历史连接IP列表应答包", req);
             String routerIP = ByteUtil.getIpMessage(ByteUtil.splitByte(req, 11, 4));
             SocketChannelHelper.ipHistory.add(routerIP);
-            SocketChannelHelper.dataMap.put(key, "成功");
-            SocketChannelHelper.promiseMap.get(key).setSuccess();
+            setPromiseSuccess(key);
         }
         // 接收到无线帧RSSI应答包
         else if (header[0] == 0x09 && header[1] == 0x77) {
@@ -185,8 +159,7 @@ public class ServerChannelHandler extends SimpleChannelInboundHandler<Object> {
             byte[] bytes = ByteUtil.splitByte(req, 15, req[10]);
             String key = SocketChannelHelper.getSendKeyByChannelId(ctx.channel().id().toString(), req);
             ((AsyncTask) SpringContextUtil.getBean("AsyncTask")).execute(handlerName, ctx.channel(), header, bytes);
-            SocketChannelHelper.dataMap.put(key, "成功");
-            SocketChannelHelper.promiseMap.get(key).setSuccess();
+            setPromiseSuccess(key);
         }
         // 获取电子秤电量应答包
         else if (header[0] == 0x08 && header[1] == 0x04) {
@@ -194,17 +167,14 @@ public class ServerChannelHandler extends SimpleChannelInboundHandler<Object> {
             String key = SocketChannelHelper.getSendKeyByChannelId(ctx.channel().id().toString(), req);
             ((AsyncTask) SpringContextUtil.getBean("AsyncTask")).execute(handlerName, ctx.channel(), header, bytes);
             SpringContextUtil.printBytes("key = " + key + " 接收获取电子秤电量应答包消息", req);
-            SocketChannelHelper.dataMap.put(key, "成功");
-            SocketChannelHelper.promiseMap.get(key).setSuccess();
+            setPromiseSuccess(key);
         }
-//        else if(CommandConstant.ROUTERREGISTY.equals(CommandCategory.getCommandCategory(header))){
         // 路由器注册命令
         else if (header[0] == 0x02 && header[1] == 0x03) {
             String key = ctx.channel().id().toString();
             SpringContextUtil.printBytes("key = " + key + " 接收路由器注册消息", req);
             ((AsyncTask) SpringContextUtil.getBean("AsyncTask")).execute(handlerName, ctx.channel(), header, ByteUtil.splitByte(req, 11, req[10]));
         }
-//        else if(CommandConstant.TAGREGISTY.equals(CommandCategory.getCommandCategory(header))){
         // 标签注册命令
         else if (header[0] == 0x02 && header[1] == 0x01) {
             String key = ctx.channel().id().toString();
@@ -237,5 +207,12 @@ public class ServerChannelHandler extends SimpleChannelInboundHandler<Object> {
         routerService.saveOne(router);
         // 更新记录数
         channel.close();
+    }
+
+    private void setPromiseSuccess(String key) {
+        if (SocketChannelHelper.promiseMap.containsKey(key)) {
+            SocketChannelHelper.dataMap.put(key, "成功");
+            SocketChannelHelper.promiseMap.get(key).setSuccess();
+        }
     }
 }

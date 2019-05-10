@@ -111,10 +111,10 @@ public class GoodServiceImpl extends BaseServiceImpl implements GoodService {
             File localFile = FileUtil.multipartFileToFile(file);
             if (mode.equals(ModeConstant.DO_BY_TYPE_GOODS_SCAN)) {
                 // 添加
-                PoiUtil.importCsvDataFile(new FileInputStream(localFile), dataColumnList, "goods", 0);
+                PoiUtil.importCsvDataFile(new FileInputStream(localFile), dataColumnList, TableConstant.TABLE_GOODS, 0);
             } else if (mode.equals(ModeConstant.DO_BY_TYPE_CHANGEGOODS_SCAN)) {
                 // 更新
-                PoiUtil.importCsvDataFile(new FileInputStream(localFile), dataColumnList, "goods", 1);
+                PoiUtil.importCsvDataFile(new FileInputStream(localFile), dataColumnList, TableConstant.TABLE_GOODS, 1);
             }
             return true;
         } catch (IOException e) {
@@ -186,8 +186,7 @@ public class GoodServiceImpl extends BaseServiceImpl implements GoodService {
                 || value.equals("rfus01")
                 || value.equals("rfus02")
                 || value.equals("regionNames")
-                || value.equals("status")
-                || value.equals("isPromote"))
+                || value.equals("status"))
             return true;
         return false;
     }
