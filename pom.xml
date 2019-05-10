@@ -277,5 +277,7 @@
             <version>3.1</version>
         </dependency>
     </dependencies>
-
+    <build>
+        <finalName>demo_1SpringBoot</finalName>
+    </build>
 </project>
