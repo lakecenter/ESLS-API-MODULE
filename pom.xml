@@ -279,6 +279,8 @@
     </dependencies>
     <build>
         <defaultGoal>compile</defaultGoal>
+
+        
         <finalName>esls-project</finalName>
     </build>
 </project>
