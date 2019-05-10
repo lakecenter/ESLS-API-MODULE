@@ -279,7 +279,6 @@
     </dependencies>
     <build>
         <defaultGoal>compile</defaultGoal>
-
-        <finalName>demo_1SpringBoot</finalName>
+        <finalName>esls-project</finalName>
     </build>
 </project>
