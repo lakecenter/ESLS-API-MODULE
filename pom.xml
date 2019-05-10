@@ -278,6 +278,8 @@
         </dependency>
     </dependencies>
     <build>
+        <defaultGoal>compile</defaultGoal>
+
         <finalName>demo_1SpringBoot</finalName>
     </build>
 </project>
