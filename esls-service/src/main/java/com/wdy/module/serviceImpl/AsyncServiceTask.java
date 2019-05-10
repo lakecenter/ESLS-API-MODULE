@@ -165,17 +165,4 @@ public class AsyncServiceTask {
         return new SuccessAndFailList(successNumber, nosuccessTags, successTags);
     }
 
-    public static void waitFreeRouter(Channel channel) {
-        if (channel == null) return;
-        while (true) {
-            //路由器不工作时退出循环
-            try {
-                Thread.sleep(10);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            if (!SocketChannelHelper.isWorking(channel.id().toString()))
-                break;
-        }
-    }
 }
