@@ -20,8 +20,7 @@ import com.wdy.module.service.GoodService;
 
 import java.io.*;
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 
 @Service("GoodService")
@@ -66,8 +65,9 @@ public class GoodServiceImpl extends BaseServiceImpl implements GoodService {
     public Good saveOne(Good good) {
         // 添加商品
         if (good.getId() != 0) {
-            Good g = goodDao.findById(good.getId()).get();
-            setRegionNames(g, good);
+            Optional<Good> gById = goodDao.findById(good.getId());
+            if (gById.isPresent())
+                setRegionNames(gById.get(), good);
         } else {
             // 1为不更新
             good.setWaitUpdate(1);
@@ -108,13 +108,12 @@ public class GoodServiceImpl extends BaseServiceImpl implements GoodService {
             return false;
         List dataColumnList = findBySql(SqlConstant.QUERY_TABLIE_COLUMN + "\'" + "goods" + "\'");
         try {
-            File localFile = FileUtil.multipartFileToFile(file);
             if (mode.equals(ModeConstant.DO_BY_TYPE_GOODS_SCAN)) {
                 // 添加
-                PoiUtil.importCsvDataFile(new FileInputStream(localFile), dataColumnList, TableConstant.TABLE_GOODS, 0);
+                PoiUtil.importCsvDataFile(file.getInputStream(), dataColumnList, TableConstant.TABLE_GOODS, 0);
             } else if (mode.equals(ModeConstant.DO_BY_TYPE_CHANGEGOODS_SCAN)) {
                 // 更新
-                PoiUtil.importCsvDataFile(new FileInputStream(localFile), dataColumnList, TableConstant.TABLE_GOODS, 1);
+                PoiUtil.importCsvDataFile(file.getInputStream(), dataColumnList, TableConstant.TABLE_GOODS, 1);
             }
             return true;
         } catch (IOException e) {

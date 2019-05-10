@@ -235,7 +235,8 @@ public class PoiUtil {
             // 读表头
             csvReader.readHeaders();
             while (csvReader.readRecord()) {
-                // 读一整行 System.out.println(csvReader.getRawRecord());
+                //读一整行
+                System.out.println(csvReader.getRawRecord());
                 // 读这行的某一列  System.out.println(csvReader.get("id"));
                 saveEntity(dataColumnList, tableName, csvReader, mode);
             }
@@ -280,6 +281,7 @@ public class PoiUtil {
             Object serviceObj = SpringContextUtil.getBean(SqlConstant.EntityToSqlMap.get(tableName) + "Service");
             Method saveOne;
             if (mode == 0) {
+                System.out.println(o);
                 saveOne = serviceObj.getClass().getMethod("saveOne", clazz);
             } else
                 saveOne = serviceObj.getClass().getMethod("updateGood", clazz);
