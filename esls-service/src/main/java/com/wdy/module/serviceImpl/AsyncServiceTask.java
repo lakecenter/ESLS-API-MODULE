@@ -155,12 +155,8 @@ public class AsyncServiceTask {
             try {
                 responseBean = tagService.updateTagStyle(tag, isWaitingLong);
             } catch (Exception e) {
-                if (e.getMessage().equals(ResultEnum.TAG_EMPTY_STYLES.getMessage())) {
-                    System.out.println("样式为空异常");
-                    responseBean.setSuccessNumber(responseBean.getSuccessNumber() + 1);
-                }
             }
-            String result = responseBean.getSuccessNumber() == 1 ? "成功" : "失败";
+            String result = responseBean.getSum() != 0 && responseBean.getSuccessNumber() == 1 ? "成功" : "失败";
             TagUtil.judgeResultAndSettingTagWaitUpdate(result, begin, tag);
             if ("失败".equals(result))
                 nosuccessTags.add(tag);
