@@ -154,7 +154,7 @@ public class AsyncServiceTask {
             ResponseBean responseBean = new ResponseBean(0, 0);
             try {
                 responseBean = tagService.updateTagStyle(tag, isWaitingLong);
-            } catch (ServiceException e) {
+            } catch (Exception e) {
                 if (e.getMessage().equals(ResultEnum.TAG_EMPTY_STYLES.getMessage())) {
                     System.out.println("样式为空异常");
                     responseBean.setSuccessNumber(responseBean.getSuccessNumber() + 1);
