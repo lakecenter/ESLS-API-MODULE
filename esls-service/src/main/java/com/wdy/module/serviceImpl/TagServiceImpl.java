@@ -51,7 +51,7 @@ public class TagServiceImpl extends BaseServiceImpl<Tag> implements TagService<T
             boolean isRegion = !StringUtil.isEmpty(regionNames) ? true : false;
             ByteResponse byteResponse = ImageHelper.getByteResponse(tag);
             if (byteResponse == null)
-                throw new ServiceException(ResultEnum.TAG_EMPTY_STYLES);
+                return new ResponseBean(1, 1);
             String resultString;
             // 样式具体内容分包
             List<byte[]> byteList = byteResponse.getByteList();
