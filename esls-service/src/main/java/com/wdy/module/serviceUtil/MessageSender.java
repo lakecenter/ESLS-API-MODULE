@@ -47,9 +47,9 @@ public class MessageSender {
         SmsSingleSenderResult result = sSender.sendWithParam("86", phone,
                 templateId, params, "", "", "");
         RedisUtil redisUtil = (RedisUtil) SpringContextUtil.getBean("RedisUtil");
-        if (result.result > 0)
+        if (result.result == 0)
             redisUtil.sentinelSet(phone, params[0], (long) (60000 * 5));
-        return result.result == 0 ? "发送失败" : "发送成功";
+        return result.result == 0 ? "发送成功" : "发送失败";
     }
 
     public static String[] getCodeAndTime() {
