@@ -234,11 +234,13 @@ public class UserController {
 
     @ApiOperation(value = "向指定的用户手机号发送验证码")
     @PostMapping("/user/sendIdentifyCode")
-    public ResponseEntity<ResultBean> sendIdentifyCode(@RequestParam @ApiParam("手机号") String phoneNumber) {
+    public ResponseEntity<ResultBean> sendIdentifyCode(@RequestParam @ApiParam("手机号") String phoneNumber) throws Exception {
         User user = userService.findByTelephone(phoneNumber);
         if (user == null)
             throw new ServiceException(ResultEnum.USER_NOT_EXIST);
-        return new ResponseEntity<>(ResultBean.success(MessageSender.sendAuthCode(phoneNumber)), HttpStatus.OK);
+        String authcode = MessageSender.generateRandomCode();
+        authcode = authcode + " " + authcode + " " + authcode;
+        return new ResponseEntity<>(ResultBean.success(MessageSender.sendMsgByTxPlatform(phoneNumber, authcode.split(" "))), HttpStatus.OK);
     }
 
     @ApiOperation(value = "验证手机验证码的正确性")

@@ -47,7 +47,7 @@ public class TagServiceImpl extends BaseServiceImpl<Tag> implements TagService<T
         if (good == null)
             throw new ServiceException(ResultEnum.TAG_BINDED_GOOD_EMPTY);
         String regionNames = good.getRegionNames();
-        boolean isRegion = !StringUtil.isEmpty(regionNames) ? true : false;
+        boolean isRegion = !StringUtil.isEmpty(regionNames) || regionNames.contains("isPromote") ? true : false;
         ByteResponse byteResponse = ImageHelper.getByteResponse(tag);
         if (byteResponse == null)
             throw new ServiceException(ResultEnum.TAG_EMPTY_STYLES);

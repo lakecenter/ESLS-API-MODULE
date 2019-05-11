@@ -250,8 +250,8 @@ public class GoodServiceImpl extends BaseServiceImpl implements GoodService {
                 }
             }
             // 0为等待更新
-            sourceGood.setWaitUpdate(0);
-            sourceGood.setRegionNames(regionNames);
+            targetGood.setWaitUpdate(0);
+            targetGood.setRegionNames(regionNames);
         }
     }
 }
