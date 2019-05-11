@@ -71,26 +71,9 @@ public class Tag implements Serializable {
     @Override
     public String toString() {
         return "Tag{" +
-                "id=" + id +
-                ", power='" + power + '\'' +
                 ", tagRssi='" + tagRssi + '\'' +
                 ", apRssi='" + apRssi + '\'' +
-                ", state=" + state +
-                ", softwareVersion='" + softwareVersion + '\'' +
-                ", waitUpdate=" + waitUpdate +
-                ", forbidState=" + forbidState +
-                ", execTime=" + execTime +
-                ", completeTime=" + completeTime +
                 ", barCode='" + barCode + '\'' +
-                ", tagAddress='" + tagAddress + '\'' +
-                ", screenType='" + screenType + '\'' +
-                ", resolutionWidth='" + resolutionWidth + '\'' +
-                ", resolutionHeight='" + resolutionHeight + '\'' +
-                ", isWorking=" + isWorking +
-                ", hardwareVersion='" + hardwareVersion + '\'' +
-                ", good=" + good.getId() +
-                ", style=" + style.getId() +
-                ", router=" + router.getId() +
                 '}';
     }
 }

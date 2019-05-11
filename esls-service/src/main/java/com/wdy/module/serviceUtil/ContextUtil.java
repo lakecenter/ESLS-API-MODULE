@@ -17,15 +17,19 @@ import javax.servlet.http.HttpServletRequest;
  */
 public class ContextUtil {
     public static String AUTHORIZATION = "ESLS";
-    private static User user;
+    private static User user = new User("未携带token用户");
 
     public static User getUser() {
         RedisUtil redisUtil = (RedisUtil) SpringContextUtil.getBean("RedisUtil");
-        ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-        HttpServletRequest request = attributes.getRequest();
-        String token = request.getHeader(AUTHORIZATION);
-        if (!StringUtils.isEmpty(token))
-            user = (User) redisUtil.sentinelGet(token, User.class);
+        try {
+            ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+            HttpServletRequest request = attributes.getRequest();
+            String token = request.getHeader(AUTHORIZATION);
+            if (!StringUtils.isEmpty(token)) {
+                user = (User) redisUtil.sentinelGet(token, User.class);
+            }
+        } catch (Exception e) {
+        }
         return user;
     }
 

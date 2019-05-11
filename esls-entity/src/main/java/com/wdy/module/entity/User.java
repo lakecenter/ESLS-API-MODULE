@@ -58,6 +58,10 @@ public class User implements Serializable {
     @JoinTable(name = "user_role", joinColumns = {@JoinColumn(name = "userId")}, inverseJoinColumns = {@JoinColumn(name = "roleId")})
     private List<Role> roleList;
 
+    public User(String userName) {
+        this.name = userName;
+    }
+
     @Override
     public String toString() {
         return "User{" +

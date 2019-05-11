@@ -34,8 +34,6 @@ public class AsyncServiceTask {
     private NettyUtil nettyUtil;
     @Autowired
     private TagService tagService;
-    @Autowired
-    private MailSender mailSender;
 
     @Async
     public ListenableFuture<Integer> sendMessageWithRepeat(List<Tag> tagList, long begin, byte[] content, Integer messageType, Integer depth) throws ExecutionException, InterruptedException {
@@ -83,24 +81,10 @@ public class AsyncServiceTask {
                 }
             }
         } else {
-            List<List<Tag>> splitByTags = Lists.partition(tagList, tagsLengthCommand);
-            for (List tags : splitByTags)
-                successAndFailList = updateStylesByTags(tags, begin, true);
+            successAndFailList = updateStylesByTags(tagList, begin, true);
         }
-        if (successAndFailList == null)
+        if (successAndFailList == null) {
             return new AsyncResult<>(0);
-        if (depth == 1 && isNeedSending) {
-            List<Tag> noSuccessTags = successAndFailList.getNoSuccessTags();
-            try {
-                List<User> tos = MessageSender.getUsersByTags(tagsAll);
-                StringBuffer sb = new StringBuffer();
-                sb.append("总数:" + tagsAll.toString()).append("失败:" + noSuccessTags.toString());
-                for (User user : tos) {
-                    mailSender.sendMail(user.getMail(), "ESLS变价通知信息邮件", sb.toString(), false);
-                }
-            } catch (Exception e) {
-                log.info("发送ESLS变价通知信息邮件失败" + e);
-            }
         }
         ListenableFuture<Integer> integerListenableFuture = updateTagStyle(successAndFailList.getNoSuccessTags(), tagsAll, begin, --depth, isNeedSending);
         return new AsyncResult<>(integerListenableFuture.get() + successAndFailList.getSuccessNumber());

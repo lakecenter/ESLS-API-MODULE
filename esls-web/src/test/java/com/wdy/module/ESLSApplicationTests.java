@@ -5,6 +5,7 @@ import com.wdy.module.dao.StyleDao;
 import com.wdy.module.dynamicquery.DynamicQuery;
 import com.wdy.module.entity.*;
 import com.wdy.module.service.UserService;
+import com.wdy.module.serviceUtil.MessageSender;
 import com.wdy.module.serviceUtil.SpringContextUtil;
 import com.wdy.module.utils.JWTTokenUtil;
 import org.junit.Test;
@@ -73,5 +74,11 @@ public class ESLSApplicationTests {
     public void testSyleService() {
         Style style = Style.builder().id((long) 350).styleType("名字").isPromote((byte) 0).styleNumber("2988").width(250).height(250).build();
         styleDao.save(style);
+    }
+
+    @Test
+    public void testMessage() throws Exception {
+        String p = "1 2 3";
+        MessageSender.sendMsgByTxPlatform("17722828134", p.split(" "));
     }
 }

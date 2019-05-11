@@ -13,6 +13,7 @@ import com.github.qcloudsms.SmsSingleSenderResult;
 import com.wdy.module.common.exception.ResultEnum;
 import com.wdy.module.common.exception.ServiceException;
 import com.wdy.module.entity.*;
+import com.wdy.module.utils.MailSender;
 import com.wdy.module.utils.RedisUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -27,25 +28,24 @@ public class MessageSender {
     private static final String product = "Dysmsapi";
     private static final String domain = "dysmsapi.aliyuncs.com";
 
-    public static String sendMsgByTxPlatform(String phone) throws Exception {
+    public static String sendMsgByTxPlatform(String phone, String[] params) throws Exception {
         // 短信应用SDK AppID
         // 1400开头
-        int appId = 1400196574;
+        int appId = 1400202313;
         // 短信应用SDK AppKey
-        String appKey = "6f189199b34f5358883bc0e22e1faeae";
+        String appKey = "a79650f35ce2178bb890502edba51ce5";
         // 需要发送短信的手机号码
         // String[] phoneNumbers = {"15212111830"};
         // 短信模板ID，需要在短信应用中申请
         //NOTE: 这里的模板ID`7839`只是一个示例，真实的模板ID需要在短信控制台中申请
-        int templateId = 305427;
-        String[] params = getCodeAndTime();
+        int templateId = 313293;
         // 签名
         // NOTE: 这里的签名"腾讯云"只是一个示例，真实的签名需要在短信控制台中申请，另外签名参数使用的是`签名内容`，而不是`签名ID`
         String smsSign = "ESLS后台管理系统";
         SmsSingleSender sSender = new SmsSingleSender(appId, appKey);
         // 签名参数未提供或者为空时，会使用默认签名发送短信
         SmsSingleSenderResult result = sSender.sendWithParam("86", phone,
-                templateId, params, smsSign, "", "");
+                templateId, params, "", "", "");
         RedisUtil redisUtil = (RedisUtil) SpringContextUtil.getBean("RedisUtil");
         if (result.result > 0)
             redisUtil.sentinelSet(phone, params[0], (long) (60000 * 5));
@@ -137,5 +137,20 @@ public class MessageSender {
                 users.addAll(needToSending);
         }
         return users;
+    }
+
+    public static void sendGoodUpdateMessage(List<Tag> tags, List<Tag> nosuccessTags) {
+        try {
+            List<User> tos = MessageSender.getUsersByTags(tags);
+            StringBuffer sb = new StringBuffer();
+            sb.append("总数:" + tags.toString()).append("/n").append("失败:" + nosuccessTags.toString());
+            MailSender mailSender = (MailSender) SpringContextUtil.getBean("MailSender");
+            for (User user : tos) {
+                System.out.println("向" + user.getName() + "发送邮件");
+                mailSender.sendSSLMail(user.getMail(), "ESLS变价通知信息邮件", sb.toString());
+            }
+        } catch (Exception e) {
+            log.info("发送ESLS变价通知信息邮件失败" + e);
+        }
     }
 }

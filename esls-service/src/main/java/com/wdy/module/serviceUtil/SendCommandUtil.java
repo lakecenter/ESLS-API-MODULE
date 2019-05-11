@@ -171,7 +171,6 @@ public class SendCommandUtil {
     public static ResponseBean updateTagStyle(List<Tag> tags, boolean isNeedWaiting, boolean isNeedSending) {
         int sum = tags.size(), successNumber = tags.size();
         ArrayList<ListenableFuture<Integer>> listenableFutures = new ArrayList<>();
-
         try {
             List<TagsAndRouter> tagsAndRouters = TagUtil.splitTagsByRouter(tags);
             for (TagsAndRouter tagsAndRouter : tagsAndRouters) {
@@ -188,6 +187,15 @@ public class SendCommandUtil {
         }
         if (isNeedWaiting) {
             successNumber = waitAllThread(listenableFutures);
+        }
+        if (isNeedSending) {
+            List<Tag> nosuccessTags = new ArrayList<>();
+            for (Tag tag : tags) {
+                if (tag.getWaitUpdate() != null && tag.getWaitUpdate() == 0)
+                    nosuccessTags.add(tag);
+            }
+            // 发送邮件通知
+            MessageSender.sendGoodUpdateMessage(tags, nosuccessTags);
         }
         // 所有的标签都变价成功，才更新商品状态
         if (sum == successNumber) {
@@ -221,6 +229,8 @@ public class SendCommandUtil {
     }
 
     public static int waitAllThread(ArrayList<ListenableFuture<Integer>> listenableFutures) {
+        if (listenableFutures.size() == 0)
+            return 0;
         ArrayList<Integer> listenableFuturesResults = new ArrayList<>();
         //等待所有线程执行完在返回
         int sumBreak = 0, sumThreads = listenableFutures.size(), successNumber = 0;
@@ -384,15 +394,16 @@ public class SendCommandUtil {
     }
 
     public static void testIfValid(String methodName) {
+        User user = ContextUtil.getUser();
         RedisUtil redisUtil = (RedisUtil) SpringContextUtil.getBean("RedisUtil");
-        String redisCache = (String) redisUtil.sentinelGet(methodName + ContextUtil.getUser().getName(), String.class);
+        String redisCache = (String) redisUtil.sentinelGet(methodName + user.getName(), String.class);
         String timeGapAndtime[] = SystemVersionArgs.timeGapAndTime.split(" ");
         if (timeGapAndtime[1].equals(redisCache)) {
             throw new ServiceException(ResultEnum.STYLE_SEND_WORKING);
         }
         if (StringUtils.isEmpty(redisCache))
             redisCache = "0";
-        redisUtil.sentinelSet(methodName + ContextUtil.getUser().getName(), Integer.valueOf(redisCache) + 1, Long.valueOf(Integer.valueOf(timeGapAndtime[0])));
+        redisUtil.sentinelSet(methodName + user.getName(), Integer.valueOf(redisCache) + 1, Long.valueOf(Integer.valueOf(timeGapAndtime[0])));
     }
 
     private static void setGoodWaitUpdate(List<Tag> tags) {
