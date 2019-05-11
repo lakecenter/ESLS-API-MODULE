@@ -311,11 +311,7 @@ public class PoiUtil {
         good.setImportTime(new Timestamp(System.currentTimeMillis()));
         GoodService goodService = (GoodService) SpringContextUtil.getBean("GoodService");
         try {
-            if (mode == 0) {
-                goodService.saveOne(good);
-            } else {
-                goodService.updateGood(good);
-            }
+            goodService.saveOne(good);
         } catch (Exception e) {
         }
     }

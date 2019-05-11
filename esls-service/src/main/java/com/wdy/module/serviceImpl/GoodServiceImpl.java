@@ -64,19 +64,15 @@ public class GoodServiceImpl extends BaseServiceImpl implements GoodService {
     @Override
     public Good saveOne(Good good) {
         // 添加商品
-        if (good.getId() != 0) {
-            Optional<Good> gById = goodDao.findById(good.getId());
-            if (gById.isPresent())
-                setRegionNames(gById.get(), good);
-            else {
-                good.setWaitUpdate(1);
-                good.setImportTime(new Timestamp(System.currentTimeMillis()));
-            }
+        Good g = findByBarCode(good.getBarCode());
+        if (g != null && g.getWaitUpdate() != null && g.getWaitUpdate() != 0) {
+            good.setId(g.getId());
+            setRegionNames(g, good);
         } else {
-            // 1为不更新
             good.setWaitUpdate(1);
             good.setImportTime(new Timestamp(System.currentTimeMillis()));
         }
+        System.out.println(good);
         return goodDao.save(good);
     }
 
