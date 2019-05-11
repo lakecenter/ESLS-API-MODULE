@@ -1,5 +1,6 @@
 package com.wdy.module.controller;
 
+import com.wdy.module.common.constant.ArrtributeConstant;
 import com.wdy.module.common.constant.TableConstant;
 import com.wdy.module.common.request.RequestBean;
 import com.wdy.module.common.request.RequestItem;
@@ -10,10 +11,10 @@ import com.wdy.module.entity.Router;
 import com.wdy.module.entity.Shop;
 import com.wdy.module.aop.Log;
 import com.wdy.module.netty.command.CommandConstant;
-import com.wdy.module.service.RouterService;
-import com.wdy.module.service.ShopService;
+import com.wdy.module.service.*;
 import com.wdy.module.serviceUtil.*;
 import com.wdy.module.utils.*;
+import com.wdy.module.entity.Tag;
 import io.swagger.annotations.*;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.springframework.beans.BeanUtils;
@@ -38,6 +39,8 @@ public class RouterController {
     private RouterService routerService;
     @Autowired
     private ShopService shopService;
+    @Autowired
+    private TagService tagService;
 
     @ApiOperation(value = "根据条件获取路由器信息")
     @ApiImplicitParams({
@@ -120,8 +123,14 @@ public class RouterController {
     @RequiresPermissions("删除指定ID的信息")
     public ResponseEntity<ResultBean> deleteRouterById(@PathVariable Long id) {
         boolean flag = routerService.deleteById(id);
-        if (flag)
+        if (flag) {
+            List<Tag> tags = tagService.findByArrtribute(TableConstant.TABLE_TAGS, ArrtributeConstant.TAG_ROUTERID, String.valueOf(id), Tag.class);
+            for (Tag tag : tags) {
+                tag.setRouter(null);
+                tagService.save(tag);
+            }
             return new ResponseEntity<>(ResultBean.success("删除成功"), HttpStatus.OK);
+        }
         return new ResponseEntity<>(ResultBean.success("删除失败！没有指定ID的路由器或者此ID下的路由器仍有绑定的标签"), HttpStatus.BAD_REQUEST);
     }
 

@@ -5,6 +5,9 @@ public class ArrtributeConstant {
     public static String TABLE_MAC = "mac";
     public static String TABLE_ID = "id";
     public static String TAG_STYLEID = "styleid";
+    public static String TAG_GOODID = "goodid";
+    public static String TAG_ROUTERID = "routerid";
+    public static String SHOPID = "shopid";
     public static String TAG_EXECTIME = "execTime";
     public static String TAG_FORBIDSTATE = "forbidState";
 

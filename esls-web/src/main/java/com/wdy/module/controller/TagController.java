@@ -141,6 +141,7 @@ public class TagController {
     @RequiresPermissions("删除指定ID的信息")
     public ResponseEntity<ResultBean> deleteTagById(@PathVariable Long id) {
         boolean flag = tagService.deleteById(id);
+
         if (flag)
             return new ResponseEntity<>(ResultBean.success("删除成功"), HttpStatus.OK);
         return new ResponseEntity<>(ResultBean.success("删除失败！没有指定ID的标签"), HttpStatus.BAD_REQUEST);
