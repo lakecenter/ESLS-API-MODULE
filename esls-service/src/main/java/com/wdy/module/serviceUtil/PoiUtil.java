@@ -239,7 +239,6 @@ public class PoiUtil {
             // 读表头
             csvReader.readHeaders();
             while (csvReader.readRecord()) {
-                //读一整行
                 // 读这行的某一列  System.out.println(csvReader.get("id"));
                 saveEntity(dataColumnList, tableName, csvReader, mode);
             }

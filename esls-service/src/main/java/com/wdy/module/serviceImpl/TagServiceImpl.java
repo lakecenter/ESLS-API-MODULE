@@ -34,47 +34,43 @@ public class TagServiceImpl extends BaseServiceImpl<Tag> implements TagService<T
         int waitingTime = 300;
         if (isWaitingLong == true)
             waitingTime = Integer.valueOf(SystemVersionArgs.commandWaitingTime);
-        try {
-            if (tag == null)
-                throw new ServiceException(ResultEnum.TAG_NOT_EXIST);
-            if (tag.getStyle() == null)
-                throw new ServiceException(ResultEnum.TAG_NOT_BIND_STYLES);
-            if (tag.getStyle().getDispmses().size() == 0)
-                throw new ServiceException(ResultEnum.TAG_EMPTY_STYLES);
-            Channel channel = SocketChannelHelper.getChannelByRouter(tag.getRouter().getId());
-            if (channel == null)
-                throw new ServiceException(ResultEnum.COMMUNITICATION_ERROR);
-            Good good = tag.getGood();
-            if (good == null)
-                throw new ServiceException(ResultEnum.TAG_BINDED_GOOD_EMPTY);
-            String regionNames = good.getRegionNames();
-            boolean isRegion = !StringUtil.isEmpty(regionNames) ? true : false;
-            ByteResponse byteResponse = ImageHelper.getByteResponse(tag);
-            if (byteResponse == null)
-                throw new ServiceException(ResultEnum.TAG_EMPTY_STYLES);
-            String resultString;
-            // 样式具体内容分包
-            List<byte[]> byteList = byteResponse.getByteList();
-            if (!isRegion) {
-                // 更改样式全局信息包
-                resultString = nettyUtil.sendMessageWithRepeat(channel, CommandConstant.getBytesByType(SpringContextUtil.getAddressByBarCode(tag.getBarCode()), byteResponse.getFirstByte(), CommandConstant.COMMANDTYPE_TAG), Integer.valueOf(SystemVersionArgs.commandRepeatTime), waitingTime);
-                System.out.println("更改样式全局信息包命令响应结果：" + resultString);
-                if (ErrorUtil.isErrorCommunication(resultString)) {
-                    return new ResponseBean(1, 0);
-                }
+        if (tag == null)
+            throw new ServiceException(ResultEnum.TAG_NOT_EXIST);
+        if (tag.getStyle() == null)
+            throw new ServiceException(ResultEnum.TAG_NOT_BIND_STYLES);
+        if (tag.getStyle().getDispmses().size() == 0)
+            throw new ServiceException(ResultEnum.TAG_EMPTY_STYLES);
+        Channel channel = SocketChannelHelper.getChannelByRouter(tag.getRouter().getId());
+        if (channel == null)
+            throw new ServiceException(ResultEnum.COMMUNITICATION_ERROR);
+        Good good = tag.getGood();
+        if (good == null)
+            throw new ServiceException(ResultEnum.TAG_BINDED_GOOD_EMPTY);
+        String regionNames = good.getRegionNames();
+        boolean isRegion = !StringUtil.isEmpty(regionNames) ? true : false;
+        ByteResponse byteResponse = ImageHelper.getByteResponse(tag);
+        if (byteResponse == null)
+            throw new ServiceException(ResultEnum.TAG_EMPTY_STYLES);
+        String resultString;
+        // 样式具体内容分包
+        List<byte[]> byteList = byteResponse.getByteList();
+        if (!isRegion) {
+            // 更改样式全局信息包
+            resultString = nettyUtil.sendMessageWithRepeat(channel, CommandConstant.getBytesByType(SpringContextUtil.getAddressByBarCode(tag.getBarCode()), byteResponse.getFirstByte(), CommandConstant.COMMANDTYPE_TAG), Integer.valueOf(SystemVersionArgs.commandRepeatTime), waitingTime);
+            System.out.println("更改样式全局信息包命令响应结果：" + resultString);
+            if (ErrorUtil.isErrorCommunication(resultString)) {
+                return new ResponseBean(1, 0);
             }
-            for (int i = 0; i < byteList.size(); i++) {
-                if (i == 0)
-                    resultString = nettyUtil.sendMessageWithRepeat(channel, CommandConstant.getBytesByType(SpringContextUtil.getAddressByBarCode(tag.getBarCode()), byteList.get(i), CommandConstant.COMMANDTYPE_TAG), Integer.valueOf(SystemVersionArgs.commandRepeatTime), waitingTime);
-                else
-                    resultString = nettyUtil.sendMessageWithRepeat(channel, CommandConstant.getBytesByType(SpringContextUtil.getAddressByBarCode(tag.getBarCode()), byteList.get(i), CommandConstant.COMMANDTYPE_TAG), Integer.valueOf(SystemVersionArgs.commandRepeatTime), 300);
-                System.out.println("样式具体内容分包命令" + i + "响应结果：" + resultString);
-                if (ErrorUtil.isErrorCommunication(resultString)) {
-                    return new ResponseBean(1, 0);
-                }
+        }
+        for (int i = 0; i < byteList.size(); i++) {
+            if (i == 0)
+                resultString = nettyUtil.sendMessageWithRepeat(channel, CommandConstant.getBytesByType(SpringContextUtil.getAddressByBarCode(tag.getBarCode()), byteList.get(i), CommandConstant.COMMANDTYPE_TAG), Integer.valueOf(SystemVersionArgs.commandRepeatTime), waitingTime);
+            else
+                resultString = nettyUtil.sendMessageWithRepeat(channel, CommandConstant.getBytesByType(SpringContextUtil.getAddressByBarCode(tag.getBarCode()), byteList.get(i), CommandConstant.COMMANDTYPE_TAG), Integer.valueOf(SystemVersionArgs.commandRepeatTime), 300);
+            System.out.println("样式具体内容分包命令" + i + "响应结果：" + resultString);
+            if (ErrorUtil.isErrorCommunication(resultString)) {
+                return new ResponseBean(1, 0);
             }
-        } catch (Exception e) {
-            throw new ServiceException(-1, "TagServiceImpl-updateTagStyle-" + e);
         }
         return new ResponseBean(1, 1);
     }
