@@ -67,7 +67,7 @@ public class GoodServiceImpl extends BaseServiceImpl implements GoodService {
     public Good saveOne(Good good) {
         // 添加商品
         Good g = findByBarCode(good.getBarCode());
-        if (g != null && g.getWaitUpdate() != null && g.getWaitUpdate() != 0) {
+        if (g != null) {
             good.setId(g.getId());
             setRegionNames(good, g);
             BeanUtils.copyProperties(good, g, CopyUtil.getNullPropertyNames(good));
@@ -81,13 +81,18 @@ public class GoodServiceImpl extends BaseServiceImpl implements GoodService {
 
     @Override
     public Good updateGood(Good good) {
+        // 添加商品
         Good g = findByBarCode(good.getBarCode());
         if (g != null && g.getWaitUpdate() != null && g.getWaitUpdate() != 0) {
             good.setId(g.getId());
             setRegionNames(good, g);
             BeanUtils.copyProperties(good, g, CopyUtil.getNullPropertyNames(good));
+            return goodDao.save(g);
+        } else {
+            good.setWaitUpdate(1);
+            good.setImportTime(new Timestamp(System.currentTimeMillis()));
+            return goodDao.save(good);
         }
-        return goodDao.save(g);
     }
 
     @Override

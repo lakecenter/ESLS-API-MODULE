@@ -273,7 +273,7 @@ public class PoiUtil {
         }
         GoodService goodService = (GoodService) SpringContextUtil.getBean("GoodService");
         try {
-            goodService.saveOne(good);
+            goodService.updateGood(good);
         } catch (Exception e) {
         }
     }
