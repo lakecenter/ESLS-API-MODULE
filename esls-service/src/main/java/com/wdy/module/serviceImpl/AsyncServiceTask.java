@@ -1,6 +1,8 @@
 package com.wdy.module.serviceImpl;
 
 import com.google.common.collect.Lists;
+import com.wdy.module.common.exception.ResultEnum;
+import com.wdy.module.common.exception.ServiceException;
 import com.wdy.module.common.response.ResponseBean;
 import com.wdy.module.common.response.SuccessAndFailList;
 import com.wdy.module.netty.command.CommandConstant;
@@ -152,7 +154,11 @@ public class AsyncServiceTask {
             ResponseBean responseBean = new ResponseBean(0, 0);
             try {
                 responseBean = tagService.updateTagStyle(tag, isWaitingLong);
-            } catch (Exception e) {
+            } catch (ServiceException e) {
+                if (e.getMessage().equals(ResultEnum.TAG_EMPTY_STYLES.getMessage())) {
+                    System.out.println("样式为空异常");
+                    responseBean.setSuccessNumber(responseBean.getSuccessNumber() + 1);
+                }
             }
             String result = responseBean.getSuccessNumber() == 1 ? "成功" : "失败";
             TagUtil.judgeResultAndSettingTagWaitUpdate(result, begin, tag);

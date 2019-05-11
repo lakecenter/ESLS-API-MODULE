@@ -7,8 +7,10 @@ import com.wdy.module.common.response.ResultBean;
 import com.wdy.module.entity.*;
 import com.wdy.module.aop.Log;
 import com.wdy.module.entity.Tag;
+import com.wdy.module.netty.command.CommandConstant;
 import com.wdy.module.service.GoodService;
 import com.wdy.module.service.TagService;
+import com.wdy.module.serviceUtil.SendCommandUtil;
 import com.wdy.module.utils.ConditionUtil;
 import com.wdy.module.serviceUtil.CopyUtil;
 import io.swagger.annotations.*;
@@ -121,6 +123,8 @@ public class GoodController {
         if (flag) {
             List<Tag> tags = tagService.findByArrtribute(TableConstant.TABLE_TAGS, ArrtributeConstant.TAG_GOODID, String.valueOf(id), Tag.class);
             for (Tag tag : tags) {
+                String contentType = CommandConstant.TAGBINDOVER;
+                SendCommandUtil.sendCommandWithTags(tags, contentType, CommandConstant.COMMANDTYPE_TAG);
                 tag.setGood(null);
                 tagService.saveOne(tag);
             }
