@@ -71,8 +71,6 @@ public class Tag implements Serializable {
     @Override
     public String toString() {
         return "Tag{" +
-                ", tagRssi='" + tagRssi + '\'' +
-                ", apRssi='" + apRssi + '\'' +
                 ", barCode='" + barCode + '\'' +
                 '}';
     }

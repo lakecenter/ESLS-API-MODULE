@@ -47,7 +47,7 @@ public class TagServiceImpl extends BaseServiceImpl<Tag> implements TagService<T
         if (good == null)
             throw new ServiceException(ResultEnum.TAG_BINDED_GOOD_EMPTY);
         String regionNames = good.getRegionNames();
-        boolean isRegion = !StringUtil.isEmpty(regionNames) || regionNames.contains("isPromote") ? true : false;
+        boolean isRegion = !StringUtil.isEmpty(regionNames) && !regionNames.contains("isPromote") ? true : false;
         ByteResponse byteResponse = ImageHelper.getByteResponse(tag);
         if (byteResponse == null)
             throw new ServiceException(ResultEnum.TAG_EMPTY_STYLES);
@@ -242,6 +242,10 @@ public class TagServiceImpl extends BaseServiceImpl<Tag> implements TagService<T
             }
             // 解绑
             else if (mode.equals("0")) {
+                if (tag.getStyle() != null) {
+                    Style style = styleDao.findByStyleNumberAndIsPromote(tag.getStyle().getStyleNumber(), (byte) 0);
+                    tag.setStyle(style);
+                }
                 good.setWaitUpdate(1);
                 goodDao.save(good);
                 tag.setState((byte) 0);

@@ -102,6 +102,7 @@ public class ServerChannelHandler extends SimpleChannelInboundHandler<Object> {
             if (req[11] == 0x0B && req[12] == 0x01) {
                 String id = ctx.channel().id().toString();
                 log.info(id + ":接收到心跳包");
+                setRouterIsWorking(ctx.channel());
                 SocketChannelHelper.heartBeanMap.put(ctx.channel().id().toString(), SocketChannelHelper.heartBeanMap.get(id) == null ? 0 : SocketChannelHelper.heartBeanMap.get(id) - 1);
                 return;
             }
@@ -207,6 +208,15 @@ public class ServerChannelHandler extends SimpleChannelInboundHandler<Object> {
         routerService.saveOne(router);
         // 更新记录数
         channel.close();
+    }
+
+    private void setRouterIsWorking(Channel channel) {
+        Router router = SocketChannelHelper.getRouterByChannel(channel);
+        if (router == null)
+            return;
+        RouterService routerService = (RouterService) SpringContextUtil.getBean("RouterService");
+        router.setIsWorking((byte) 1);
+        routerService.saveOne(router);
     }
 
     private void setPromiseSuccess(String key) {

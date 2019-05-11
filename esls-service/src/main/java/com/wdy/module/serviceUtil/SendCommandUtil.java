@@ -195,7 +195,7 @@ public class SendCommandUtil {
                     nosuccessTags.add(tag);
             }
             // 发送邮件通知
-//            MessageSender.sendGoodUpdateMessage(tags, nosuccessTags);
+            MessageSender.sendGoodUpdateMessage(tags, nosuccessTags);
         }
         // 所有的标签都变价成功，才更新商品状态
         if (sum == successNumber) {

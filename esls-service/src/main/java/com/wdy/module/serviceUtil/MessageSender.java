@@ -143,7 +143,7 @@ public class MessageSender {
         try {
             List<User> tos = MessageSender.getUsersByTags(tags);
             StringBuffer sb = new StringBuffer();
-            sb.append("总数:" + tags.toString()).append("/n").append("失败:" + nosuccessTags.toString());
+            sb.append("总数:" + tags.size() + "\r\n" + tags.toString()).append("\r\n").append("失败:" + nosuccessTags.size() + "\r\n" + nosuccessTags.toString());
             MailSender mailSender = (MailSender) SpringContextUtil.getBean("MailSender");
             for (User user : tos) {
                 System.out.println("向" + user.getName() + "发送邮件");
