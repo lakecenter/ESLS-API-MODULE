@@ -68,7 +68,6 @@ public class GoodServiceImpl extends BaseServiceImpl implements GoodService {
             Optional<Good> gById = goodDao.findById(good.getId());
             if (gById.isPresent()) {
                 setRegionNames(gById.get(), good);
-                gById.get().setId((long) 0);
             }
         } else {
             // 1为不更新
