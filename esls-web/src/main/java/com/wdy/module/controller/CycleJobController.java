@@ -95,7 +95,7 @@ public class CycleJobController {
         if(cycleJob.getMode() == -2 && cycleJob.getType()!=8 && cycleJob.getId()==0)
             throw new ServiceException(ResultEnum.CYCLEJOB_NOT_ALLOW_CHANGE_CHANGE_GOOD_JOB);
         CycleJob result = cycleJobService.saveOne(cycleJob);
-        dynamicTask.init();
+        dynamicTask.restartFutures();
         return new ResponseEntity<>(new ResultBean(result), HttpStatus.OK);
     }
 

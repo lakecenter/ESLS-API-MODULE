@@ -192,7 +192,7 @@ public class ImageHelper {
             ByteArrayInputStream in = new ByteArrayInputStream(bytes);
             bufferedImage = ImageIO.read(in);
         }
-        ImageIO.write(bufferedImage, "BMP", new File("D:\\styles\\" + styleNumber + "(" + dispM.getStyle().getId() + ")" + "\\" + dispM.getId() + columnType + " (x" + returnDispms.getX() + " y" + returnDispms.getY() + " w" + returnDispms.getWidth() + " h" + returnDispms.getHeight() + ").bmp"));
+//        ImageIO.write(bufferedImage, "BMP", new File("D:\\styles\\" + styleNumber + "(" + dispM.getStyle().getId() + ")" + "\\" + dispM.getId() + columnType + " (x" + returnDispms.getX() + " y" + returnDispms.getY() + " w" + returnDispms.getWidth() + " h" + returnDispms.getHeight() + ").bmp"));
         return new ByteAndRegion(changeImage(bufferedImage, styleNumber), returnDispms);
     }
 
@@ -270,7 +270,7 @@ public class ImageHelper {
             //dispM.setBackup(args[0]);
         }
         dispmsService.saveOne(dispM);
-        ImageIO.write(bufferedImage, "BMP", new File("D:\\styles\\" + styleNumber + "(" + dispM.getStyle().getId() + ")" + "\\" + dispM.getId() + columnType + " (x" + returnDispms.getX() + " y" + returnDispms.getY() + " w" + returnDispms.getWidth() + " h" + returnDispms.getHeight() + ").bmp"));
+//        ImageIO.write(bufferedImage, "BMP", new File("D:\\styles\\" + styleNumber + "(" + dispM.getStyle().getId() + ")" + "\\" + dispM.getId() + columnType + " (x" + returnDispms.getX() + " y" + returnDispms.getY() + " w" + returnDispms.getWidth() + " h" + returnDispms.getHeight() + ").bmp"));
         return new ByteAndRegion(changeImage(bufferedImage, styleNumber), returnDispms);
     }
 
@@ -576,7 +576,7 @@ public class ImageHelper {
     private static List<Dispms> sortDispms(List<Dispms> dispmses) {
         for (int i = 0; i < dispmses.size(); i++) {
             for (int j = 0; j < dispmses.size(); j++) {
-                if (dispmses.get(i).getRegionId() > dispmses.get(j).getRegionId()) {
+                if (dispmses.get(i).getRegionId() < dispmses.get(j).getRegionId()) {
                     Dispms temp = dispmses.get(i);
                     dispmses.set(i, dispmses.get(j));
                     dispmses.set(j, temp);

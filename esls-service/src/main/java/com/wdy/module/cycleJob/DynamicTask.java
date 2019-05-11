@@ -242,6 +242,14 @@ public class DynamicTask {
                     try {
                         // 修改
                         PoiUtil.importCsvDataFile(new FileInputStream(files[i]), dataColumnList, "goods", 1);
+                        // 删除
+                        String startPath = filePath + File.separator + files[i].getName();
+                        String endPath = filePath + "_finish" + File.separator + files[i].getName();
+                        File startFile = new File(startPath);
+                        FileUtils.copyFile(startFile, new File(endPath));
+                        System.gc();
+                        FileUtils.forceDelete(startFile);
+
                     } catch (Exception e) {
                         System.out.println(files[i].getName() + "导入失败");
                     }
@@ -250,20 +258,7 @@ public class DynamicTask {
                 }
             }
             // 开始变价
-            ResponseBean responseBean = goodService.updateGoods(true);
-            if (responseBean != null && responseBean.getSuccessNumber() == responseBean.getSum() && responseBean.getSum() != 0) {
-                for (int i = 0; i < files.length; i++) {
-                    try {
-                        String startPath = filePath + File.separator + files[i].getName();
-                        String endPath = filePath + "_finish" + File.separator + files[i].getName();
-                        File startFile = new File(startPath);
-                        FileUtils.copyFile(startFile, new File(endPath));
-                        System.gc();
-                        FileUtils.forceDelete(startFile);
-                    } catch (Exception e) {
-                    }
-                }
-            }
+            goodService.updateGoods(true);
         }
     }
 

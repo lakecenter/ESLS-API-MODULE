@@ -281,7 +281,6 @@ public class PoiUtil {
             Object serviceObj = SpringContextUtil.getBean(SqlConstant.EntityToSqlMap.get(tableName) + "Service");
             Method saveOne;
             if (mode == 0) {
-                System.out.println(o);
                 saveOne = serviceObj.getClass().getMethod("saveOne", clazz);
             } else
                 saveOne = serviceObj.getClass().getMethod("updateGood", clazz);

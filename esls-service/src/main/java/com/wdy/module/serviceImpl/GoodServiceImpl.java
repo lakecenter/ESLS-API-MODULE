@@ -79,7 +79,7 @@ public class GoodServiceImpl extends BaseServiceImpl implements GoodService {
     @Override
     public Good updateGood(Good good) {
         Good g = findByBarCode(good.getBarCode());
-        if (g != null) {
+        if (g != null && g.getWaitUpdate() != null && g.getWaitUpdate() != 0) {
             good.setId(g.getId());
             setRegionNames(g, good);
         }
@@ -146,6 +146,22 @@ public class GoodServiceImpl extends BaseServiceImpl implements GoodService {
 
     // 商品改价
     @Override
+    public List<Tag> getBindTags(String query, String connection, String queryString) {
+        if (connection.equals("like"))
+            queryString = "%" + queryString + "%";
+        List<Good> goods = findBySql(SqlConstant.getQuerySql(TableConstant.TABLE_GOODS, query, connection, queryString), Good.class);
+        List<Tag> resultList = new ArrayList<>();
+        try {
+            for (Good good : goods) {
+                List<Tag> tags = tagDao.findByGoodId(good.getId());
+                resultList.addAll(tags);
+            }
+        } catch (Exception e) {
+        }
+        return resultList;
+    }
+
+    @Override
     public ResponseBean updateGoods(boolean isNeedSending) {
         ResponseBean responseBean = null;
         List<Good> goods = findBySql(SqlConstant.getQuerySql(TableConstant.TABLE_GOODS, ArrtributeConstant.GOOD_WAITUPDATE, "=", "0"), Good.class);
@@ -162,22 +178,6 @@ public class GoodServiceImpl extends BaseServiceImpl implements GoodService {
         }
         setGoodUpdateComplete(responseBean, goods);
         return responseBean;
-    }
-
-    @Override
-    public List<Tag> getBindTags(String query, String connection, String queryString) {
-        if (connection.equals("like"))
-            queryString = "%" + queryString + "%";
-        List<Good> goods = findBySql(SqlConstant.getQuerySql(TableConstant.TABLE_GOODS, query, connection, queryString), Good.class);
-        List<Tag> resultList = new ArrayList<>();
-        try {
-            for (Good good : goods) {
-                List<Tag> tags = tagDao.findByGoodId(good.getId());
-                resultList.addAll(tags);
-            }
-        } catch (Exception e) {
-        }
-        return resultList;
     }
 
     private boolean isNotProperty(String value) {
