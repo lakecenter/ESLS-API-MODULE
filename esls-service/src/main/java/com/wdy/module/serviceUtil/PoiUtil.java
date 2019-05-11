@@ -4,7 +4,10 @@ import com.csvreader.CsvReader;
 import com.wdy.module.common.constant.SqlConstant;
 import com.wdy.module.common.exception.ResultEnum;
 import com.wdy.module.common.exception.ServiceException;
+import com.wdy.module.entity.Good;
+import com.wdy.module.service.GoodService;
 import com.wdy.module.service.Service;
+import com.wdy.module.system.SystemVersionArgs;
 import org.apache.poi.hssf.usermodel.*;
 import org.apache.poi.ss.usermodel.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -241,6 +244,79 @@ public class PoiUtil {
             }
         } catch (Exception e) {
             throw new ServiceException(ResultEnum.FILE_ERROR);
+        }
+    }
+
+    public static void importCsvGoodDataFile(InputStream fileInputStream, Integer mode) {
+        try {
+            Reader reader = new InputStreamReader(fileInputStream);
+            CsvReader csvReader = new CsvReader(reader);
+            // 读表头
+            csvReader.readHeaders();
+            List dataColumnList = Arrays.asList(SystemVersionArgs.goodDataFormat.split(" "));
+            while (csvReader.readRecord()) {
+                //读一整行
+                saveGoodEntity(dataColumnList, csvReader, mode);
+            }
+        } catch (Exception e) {
+            System.out.println(e);
+            throw new ServiceException(ResultEnum.FILE_ERROR);
+        }
+    }
+
+    public static void saveGoodEntity(List dataColumnList, CsvReader csvReader, Integer mode) throws Exception {
+        Good good = new Good();
+        Long id = csvReader.get(dataColumnList.get(0).toString()) != null ? Long.valueOf(csvReader.get(dataColumnList.get(0).toString())) : 0;
+        String name = csvReader.get(dataColumnList.get(1).toString());
+        String barCode = csvReader.get(dataColumnList.get(2).toString());
+        String qrCode = csvReader.get(dataColumnList.get(3).toString());
+        String price = csvReader.get(dataColumnList.get(4).toString());
+        String promotePrice = csvReader.get(dataColumnList.get(5).toString());
+        String provider = csvReader.get(dataColumnList.get(6).toString());
+        String operator = csvReader.get(dataColumnList.get(7).toString());
+        String category = csvReader.get(dataColumnList.get(8).toString());
+        String origin = csvReader.get(dataColumnList.get(9).toString());
+        String spec = csvReader.get(dataColumnList.get(10).toString());
+        String stock = csvReader.get(dataColumnList.get(11).toString());
+        String unit = csvReader.get(dataColumnList.get(12).toString());
+        String shelfNumber = csvReader.get(dataColumnList.get(13).toString());
+        String promoteTimeGap = csvReader.get(dataColumnList.get(14).toString());
+        String promotionReason = csvReader.get(dataColumnList.get(15).toString());
+        Byte isPromote = csvReader.get(dataColumnList.get(16).toString()) != null ? Byte.valueOf(csvReader.get(dataColumnList.get(16).toString())) : 0;
+        String rfu01 = csvReader.get(dataColumnList.get(17).toString());
+        String rfu02 = csvReader.get(dataColumnList.get(18).toString());
+        String rfus01 = csvReader.get(dataColumnList.get(19).toString());
+        String rfus02 = csvReader.get(dataColumnList.get(20).toString());
+        good.setId(id);
+        good.setName(name);
+        good.setBarCode(barCode);
+        good.setQrCode(qrCode);
+        good.setPrice(price);
+        good.setPromotePrice(promotePrice);
+        good.setProvider(provider);
+        good.setOperator(operator);
+        good.setCategory(category);
+        good.setOrigin(origin);
+        good.setSpec(spec);
+        good.setStock(stock);
+        good.setUnit(unit);
+        good.setShelfNumber(shelfNumber);
+        good.setPromoteTimeGap(promoteTimeGap);
+        good.setPromotionReason(promotionReason);
+        good.setIsPromote(isPromote);
+        good.setRfu01(rfu01);
+        good.setRfu02(rfu02);
+        good.setRfus01(rfus01);
+        good.setRfus02(rfus02);
+        good.setImportTime(new Timestamp(System.currentTimeMillis()));
+        GoodService goodService = (GoodService) SpringContextUtil.getBean("GoodService");
+        try {
+            if (mode == 0) {
+                goodService.saveOne(good);
+            } else {
+                goodService.updateGood(good);
+            }
+        } catch (Exception e) {
         }
     }
 

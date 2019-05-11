@@ -196,7 +196,6 @@ public class DynamicTask {
         @Override
         public void run() {
             Service service = (Service) SpringContextUtil.getBean("BaseService");
-            List dataColumnList = service.findBySql(SqlConstant.QUERY_TABLIE_COLUMN + "\'" + "goods" + "\'");
             System.out.println("扫描指定目录下的商品基本文件  " + filePath + " " + new Date());
             File file = new File(filePath);
             File[] files = file.listFiles();
@@ -204,7 +203,7 @@ public class DynamicTask {
                 for (int i = 0; i < files.length; i++) {
                     try {
                         // 添加
-                        PoiUtil.importCsvDataFile(new FileInputStream(files[i]), dataColumnList, "goods", 0);
+                        PoiUtil.importCsvGoodDataFile(new FileInputStream(files[i]), 0);
                         String startPath = filePath + File.separator + files[i].getName();
                         String endPath = filePath + "_finish" + File.separator + files[i].getName();
                         File startFile = new File(startPath);
@@ -236,12 +235,11 @@ public class DynamicTask {
             File[] files = file.listFiles();
             for (int i = 0; i < files.length; i++) {
                 Service service = (Service) SpringContextUtil.getBean("BaseService");
-                List dataColumnList = service.findBySql(SqlConstant.QUERY_TABLIE_COLUMN + "\'" + "goods" + "\'");
                 try {
                     System.out.println(files[i].getName() + "开始导入数据库");
                     try {
                         // 修改
-                        PoiUtil.importCsvDataFile(new FileInputStream(files[i]), dataColumnList, "goods", 1);
+                        PoiUtil.importCsvGoodDataFile(new FileInputStream(files[i]), 1);
                         // 删除
                         String startPath = filePath + File.separator + files[i].getName();
                         String endPath = filePath + "_finish" + File.separator + files[i].getName();

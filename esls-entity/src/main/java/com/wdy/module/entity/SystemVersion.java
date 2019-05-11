@@ -58,4 +58,6 @@ public class SystemVersion implements Serializable {
     @Column(name = "tagsLengthCommand")
     @ExcelField(title = "标签唤醒量", order = 13)
     private String tagsLengthCommand;
+    @ExcelField(title = "商品导入导出数据格式", order = 14)
+    private String goodDataFormat;
 }

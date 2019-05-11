@@ -50,6 +50,7 @@ public class SystemVersionArgs {
     public static String timeGapAndTime;
     public static String basePermissions;
     public static String tagsLengthCommand;
+    public static String goodDataFormat;
 
     public void init() {
         try {
@@ -142,6 +143,7 @@ public class SystemVersionArgs {
             SystemVersionArgs.timeGapAndTime = systemVersion.getTimeGapAndTime();
             SystemVersionArgs.basePermissions = systemVersion.getBasePermissions();
             SystemVersionArgs.tagsLengthCommand = systemVersion.getTagsLengthCommand();
+            SystemVersionArgs.goodDataFormat = systemVersion.getGoodDataFormat();
         } else {
             String softVersion = "V1.00";
             String productor = "数据库组";
@@ -156,6 +158,7 @@ public class SystemVersionArgs {
             String tagsLengthCommand = "1000";
             StringBuffer basePermissions = new StringBuffer();
             basePermissions.append("标签闪灯 添加或修改信息 标签商品绑定 系统菜单 设置通讯命令时间参数 设置通讯命令时间参数 导入数据库表 导出数据库表 获取数据表信息 获取指定ID的信息 删除指定ID的信息 查询和搜索功能");
+            String goodDataFormat = "id name barCode qrCode price promotePrice provider operator category origin spec stock unit shelfNumber promoteTimeGap promotionReason isPromote rfu01 rfu02 rfus01 rfus02";
             SystemVersion newSystemVersion = new SystemVersion();
             newSystemVersion.setId((long) 1);
             newSystemVersion.setSoftVersion(softVersion);
@@ -170,6 +173,7 @@ public class SystemVersionArgs {
             newSystemVersion.setTimeGapAndTime(timeGapAndTime);
             newSystemVersion.setBasePermissions(basePermissions.toString());
             newSystemVersion.setTagsLengthCommand(tagsLengthCommand);
+            newSystemVersion.setGoodDataFormat(goodDataFormat);
             SystemVersionArgs.softVersion = softVersion;
             SystemVersionArgs.productor = productor;
             SystemVersionArgs.date = date;
@@ -181,6 +185,7 @@ public class SystemVersionArgs {
             SystemVersionArgs.recursionDepth = recursionDepth;
             SystemVersionArgs.basePermissions = basePermissions.toString();
             SystemVersionArgs.tagsLengthCommand = tagsLengthCommand;
+            SystemVersionArgs.goodDataFormat = goodDataFormat;
             systemVersionDao.save(newSystemVersion);
         }
     }

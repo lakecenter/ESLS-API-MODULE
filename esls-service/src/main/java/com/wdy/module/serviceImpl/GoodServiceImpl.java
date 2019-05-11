@@ -66,15 +66,17 @@ public class GoodServiceImpl extends BaseServiceImpl implements GoodService {
         // 添加商品
         if (good.getId() != 0) {
             Optional<Good> gById = goodDao.findById(good.getId());
-            if (gById.isPresent()) {
+            if (gById.isPresent())
                 setRegionNames(gById.get(), good);
+            else {
+                good.setWaitUpdate(1);
+                good.setImportTime(new Timestamp(System.currentTimeMillis()));
             }
         } else {
             // 1为不更新
             good.setWaitUpdate(1);
             good.setImportTime(new Timestamp(System.currentTimeMillis()));
         }
-        System.out.println(good);
         return goodDao.save(good);
     }
 
@@ -108,14 +110,13 @@ public class GoodServiceImpl extends BaseServiceImpl implements GoodService {
     public boolean uploadGoodData(MultipartFile file, Integer mode) {
         if (mode > -1)
             return false;
-        List dataColumnList = findBySql(SqlConstant.QUERY_TABLIE_COLUMN + "\'" + "goods" + "\'");
         try {
             if (mode.equals(ModeConstant.DO_BY_TYPE_GOODS_SCAN)) {
                 // 添加
-                PoiUtil.importCsvDataFile(file.getInputStream(), dataColumnList, TableConstant.TABLE_GOODS, 0);
+                PoiUtil.importCsvGoodDataFile(file.getInputStream(), 0);
             } else if (mode.equals(ModeConstant.DO_BY_TYPE_CHANGEGOODS_SCAN)) {
                 // 更新
-                PoiUtil.importCsvDataFile(file.getInputStream(), dataColumnList, TableConstant.TABLE_GOODS, 1);
+                PoiUtil.importCsvGoodDataFile(file.getInputStream(), 1);
             }
             return true;
         } catch (IOException e) {

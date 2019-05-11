@@ -2,6 +2,7 @@ package com.wdy.module.controller;
 
 import com.wdy.module.aop.Log;
 import com.wdy.module.common.constant.SqlConstant;
+import com.wdy.module.common.constant.TableConstant;
 import com.wdy.module.common.response.ResultBean;
 import com.wdy.module.dao.SystemVersionDao;
 import com.wdy.module.entity.SystemVersion;
@@ -49,9 +50,9 @@ public class CommonController {
             sql = SqlConstant.QUERY_TABLIE_COLUMN + "\'" + tableName + "\'";
         List results = baseDao.findBySql(sql);
         List<HashMap> mapToList = new ArrayList<>();
-        for(Object str : results){
-            HashMap<Object,Object> resultMap = new HashMap<>();
-            resultMap.put("keyName",str);
+        for (Object str : results) {
+            HashMap<Object, Object> resultMap = new HashMap<>();
+            resultMap.put("keyName", str);
             mapToList.add(resultMap);
         }
         return new ResponseEntity<>(ResultBean.success(mapToList), HttpStatus.OK);
@@ -62,7 +63,7 @@ public class CommonController {
     @RequiresPermissions("导出数据库表")
     public ResponseEntity<ResultBean> getExcelByTableName(@RequestParam(required = false) String tableName, @RequestParam(required = false) String query, @RequestParam(required = false) String connection, @RequestParam(required = false) String queryString, @RequestParam Integer mode, HttpServletRequest request, HttpServletResponse response) {
         HSSFWorkbook hssfWorkbook;
-        if(mode==0) {
+        if (mode == 0) {
             List dataColumnList = baseDao.findBySql(SqlConstant.QUERY_TABLIE_COLUMN + "\'" + tableName + "\'");
             List dataList;
             try {
@@ -80,8 +81,7 @@ public class CommonController {
             }
             hssfWorkbook = PoiUtil.exportData2Excel(dataList, dataColumnList, tableName);
             PoiUtil.writeToResponse(hssfWorkbook, request, response, tableName);
-        }
-        else {
+        } else {
             hssfWorkbook = PoiUtil.exportData2ExcelBatch();
             PoiUtil.writeToResponse(hssfWorkbook, request, response, "总表");
         }
@@ -94,39 +94,42 @@ public class CommonController {
     @RequiresPermissions("导出数据库表")
     public ResponseEntity<ResultBean> getCsvByTableName(@RequestParam @ApiParam("数据库表名") String tableName, @RequestParam(required = false) String query, @RequestParam(required = false) String connection, @RequestParam(required = false) String queryString, HttpServletRequest request, HttpServletResponse response) {
         List dataColumnList = baseDao.findBySql(SqlConstant.QUERY_TABLIE_COLUMN + "\'" + tableName + "\'");
-        List dataList ;
+        List dataList;
         try (final OutputStream os = response.getOutputStream()) {
-            if(query==null || query==null  || connection==null){
-                dataList = baseDao.findBySql("select * from "+ tableName , Class.forName("com.wdy.module.entity." + SqlConstant.EntityToSqlMap.get(tableName)));
-            }
-            else {
+            if (query == null || query == null || connection == null) {
+                dataList = baseDao.findBySql("select * from " + tableName, Class.forName("com.wdy.module.entity." + SqlConstant.EntityToSqlMap.get(tableName)));
+            } else {
                 if (!"=".equals(connection) && !"like".equalsIgnoreCase(connection) && !"is".equalsIgnoreCase(connection))
                     return new ResponseEntity<>(ResultBean.error("connecttion参数出错"), HttpStatus.BAD_REQUEST);
                 if (connection.equalsIgnoreCase("like"))
                     queryString = "%" + queryString + "%";
                 dataList = baseDao.findBySql(SqlConstant.getQuerySql(tableName, query, connection, queryString), Class.forName("com.wdy.module.entity." + SqlConstant.EntityToSqlMap.get(tableName)));
             }
-            PoiUtil.responseSetProperties(tableName, request,response);
+            PoiUtil.responseSetProperties(tableName, request, response);
+            if (tableName.equals(TableConstant.TABLE_GOODS)) {
+                dataColumnList = Arrays.asList(SystemVersionArgs.goodDataFormat.split(" "));
+            }
             PoiUtil.exportData2Csv(dataList, dataColumnList, os);
         } catch (Exception e) {
             return new ResponseEntity<>(ResultBean.error("导出csv出错"), HttpStatus.BAD_REQUEST);
         }
         return new ResponseEntity<>(ResultBean.success("导出csv成功"), HttpStatus.OK);
     }
+
     @ApiOperation("导入Excel数据库表,mode为1则导入全部数据表")
     @PostMapping("/common/database/importExcelDataFile")
     @RequiresPermissions("导入数据库表")
-    public ResponseEntity<ResultBean> importExcelDataFile(@ApiParam(value = "文件信息", required = true) @RequestParam("file") MultipartFile file, @RequestParam(required = false) @ApiParam("数据库表名") String tableName, @RequestParam Integer mode)        {
-            if (Objects.isNull(file) || file.isEmpty()) {
+    public ResponseEntity<ResultBean> importExcelDataFile(@ApiParam(value = "文件信息", required = true) @RequestParam("file") MultipartFile file, @RequestParam(required = false) @ApiParam("数据库表名") String tableName, @RequestParam Integer mode) {
+        if (Objects.isNull(file) || file.isEmpty()) {
             return new ResponseEntity<>(ResultBean.error("文件为空，请重新上传"), HttpStatus.NOT_ACCEPTABLE);
         }
-        if(mode == 0) {
+        if (mode == 0) {
             PoiUtil.importExcelDataFile(file, tableName);
-        }
-        else
+        } else
             PoiUtil.importExcelDataFileBatch(file);
         return new ResponseEntity<>(ResultBean.success("文件上传成功"), HttpStatus.OK);
     }
+
     @ApiOperation("导入Csv数据库表")
     @PostMapping("/common/database/importCsvDataFile")
     @RequiresPermissions("导入数据库表")
@@ -136,14 +139,18 @@ public class CommonController {
         }
         List dataColumnList = baseDao.findBySql(SqlConstant.QUERY_TABLIE_COLUMN + "\'" + tableName + "\'");
         try {
-            PoiUtil.importCsvDataFile(file.getInputStream(),dataColumnList,tableName,1);
+            if (tableName.equals(TableConstant.TABLE_GOODS)) {
+                PoiUtil.importCsvGoodDataFile(file.getInputStream(), 1);
+            } else
+                PoiUtil.importCsvDataFile(file.getInputStream(), dataColumnList, tableName, 1);
         } catch (IOException e) {
             e.printStackTrace();
         }
         return new ResponseEntity<>(ResultBean.success("文件上传成功"), HttpStatus.OK);
     }
+
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "mode", value = " 0设置命令等待时间(单位为毫秒) 1设置token存活时间(单位为毫秒) 2设置命令重发次数 3设置命令包的最大长度（不得超过220字节）4设置外网IP 5设置递归深度(对失败的标签重发次数) 6设置调用发送样式接口时间间隔与次数(15000 1代表15秒1次) 7设置基础权限集合名 8设置标签通讯数量", dataType = "int", paramType = "query")
+            @ApiImplicitParam(name = "mode", value = " 0设置命令等待时间(单位为毫秒) 1设置token存活时间(单位为毫秒) 2设置命令重发次数 3设置命令包的最大长度（不得超过220字节）4设置外网IP 5设置递归深度(对失败的标签重发次数) 6设置调用发送样式接口时间间隔与次数(15000 1代表15秒1次) 7设置基础权限集合名 8设置标签通讯数量 9设置商品数据格式", dataType = "int", paramType = "query")
     })
     @ApiOperation("设置系统参数")
     @PutMapping("/common/systemArgs")
@@ -152,36 +159,39 @@ public class CommonController {
     public ResponseEntity<ResultBean> setCommandTime(@ApiParam("参数值") @RequestParam String time, @RequestParam Integer mode) {
         SystemVersion systemVersion = null;
         List<SystemVersion> systemVersions = systemVersionDao.findAll();
-        if(systemVersions.size()>0)
+        if (systemVersions.size() > 0)
             systemVersion = systemVersions.get(0);
         switch (mode) {
             case 0:
                 systemVersion.setCommandWaitingTime(time);
                 break;
-            case 1 :
+            case 1:
                 systemVersion.setTokenAliveTime(time);
                 break;
-            case 2 :
+            case 2:
                 systemVersion.setCommandRepeatTime(time);
                 break;
-            case 3 :
+            case 3:
                 systemVersion.setPackageLength(time);
                 break;
 
-            case 4 :
+            case 4:
                 systemVersion.setOutNetIp(time);
                 break;
-            case 5 :
+            case 5:
                 systemVersion.setRecursionDepth(time);
                 break;
-            case 6 :
+            case 6:
                 systemVersion.setTimeGapAndTime(time);
                 break;
-            case 7 :
+            case 7:
                 systemVersion.setBasePermissions(time);
                 break;
-            case 8 :
+            case 8:
                 systemVersion.setTagsLengthCommand(time);
+                break;
+            case 9:
+                systemVersion.setGoodDataFormat(time);
                 break;
             default:
                 break;
@@ -191,11 +201,12 @@ public class CommonController {
         systemVersionArgs.init();
         return new ResponseEntity<>(ResultBean.success(result), HttpStatus.OK);
     }
+
     @ApiOperation("设置系统版本号和开发人员")
     @PutMapping("/common/system")
     @RequiresPermissions("设置命令参数")
     @Log("设置命令参数")
-    public ResponseEntity<ResultBean> setSystemArgs(@ApiParam("版本号") @RequestParam String softVersion, @ApiParam("开发人员")String productor) throws IOException {
+    public ResponseEntity<ResultBean> setSystemArgs(@ApiParam("版本号") @RequestParam String softVersion, @ApiParam("开发人员") String productor) throws IOException {
         SystemVersion systemVersion = systemVersionDao.findById((long) 1).get();
         systemVersion.setSoftVersion(softVersion);
         systemVersion.setProductor(productor);
@@ -204,6 +215,7 @@ public class CommonController {
         systemVersionArgs.init();
         return new ResponseEntity<>(ResultBean.success(result), HttpStatus.OK);
     }
+
     @ApiOperation("获得系统参数")
     @GetMapping("/common/systemArgs")
     @RequiresPermissions("获得系统参数")
