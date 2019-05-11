@@ -4,11 +4,11 @@ import com.wdy.module.common.constant.*;
 import com.wdy.module.common.request.RequestBean;
 import com.wdy.module.common.response.ResponseBean;
 import com.wdy.module.cycleJob.DynamicTask;
-import com.wdy.module.dao.GoodDao;
-import com.wdy.module.dao.TagDao;
+import com.wdy.module.dao.*;
 import com.wdy.module.entity.*;
 import com.wdy.module.serviceUtil.*;
 import com.wdy.module.utils.*;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -34,6 +34,8 @@ public class GoodServiceImpl extends BaseServiceImpl implements GoodService {
     private DynamicTask dynamicTask;
     @Autowired
     private CycleJobService cycleJobService;
+    @Autowired
+    private StyleDao styleDao;
 
     @Override
     public List<Good> findAll() {
@@ -67,13 +69,14 @@ public class GoodServiceImpl extends BaseServiceImpl implements GoodService {
         Good g = findByBarCode(good.getBarCode());
         if (g != null && g.getWaitUpdate() != null && g.getWaitUpdate() != 0) {
             good.setId(g.getId());
-            setRegionNames(g, good);
+            setRegionNames(good, g);
+            BeanUtils.copyProperties(good, g, CopyUtil.getNullPropertyNames(good));
+            return goodDao.save(g);
         } else {
             good.setWaitUpdate(1);
             good.setImportTime(new Timestamp(System.currentTimeMillis()));
+            return goodDao.save(good);
         }
-        System.out.println(good);
-        return goodDao.save(good);
     }
 
     @Override
@@ -81,9 +84,10 @@ public class GoodServiceImpl extends BaseServiceImpl implements GoodService {
         Good g = findByBarCode(good.getBarCode());
         if (g != null && g.getWaitUpdate() != null && g.getWaitUpdate() != 0) {
             good.setId(g.getId());
-            setRegionNames(g, good);
+            setRegionNames(good, g);
+            BeanUtils.copyProperties(good, g, CopyUtil.getNullPropertyNames(good));
         }
-        return goodDao.save(good);
+        return goodDao.save(g);
     }
 
     @Override
@@ -109,10 +113,10 @@ public class GoodServiceImpl extends BaseServiceImpl implements GoodService {
         try {
             if (mode.equals(ModeConstant.DO_BY_TYPE_GOODS_SCAN)) {
                 // 添加
-                PoiUtil.importCsvGoodDataFile(file.getInputStream(), 0);
+                PoiUtil.importCsvGoodDataFile(file.getInputStream());
             } else if (mode.equals(ModeConstant.DO_BY_TYPE_CHANGEGOODS_SCAN)) {
                 // 更新
-                PoiUtil.importCsvGoodDataFile(file.getInputStream(), 1);
+                PoiUtil.importCsvGoodDataFile(file.getInputStream());
             }
             return true;
         } catch (IOException e) {
@@ -235,6 +239,10 @@ public class GoodServiceImpl extends BaseServiceImpl implements GoodService {
             for (Tag tag : tags) {
                 //标签等待更新
                 tag.setWaitUpdate(0);
+                if (regionNames.contains("isPromote")) {
+                    Style style = styleDao.findByStyleNumberAndIsPromote(tag.getStyle().getStyleNumber(), targetGood.getIsPromote());
+                    tag.setStyle(style);
+                }
             }
             // 0为等待更新
             sourceGood.setWaitUpdate(0);

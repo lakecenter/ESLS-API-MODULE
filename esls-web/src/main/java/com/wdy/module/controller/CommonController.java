@@ -140,7 +140,7 @@ public class CommonController {
         List dataColumnList = baseDao.findBySql(SqlConstant.QUERY_TABLIE_COLUMN + "\'" + tableName + "\'");
         try {
             if (tableName.equals(TableConstant.TABLE_GOODS)) {
-                PoiUtil.importCsvGoodDataFile(file.getInputStream(), 1);
+                PoiUtil.importCsvGoodDataFile(file.getInputStream());
             } else
                 PoiUtil.importCsvDataFile(file.getInputStream(), dataColumnList, tableName, 1);
         } catch (IOException e) {

@@ -158,7 +158,7 @@ public class SystemVersionArgs {
             String tagsLengthCommand = "1000";
             StringBuffer basePermissions = new StringBuffer();
             basePermissions.append("标签闪灯 添加或修改信息 标签商品绑定 系统菜单 设置通讯命令时间参数 设置通讯命令时间参数 导入数据库表 导出数据库表 获取数据表信息 获取指定ID的信息 删除指定ID的信息 查询和搜索功能");
-            String goodDataFormat = "id name barCode qrCode price promotePrice provider operator category origin spec stock unit shelfNumber promoteTimeGap promotionReason isPromote rfu01 rfu02 rfus01 rfus02";
+            String goodDataFormat = "name barCode qrCode price promotePrice provider operator category origin spec stock unit shelfNumber promoteTimeGap promotionReason isPromote rfu01 rfu02 rfus01 rfus02";
             SystemVersion newSystemVersion = new SystemVersion();
             newSystemVersion.setId((long) 1);
             newSystemVersion.setSoftVersion(softVersion);

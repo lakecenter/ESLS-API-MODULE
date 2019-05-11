@@ -203,7 +203,7 @@ public class DynamicTask {
                 for (int i = 0; i < files.length; i++) {
                     try {
                         // 添加
-                        PoiUtil.importCsvGoodDataFile(new FileInputStream(files[i]), 0);
+                        PoiUtil.importCsvGoodDataFile(new FileInputStream(files[i]));
                         String startPath = filePath + File.separator + files[i].getName();
                         String endPath = filePath + "_finish" + File.separator + files[i].getName();
                         File startFile = new File(startPath);
@@ -239,7 +239,7 @@ public class DynamicTask {
                     System.out.println(files[i].getName() + "开始导入数据库");
                     try {
                         // 修改
-                        PoiUtil.importCsvGoodDataFile(new FileInputStream(files[i]), 1);
+                        PoiUtil.importCsvGoodDataFile(new FileInputStream(files[i]));
                         // 删除
                         String startPath = filePath + File.separator + files[i].getName();
                         String endPath = filePath + "_finish" + File.separator + files[i].getName();

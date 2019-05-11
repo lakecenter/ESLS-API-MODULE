@@ -7,10 +7,11 @@ import com.wdy.module.service.ShopService;
 import com.wdy.module.service.UserService;
 import com.wdy.module.utils.ReflectUtil;
 import org.apache.poi.ss.formula.functions.T;
-import org.springframework.beans.BeanUtils;
+import org.springframework.beans.*;
 import org.springframework.util.*;
 
 import javax.swing.*;
+import java.beans.PropertyDescriptor;
 import java.lang.reflect.Method;
 import java.util.*;
 
@@ -260,6 +261,18 @@ public class CopyUtil {
                 }
         );
         return resultList;
+    }
+
+    public static String[] getNullPropertyNames(Object source) {
+        BeanWrapper src = new BeanWrapperImpl(source);
+        PropertyDescriptor[] pds = src.getPropertyDescriptors();
+        Set<String> emptyNames = new HashSet<>();
+        for (PropertyDescriptor pd : pds) {
+            Object srcValue = src.getPropertyValue(pd.getName());
+            if (srcValue == null)
+                emptyNames.add(pd.getName());
+        }
+        return emptyNames.toArray(new String[emptyNames.size()]);
     }
 
     private static String NEEDIGNOREPROPERTY = "openId smsId channelId userId permissionId roleId regionId";
