@@ -3,18 +3,22 @@ package com.wdy.module.service;
 import com.wdy.module.common.request.RequestBean;
 import com.wdy.module.common.response.ResponseBean;
 import com.wdy.module.common.response.ResultBean;
+import com.wdy.module.entity.Good;
 import com.wdy.module.entity.Tag;
 import org.springframework.http.ResponseEntity;
 
 import java.util.List;
 import java.util.Optional;
 
-public interface TagService<T> extends Service<T> {
+public interface TagService extends Service {
     List<Tag> findAll();
 
     List<Tag> findAll(Integer page, Integer count);
 
     List<Tag> findByRouterId(Long routerId);
+
+    List<Tag> findByGoodId(Long goodId);
+
 
     Tag findByTagAddress(String tagAddress);
 
@@ -53,8 +57,11 @@ public interface TagService<T> extends Service<T> {
 
     ResponseBean changeLightStatusByRouter(RequestBean requestBean, Integer mode);
 
-    // 更新指定路由器下的所有样式
-    ResponseBean updateTagStyle(Tag tag, boolean isWaittingLong);
+    ResponseBean updateTagStyle(Tag tag, boolean isWaitingLong);
+
+    ResponseBean updateTagStyle(Tag tag, Good good,String regionNames, boolean isWaitingLong);
+
+    ResponseBean updateTagStyle(Tag tag, String styleNumber,boolean isWaitingLong);
 
     // 对指定的标签或路由器发出标签移除命令
     ResponseBean removeTagCommand(RequestBean requestBean, Integer mode);
@@ -66,4 +73,6 @@ public interface TagService<T> extends Service<T> {
     ResponseEntity<ResultBean> updateTagStyleById(long tagId, long styleId, Integer mode);
 
     ResponseBean testInkScreen(RequestBean requestBean, Integer type, Integer mode);
+
+    ResponseBean scanAllTags();
 }

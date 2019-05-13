@@ -3,8 +3,7 @@ package com.wdy.module.netty.command;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 @Component
 public class CommandConstant {
@@ -39,9 +38,9 @@ public class CommandConstant {
     public static String QUERYTAG = "查询标签信息";
     public static String QUERYROUTER = "查询路由器信息";
     public static String SETTINGROUTER = "设置路由器信息";
-    public static String TAGREMOVE = "标签移除";
+    public static final String TAGREMOVE = "标签移除";
     public static String ROUTERAWAKEOVER = "路由器结束唤醒";
-    public static String ROUTERREMOVE = "路由器移除";
+    public static final String ROUTERREMOVE = "路由器移除";
     public static String ROUTERHEARTBEAN = "心跳包";
     public static String APBYCHANNELIDSTOP = "AP停止发送无线帧";
     public static String APRECEIVEBYCHANNELIDSTOP = "AP停止接收无线帧";
@@ -63,6 +62,7 @@ public class CommandConstant {
     // 路由器在线升级
     public static String ROUTER_UPDATE = "在线升级命令";
     public static String ROUTER_UPDATE_BEGIN = "开始发送升级程序数据命令";
+    public static List<String> needToSynchronize = new ArrayList<>();
 
     @PostConstruct
     public static void init() {
@@ -121,6 +121,7 @@ public class CommandConstant {
         // 路由器在线升级
         COMMAND_BYTE.put(ROUTER_UPDATE, getBytes(0x0C, 0x01));
         COMMAND_BYTE.put(ROUTER_UPDATE_BEGIN, getBytes(0x0C, 0x02, CommandConstant.COMMANDTYPE_ROUTER));
+        needToSynchronize = Arrays.asList(TAGREMOVE);
     }
 
     private static byte[] getBytes(int _0, int _1, int type) {

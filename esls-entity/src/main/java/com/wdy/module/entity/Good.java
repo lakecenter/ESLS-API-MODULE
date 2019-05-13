@@ -98,6 +98,9 @@ public class Good implements Serializable {
     @Column(name = "promoteTimeGap")
     @ExcelField(title = "促销时间起止时间", order = 26)
     private String promoteTimeGap;
+    @Column(name = "shopNumber")
+    @ExcelField(title = "商店编号", order = 27)
+    private String shopNumber;
     @OneToMany(mappedBy = "good", fetch = FetchType.EAGER)
     @JsonIgnore
     private Collection<Tag> tags;

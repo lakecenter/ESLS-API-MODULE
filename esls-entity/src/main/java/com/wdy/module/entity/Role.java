@@ -32,7 +32,7 @@ public class Role {
     @ExcelField(title = "角色描述", order = 3)
     private String name;
     //角色 -- 权限关系：多对多关系;
-    @ManyToMany(fetch = FetchType.EAGER)
+    @ManyToMany
     @JoinTable(name = "role_permission", joinColumns = {@JoinColumn(name = "roleId")}, inverseJoinColumns = {@JoinColumn(name = "permissionId")})
     private List<Permission> permissions;
     // 用户 - 角色关系定义;

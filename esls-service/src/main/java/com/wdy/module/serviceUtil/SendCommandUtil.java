@@ -6,7 +6,6 @@ import com.wdy.module.common.exception.ServiceException;
 import com.wdy.module.netty.command.CommandConstant;
 import com.wdy.module.dto.TagsAndRouter;
 import com.wdy.module.entity.*;
-import com.wdy.module.service.GoodService;
 import com.wdy.module.system.SystemVersionArgs;
 import com.wdy.module.utils.*;
 import io.netty.channel.Channel;
@@ -19,16 +18,13 @@ import com.wdy.module.serviceImpl.AsyncServiceTask;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 @Slf4j
 public class SendCommandUtil {
     public static ResponseBean sendCommandWithRouters(List<Router> routers, String contentType, Integer messageType) {
         int sum = routers.size();
         ArrayList<ListenableFuture<Integer>> listenableFutures = new ArrayList<>();
-        byte[] content = CommandConstant.COMMAND_BYTE.get(contentType);
-        byte[] message = CommandConstant.getBytesByType(null, content, messageType);
         try {
             for (Router router : routers) {
                 // 路由器未连接或禁用
@@ -36,27 +32,11 @@ public class SendCommandUtil {
                 Channel channel = SocketChannelHelper.getChannelByRouter(router);
                 if (channel == null) continue;
                 // 广播命令只发一次 广播命令没有响应
-                ListenableFuture<Integer> result = ((AsyncServiceTask) SpringContextUtil.getBean("AsyncServiceTask")).sendMessageWithRepeat(channel, message, router, System.currentTimeMillis(), 1);
+                ListenableFuture<Integer> result = ((AsyncServiceTask) SpringContextUtil.getBean("AsyncServiceTask")).sendMessageWithRepeat(channel, router, contentType, messageType, System.currentTimeMillis(), 1);
                 listenableFutures.add(result);
             }
         } catch (Exception e) {
             log.info("SendCommandUtil - sendCommandWithRouters : " + e);
-        }
-        return new ResponseBean(sum, sum);
-    }
-
-    public static ResponseBean sendCommandWithRouters(List<Router> routers, byte[] message) {
-        int sum = routers.size();
-        ArrayList<ListenableFuture<Integer>> listenableFutures = new ArrayList<>();
-        byte[] realMessage = CommandConstant.getBytesByType(null, message, CommandConstant.COMMANDTYPE_ROUTER);
-        for (Router router : routers) {
-            // 路由器未连接或禁用
-            if (router.getState() != null && router.getState() == 0) continue;
-            Channel channel = SocketChannelHelper.getChannelByRouter(router);
-            if (channel == null) continue;
-            // 广播命令只发一次 广播命令没有响应
-            ListenableFuture<Integer> result = ((AsyncServiceTask) SpringContextUtil.getBean("AsyncServiceTask")).sendMessageWithRepeat(channel, realMessage, router, System.currentTimeMillis(), 1);
-            listenableFutures.add(result);
         }
         return new ResponseBean(sum, sum);
     }
@@ -109,23 +89,31 @@ public class SendCommandUtil {
         return new ResponseBean(sum, ack);
     }
 
-    public static ResponseBean sendCommandWithTags(List<Tag> tags, String contentType, Integer messageType) {
-        int sum = tags.size();
+    public static ResponseBean sendCommandWithTags(List<Tag> tags, String contentType, Integer messageType, Boolean isNeedWaiting) {
+        int sum = tags.size(), successNumber = 0;
         ArrayList<ListenableFuture<Integer>> listenableFutures = new ArrayList<>();
         try {
-            List<TagsAndRouter> tagsAndRouters = TagUtil.splitTagsByRouter(tags);
-            byte[] content = CommandConstant.COMMAND_BYTE.get(contentType);
+            List<TagsAndRouter> tagsAndRouters = TagAndRouterUtil.splitTagsByRouter(tags);
             for (TagsAndRouter tagsAndRouter : tagsAndRouters) {
                 ArrayList<Tag> tagsList = tagsAndRouter.getTags();
-                ListenableFuture<Integer> result = ((AsyncServiceTask) SpringContextUtil.getBean("AsyncServiceTask")).sendMessageWithRepeat(tagsList, System.currentTimeMillis(), content, messageType, 1);
+                ListenableFuture<Integer> result = ((AsyncServiceTask) SpringContextUtil.getBean("AsyncServiceTask")).sendMessageWithRepeat(tagsList, System.currentTimeMillis(), contentType, messageType, 1);
                 listenableFutures.add(result);
             }
         } catch (Exception e) {
             log.info("SendCommandUtil - sendCommandWithTags : " + e);
         }
         //等待所有线程执行完在返回
-//        successNumber = waitAllThread(listenableFutures);
-        return new ResponseBean(sum, sum);
+        if (isNeedWaiting)
+            successNumber = waitAllThread(listenableFutures);
+        return new ResponseBean(sum, successNumber);
+    }
+
+    public static void sendBindTagGood(Tag tag, Good good, Integer mode) {
+        ((AsyncServiceTask) SpringContextUtil.getBean("AsyncServiceTask")).sendBindTagGood(tag, good, mode);
+    }
+
+    public static void sendTagChangeStyle(Tag tag, Style style) {
+        ((AsyncServiceTask) SpringContextUtil.getBean("AsyncServiceTask")).sendTagChangeStyle(tag, style, true);
     }
 
     public static ResponseBean sendCommandWithSettingRouters(List<Router> routers) {
@@ -172,15 +160,18 @@ public class SendCommandUtil {
         int sum = tags.size(), successNumber = tags.size();
         ArrayList<ListenableFuture<Integer>> listenableFutures = new ArrayList<>();
         try {
-            List<TagsAndRouter> tagsAndRouters = TagUtil.splitTagsByRouter(tags);
+            List<TagsAndRouter> tagsAndRouters = TagAndRouterUtil.splitTagsByRouter(tags);
             for (TagsAndRouter tagsAndRouter : tagsAndRouters) {
                 if (tagsAndRouter.getRouter() == null) continue;
                 testIfValid("UPDATE_TAG_STYLE_" + tagsAndRouter.getRouter().getId() + "_");
                 ArrayList<Tag> tagsList = tagsAndRouter.getTags();
                 if (CollectionUtils.isEmpty(tagsList))
                     continue;
-                ListenableFuture<Integer> result = ((AsyncServiceTask) SpringContextUtil.getBean("AsyncServiceTask")).updateTagStyle(tagsList, tagsList, System.currentTimeMillis(), Integer.valueOf(SystemVersionArgs.recursionDepth), isNeedSending);
-                listenableFutures.add(result);
+                try {
+                    ListenableFuture<Integer> result = ((AsyncServiceTask) SpringContextUtil.getBean("AsyncServiceTask")).updateTagStyle(tagsList, System.currentTimeMillis(), Integer.valueOf(SystemVersionArgs.recursionDepth));
+                    listenableFutures.add(result);
+                } catch (Exception e) {
+                }
             }
         } catch (Exception e) {
             throw new ServiceException(-1, "SendCommandUtil-updateTagStyle-" + e);
@@ -196,10 +187,6 @@ public class SendCommandUtil {
             }
             // 发送邮件通知
             MessageSender.sendGoodUpdateMessage(tags, nosuccessTags);
-        }
-        // 所有的标签都变价成功，才更新商品状态
-        if (sum == successNumber) {
-            setGoodWaitUpdate(tags);
         }
         return new ResponseBean(sum, successNumber);
     }
@@ -217,7 +204,6 @@ public class SendCommandUtil {
                     byte[] message = CommandConstant.getBytesByType(null, content, messageType);
                     ListenableFuture<Integer> result = ((AsyncServiceTask) SpringContextUtil.getBean("AsyncServiceTask")).sendMessageWithRepeat(channel, message, tagsAndRouter.getRouter(), System.currentTimeMillis(), 1);
                     listenableFutures.add(result);
-                    // 判断是否成功
                 }
             }
         } catch (Exception e) {
@@ -227,6 +213,7 @@ public class SendCommandUtil {
         successNumber = waitAllThread(listenableFutures);
         return new ResponseBean(0, successNumber);
     }
+
 
     public static int waitAllThread(ArrayList<ListenableFuture<Integer>> listenableFutures) {
         if (listenableFutures.size() == 0)
@@ -406,15 +393,4 @@ public class SendCommandUtil {
         redisUtil.sentinelSet(methodName + user.getName(), Integer.valueOf(redisCache) + 1, Long.valueOf(Integer.valueOf(timeGapAndtime[0])));
     }
 
-    private static void setGoodWaitUpdate(List<Tag> tags) {
-        for (Tag tag : tags) {
-            Good good = tag.getGood();
-            if (good != null) {
-                GoodService goodService = (GoodService) SpringContextUtil.getBean("GoodService");
-                good.setWaitUpdate(0);
-                good.setRegionNames(null);
-                goodService.save(good);
-            }
-        }
-    }
 }

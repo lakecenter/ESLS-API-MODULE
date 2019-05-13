@@ -37,8 +37,7 @@ public class LicenseCreator {
         try {
             LicenseManager licenseManager = new CustomLicenseManager(initLicenseParam());
             LicenseContent licenseContent = initLicenseContent();
-            File localFile = File.createTempFile("temp", null);
-            FileUtils.copyInputStreamToFile(new ClassPathResource(param.getLicensePath()).getInputStream(), localFile);
+            File localFile = new File(param.getLicensePath());
             licenseManager.store(licenseContent, localFile);
             return true;
         } catch (Exception e) {

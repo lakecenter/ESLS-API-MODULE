@@ -1,14 +1,13 @@
 package com.wdy.module.controller;
 
+import com.wdy.module.common.response.ResponseHelper;
 import com.wdy.module.common.response.ResultBean;
 import com.wdy.module.license.*;
 import com.wdy.module.serviceUtil.SpringContextUtil;
 import de.schlichtherle.license.LicenseContent;
 import de.schlichtherle.license.LicenseManager;
 import io.swagger.annotations.*;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -69,8 +68,7 @@ public class LicenseCreatorController {
     public ResponseEntity<ResultBean> generateLicense(@RequestBody LicenseCreatorParam param) {
         LicenseCreator licenseCreator = new LicenseCreator(param);
         boolean result = licenseCreator.generateLicense();
-
-        return new ResponseEntity<>(ResultBean.success(result), HttpStatus.OK);
+        return ResponseHelper.buildSuccessResultBean(result);
     }
 
     @ApiOperation("下载证书")
@@ -92,9 +90,10 @@ public class LicenseCreatorController {
                 os.write(buffer, 0, i);
                 i = bis.read(buffer);
             }
-            return new ResponseEntity<>(ResultBean.success("下载成功"), HttpStatus.OK);
+
+            return ResponseHelper.buildSuccessResultBean("下载成功");
         } catch (Exception e) {
-            return new ResponseEntity<>(ResultBean.error("下载失败" + e), HttpStatus.BAD_REQUEST);
+            return ResponseHelper.buildBadRequestResultBean("下载失败" + e);
         }
     }
 
@@ -117,9 +116,9 @@ public class LicenseCreatorController {
             multipartFile.transferTo(localFile);
             LicenseCheckListener licenseCheckListener = (LicenseCheckListener) SpringContextUtil.getBean("LicenseCheckListener");
             licenseCheckListener.installLicense();
-            return new ResponseEntity<>(ResultBean.success("安装成功"), HttpStatus.OK);
+            return ResponseHelper.buildSuccessResultBean("安装成功");
         } catch (Exception e) {
-            return new ResponseEntity<>(ResultBean.error("安装失败" + e), HttpStatus.BAD_REQUEST);
+            return ResponseHelper.buildBadRequestResultBean("安装失败" + e);
         }
     }
 
@@ -128,6 +127,6 @@ public class LicenseCreatorController {
     public ResponseEntity<ResultBean> getValidTime() throws Exception {
         LicenseManager licenseManager = LicenseManagerHolder.getInstance(null);
         LicenseContent verify = licenseManager.verify();
-        return new ResponseEntity<>(ResultBean.success(verify), HttpStatus.OK);
+        return ResponseHelper.buildSuccessResultBean(verify);
     }
 }

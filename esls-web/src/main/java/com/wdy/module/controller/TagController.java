@@ -2,15 +2,16 @@ package com.wdy.module.controller;
 
 import com.wdy.module.aop.AccessLimit;
 import com.wdy.module.common.constant.*;
+import com.wdy.module.common.request.QueryAllBean;
 import com.wdy.module.common.request.RequestBean;
 import com.wdy.module.common.response.ResponseBean;
 import com.wdy.module.common.response.ResultBean;
+import com.wdy.module.common.response.ResponseHelper;
 import com.wdy.module.dao.GoodDao;
 import com.wdy.module.dto.TagVo;
 import com.wdy.module.entity.*;
 import com.wdy.module.entity.Tag;
 import com.wdy.module.aop.Log;
-import com.wdy.module.netty.command.CommandConstant;
 import com.wdy.module.rabbitMq.RabbiMqSendBean;
 import com.wdy.module.service.StyleService;
 import com.wdy.module.service.TagService;
@@ -55,43 +56,9 @@ public class TagController {
     })
     @GetMapping("/tags")
     @RequiresPermissions("系统菜单")
-    public ResponseEntity<ResultBean> getTags(@RequestParam(required = false) String query, @RequestParam(required = false) String queryString, @Min(message = "data.page.min", value = 0) @RequestParam(required = false) Integer page, @Min(message = "data.count.min", value = 0) @RequestParam(required = false) Integer count) {
+    public ResponseEntity<ResultBean> getTags(@RequestParam(required = false) String query, @RequestParam(required = false) String queryString, @Min(message = "data.page.min", value = 0) @RequestParam(required = false) Integer page, @Min(message = "data.count.min", value = 0) @RequestParam(required = false) Integer count) throws Exception {
         String result = ConditionUtil.judgeArgument(query, queryString, page, count);
-        if (result == null)
-            return new ResponseEntity<>(ResultBean.error("参数组合有误 [query和queryString必须同时提供] [page和count必须同时提供]"), HttpStatus.BAD_REQUEST);
-        // 带条件或查询
-        if (query != null && query.contains(" ")) {
-            List content = tagService.findAllBySql(TableConstant.TABLE_TAGS, "like", query, queryString, page, count, Tag.class);
-            List resultList = CopyUtil.copyTag(content);
-            return new ResponseEntity<>(new ResultBean(resultList, resultList.size()), HttpStatus.OK);
-        }
-        // 查询全部
-        if (result.equals(ConditionUtil.QUERY_ALL)) {
-            List<Tag> list = tagService.findAll();
-            List<TagVo> resultList = CopyUtil.copyTag(list);
-            return new ResponseEntity<>(new ResultBean(resultList, resultList.size()), HttpStatus.OK);
-        }
-        // 查询全部分页
-        if (result.equals(ConditionUtil.QUERY_ALL_PAGE)) {
-            List<Tag> list = tagService.findAll();
-            List<Tag> content = tagService.findAll(page, count);
-            List<TagVo> resultList = CopyUtil.copyTag(content);
-            return new ResponseEntity<>(new ResultBean(resultList, list.size()), HttpStatus.OK);
-        }
-        // 带条件查询全部
-        if (result.equals(ConditionUtil.QUERY_ATTRIBUTE_ALL)) {
-            List content = tagService.findAllBySql(TableConstant.TABLE_TAGS, query, queryString, Tag.class);
-            List<TagVo> resultList = CopyUtil.copyTag(content);
-            return new ResponseEntity<>(new ResultBean(resultList, resultList.size()), HttpStatus.OK);
-        }
-        // 带条件查询分页
-        if (result.equals(ConditionUtil.QUERY_ATTRIBUTE_PAGE)) {
-            List<Tag> list = tagService.findAll();
-            List content = tagService.findAllBySql(TableConstant.TABLE_TAGS, query, queryString, page, count, Tag.class);
-            List<TagVo> resultList = CopyUtil.copyTag(content);
-            return new ResponseEntity<>(new ResultBean(resultList, list.size()), HttpStatus.OK);
-        }
-        return new ResponseEntity<>(ResultBean.error("查询组合出错 函数未执行！"), HttpStatus.BAD_REQUEST);
+        return tagService.getEntityList(QueryAllBean.builder().query(query).queryString(queryString).page(page).pagecount(count).result(result).serviceName("TagService").build());
     }
 
     @ApiOperation(value = "获取指定ID的标签信息")
@@ -99,13 +66,7 @@ public class TagController {
     @RequiresPermissions("获取指定ID的信息")
     public ResponseEntity<ResultBean> getTagById(@PathVariable Long id) {
         Optional<Tag> result = tagService.findById(id);
-        if (result.isPresent()) {
-            ArrayList<Tag> tags = new ArrayList<>();
-            tags.add(result.get());
-            List<TagVo> tagVos = CopyUtil.copyTag(tags);
-            return new ResponseEntity<>(new ResultBean(tagVos), HttpStatus.OK);
-        }
-        return new ResponseEntity<>(ResultBean.error("此ID标签不存在"), HttpStatus.BAD_REQUEST);
+        return ResponseHelper.buildSuccessResultBean(CopyUtil.copyTag(Arrays.asList(result.get())));
     }
 
     @ApiOperation(value = "添加或修改标签信息")
@@ -132,7 +93,7 @@ public class TagController {
             router.setId(tagVo.getRouterId());
             tag.setRouter(router);
         }
-        return new ResponseEntity<>(new ResultBean(tagService.saveOne(tag)), HttpStatus.OK);
+        return ResponseHelper.buildSuccessResultBean(tagService.saveOne(tag));
     }
 
     @ApiOperation(value = "根据ID删除标签信息")
@@ -141,10 +102,7 @@ public class TagController {
     @RequiresPermissions("删除指定ID的信息")
     public ResponseEntity<ResultBean> deleteTagById(@PathVariable Long id) {
         boolean flag = tagService.deleteById(id);
-
-        if (flag)
-            return new ResponseEntity<>(ResultBean.success("删除成功"), HttpStatus.OK);
-        return new ResponseEntity<>(ResultBean.success("删除失败！没有指定ID的标签"), HttpStatus.BAD_REQUEST);
+        return ResponseHelper.buildBooleanResultBean("删除成功", "删除失败！没有指定ID的标签", flag);
     }
 
     @ApiOperation("根据多个字段搜索数据")
@@ -152,7 +110,7 @@ public class TagController {
     @RequiresPermissions("查询和搜索功能")
     public ResponseEntity<ResultBean> searchTagsByConditon(@RequestParam String connection, @Min(message = "data.page.min", value = 0) @RequestParam Integer page, @RequestParam @Min(message = "data.count.min", value = 0) Integer count, @RequestBody @ApiParam(value = "查询条件json格式") RequestBean requestBean) {
         List<Tag> tags = tagService.findAllBySql(TableConstant.TABLE_TAGS, connection, requestBean, page, count, Tag.class);
-        return new ResponseEntity<>(new ResultBean(CopyUtil.copyTag(tags)), HttpStatus.OK);
+        return ResponseHelper.buildSuccessResultBean(CopyUtil.copyTag(tags));
     }
 
     @ApiOperation(value = "自定义属性----标签和商品绑定和取消绑定")
@@ -191,7 +149,7 @@ public class TagController {
         // 对指定的标签刷新
         if (mode.equals(ModeConstant.DO_BY_TAG)) {
             ResponseBean responseBean = tagService.flushTags(requestBean);
-            return new ResponseEntity<>(ResultBean.success(responseBean), HttpStatus.OK);
+            return ResponseHelper.buildSuccessResultBean(responseBean);
         }
         // 对路由器下的所有标签刷新
         else if (mode.equals(ModeConstant.DO_BY_ROUTER)) {
@@ -199,9 +157,9 @@ public class TagController {
             return new ResponseEntity<>(ResultBean.success(responseBean), HttpStatus.OK);
         } else if (mode.equals(ModeConstant.DO_BY_TAG_CYCLE) || mode.equals(ModeConstant.DO_BY_ROUTER_CYCLE)) {
             ResponseBean responseBean = tagService.flushTagsByCycle(requestBean, mode);
-            return new ResponseEntity<>(ResultBean.success(responseBean), HttpStatus.OK);
+            return ResponseHelper.buildSuccessResultBean(responseBean);
         } else
-            return new ResponseEntity<>(ResultBean.error("参数有误 正确选择mode"), HttpStatus.BAD_REQUEST);
+            return ResponseHelper.buildBadRequestResultBean("参数有误 请正确选择mode");
     }
 
     @ApiOperation(value = "对标签进行巡检或设置定期巡检", notes = "定期巡检才需加cron字段")
@@ -214,17 +172,17 @@ public class TagController {
         // 对指定的标签巡检
         if (mode.equals(ModeConstant.DO_BY_TAG)) {
             ResponseBean responseBean = tagService.scanTags(requestBean);
-            return new ResponseEntity<>(ResultBean.success(responseBean), HttpStatus.OK);
+            return ResponseHelper.buildSuccessResultBean(responseBean);
         }
         // 对路由器下的所有标签巡检
         else if (mode.equals(ModeConstant.DO_BY_ROUTER)) {
             ResponseBean responseBean = tagService.scanTagsByRouter(requestBean);
-            return new ResponseEntity<>(ResultBean.success(responseBean), HttpStatus.OK);
+            return ResponseHelper.buildSuccessResultBean(responseBean);
         } else if (mode.equals(ModeConstant.DO_BY_TAG_CYCLE) || mode.equals(ModeConstant.DO_BY_ROUTER_CYCLE)) {
             ResponseBean responseBean = tagService.scanTagsByCycle(requestBean, mode);
-            return new ResponseEntity<>(ResultBean.success(responseBean), HttpStatus.OK);
+            return ResponseHelper.buildSuccessResultBean(responseBean);
         } else
-            return new ResponseEntity<>(ResultBean.error("参数有误 正确选择mode"), HttpStatus.BAD_REQUEST);
+            return ResponseHelper.buildBadRequestResultBean("参数有误 请正确选择mode");
     }
 
     @ApiOperation("对标签进行禁用或启用")
@@ -235,7 +193,7 @@ public class TagController {
     @RequiresPermissions("切换状态")
     @Log("对标签进行禁用或启用")
     public ResponseEntity<ResultBean> changeStatus(@RequestBody @ApiParam("标签集合") RequestBean requestBean, @RequestParam @Min(message = "data.page.min", value = 0) @Max(message = "data.mode.max", value = 1) Integer mode) {
-        return new ResponseEntity<>(new ResultBean(tagService.changeStatus(requestBean, mode)), HttpStatus.OK);
+        return ResponseHelper.buildSuccessResultBean(tagService.changeStatus(requestBean, mode));
     }
 
     @ApiOperation("查看所有变价超时的标签信息")
@@ -246,7 +204,7 @@ public class TagController {
         ResponseEntity<ResultBean> result;
         if ((result = ResponseUtil.testListSize("没有相应的标签或商品 请重新选择", tagList)) != null) return result;
         List<TagVo> tagVos = CopyUtil.copyTag(tagList);
-        return new ResponseEntity<>(new ResultBean(tagVos), HttpStatus.OK);
+        return ResponseHelper.buildSuccessResultBean(tagVos);
     }
 
     @ApiOperation("对指定的标签闪灯或结束闪灯")
@@ -259,11 +217,11 @@ public class TagController {
     @Log("标签闪灯")
     public ResponseEntity<ResultBean> changeLightStatus(@RequestBody @ApiParam("标签或路由器信息集合") RequestBean requestBean, @RequestParam @Min(message = "data.page.min", value = 0) @Max(message = "data.mode.max", value = 1) Integer mode, @RequestParam Integer typeMode) {
         if (typeMode.equals(0))
-            return new ResponseEntity<>(new ResultBean(tagService.changeLightStatus(requestBean, mode)), HttpStatus.OK);
+            return ResponseHelper.buildSuccessResultBean(tagService.changeLightStatus(requestBean, mode));
         else if (typeMode.equals(1))
-            return new ResponseEntity<>(new ResultBean(tagService.changeLightStatusByRouter(requestBean, mode)), HttpStatus.OK);
+            return ResponseHelper.buildSuccessResultBean(tagService.changeLightStatusByRouter(requestBean, mode));
         else
-            return new ResponseEntity<>(ResultBean.error("参数有误"), HttpStatus.BAD_REQUEST);
+            return ResponseHelper.buildBadRequestResultBean("参数有误");
     }
 
     @ApiOperation("对指定的标签发出标签移除命令")
@@ -273,7 +231,7 @@ public class TagController {
     @PutMapping("/tag/remove")
     @Log("对指定的标签发出标签移除命令")
     public ResponseEntity<ResultBean> removeTagCommand(@RequestBody @ApiParam("标签集合") RequestBean requestBean, @RequestParam @Min(message = "data.page.min", value = 0) @Max(message = "data.mode.max", value = 1) Integer mode) {
-        return new ResponseEntity<>(new ResultBean(tagService.removeTagCommand(requestBean, mode)), HttpStatus.OK);
+        return ResponseHelper.buildSuccessResultBean(tagService.removeTagCommand(requestBean, mode));
     }
 
     @ApiOperation("获得标签可绑定的所有样式")
@@ -285,26 +243,16 @@ public class TagController {
         List<Style> resultList = new ArrayList<>();
         for (Tag tag : tags)
             for (Style style : styles)
-                if (TagUtil.judgeTagMatchStyle(tag, style))
+                if (TagAndRouterUtil.judgeTagMatchStyle(tag, style))
                     resultList.add(style);
-        return new ResponseEntity<>(new ResultBean(CopyUtil.copyStyle(resultList)), HttpStatus.OK);
+        return ResponseHelper.buildSuccessResultBean(CopyUtil.copyStyle(resultList));
     }
 
     @ApiOperation("对所有标签进行巡检")
     @GetMapping("/tags/scan")
     @Log("对所有标签进行巡检")
     public ResponseEntity<ResultBean> scanAllTags() {
-        List<Tag> tags = tagService.findAll();
-        Set<Router> routers = new HashSet<>();
-        for (Tag tag : tags) {
-            Router router = tag.getRouter();
-            if (router != null)
-                routers.add(router);
-        }
-        String contentType = CommandConstant.QUERYTAG;
-        TagUtil.setTagIsNotWorking(tags);
-        ResponseBean responseBean = SendCommandUtil.sendCommandWithRouters(new ArrayList<>(routers), contentType, CommandConstant.COMMANDTYPE_TAG_BROADCAST);
-        return new ResponseEntity<>(new ResultBean(responseBean), HttpStatus.OK);
+        return ResponseHelper.buildSuccessResultBean(tagService.scanAllTags());
     }
 
     @ApiOperation("对工作的标签进行批量改价操作")
@@ -345,7 +293,7 @@ public class TagController {
             List<Tag> tags = tagService.findBySql(SqlConstant.getQuerySql(TableConstant.TABLE_TAGS, ArrtributeConstant.TAG_FORBIDSTATE, "=", "1"), Tag.class);
             responseBean = SendCommandUtil.updateTagStyle(tags, true, false);
         }
-        return new ResponseEntity<>(ResultBean.success(responseBean), HttpStatus.OK);
+        return ResponseHelper.buildSuccessResultBean(responseBean);
     }
 
     @ApiOperation("测试rabbitmq")
@@ -371,6 +319,6 @@ public class TagController {
     @Log("墨水瓶测试命令")
     public ResponseEntity<ResultBean> testInkScreen(@RequestBody RequestBean requestBean, @RequestParam Integer type, @RequestParam Integer mode) {
         ResponseBean responseBean = tagService.testInkScreen(requestBean, type, mode);
-        return new ResponseEntity<>(ResultBean.success(responseBean), HttpStatus.OK);
+        return ResponseHelper.buildSuccessResultBean(responseBean);
     }
 }

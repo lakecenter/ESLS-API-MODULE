@@ -15,7 +15,6 @@ public class SettingUtil {
         tag.setWaitUpdate(0);
         // 设置命令执行时间
         tag.setExecTime((int) (end - begin));
-        System.out.println("命令执行时间: " + (end - begin));
         return tag;
     }
 
@@ -25,7 +24,6 @@ public class SettingUtil {
         long end = System.currentTimeMillis();
         // 设置命令执行时间
         tag.setExecTime((int) (end - begin));
-        System.out.println("命令执行时间: " + (end - begin));
         return tag;
     }
 

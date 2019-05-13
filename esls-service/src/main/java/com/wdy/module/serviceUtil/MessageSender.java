@@ -133,8 +133,11 @@ public class MessageSender {
             if (shop == null)
                 throw new ServiceException(ResultEnum.ROUTER_BIND_SHOP_NOT_EXIST);
             List<User> needToSending = (List) shop.getUsers();
-            if (!CollectionUtils.isEmpty(needToSending))
-                users.addAll(needToSending);
+            if (!CollectionUtils.isEmpty(needToSending)) {
+                for (User user : needToSending)
+                    if (!users.contains(user))
+                        users.add(user);
+            }
         }
         return users;
     }

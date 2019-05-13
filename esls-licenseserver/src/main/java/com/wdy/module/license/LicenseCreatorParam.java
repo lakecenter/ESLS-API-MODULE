@@ -42,7 +42,7 @@ public class LicenseCreatorParam implements Serializable {
      * 证书生成路径
      */
     @JsonIgnore
-    private String licensePath = "license/data.license";
+    private String licensePath = "data.license";
 
     /**
      * 密钥库存储路径

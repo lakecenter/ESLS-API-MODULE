@@ -33,5 +33,6 @@ public class GoodVo {
     private String stock;
     private Byte isPromote;
     private String promoteTimeGap;
+    private String shopNumber;
     private List<Long> tagIdList = new ArrayList<>();
 }

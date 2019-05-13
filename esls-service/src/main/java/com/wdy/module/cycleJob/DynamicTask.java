@@ -1,10 +1,8 @@
 package com.wdy.module.cycleJob;
 
 import com.wdy.module.common.constant.ModeConstant;
-import com.wdy.module.common.constant.SqlConstant;
 import com.wdy.module.common.request.RequestBean;
 import com.wdy.module.common.request.RequestItem;
-import com.wdy.module.common.response.ResponseBean;
 import com.wdy.module.dao.CycleJobDao;
 import com.wdy.module.entity.*;
 import com.wdy.module.serviceUtil.*;
@@ -17,7 +15,6 @@ import org.springframework.scheduling.support.CronTrigger;
 import org.springframework.stereotype.Component;
 import com.wdy.module.service.*;
 
-import javax.annotation.PostConstruct;
 import java.io.File;
 import java.io.FileInputStream;
 import java.util.*;
@@ -195,7 +192,6 @@ public class DynamicTask {
 
         @Override
         public void run() {
-            Service service = (Service) SpringContextUtil.getBean("BaseService");
             System.out.println("扫描指定目录下的商品基本文件  " + filePath + " " + new Date());
             File file = new File(filePath);
             File[] files = file.listFiles();

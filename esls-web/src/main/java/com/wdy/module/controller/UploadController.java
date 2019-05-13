@@ -1,9 +1,12 @@
 package com.wdy.module.controller;
 
 import com.wdy.module.common.constant.FileConstant;
+import com.wdy.module.common.exception.ResultEnum;
+import com.wdy.module.common.exception.ServiceException;
 import com.wdy.module.common.request.RequestBean;
 import com.wdy.module.common.request.RequestItem;
 import com.wdy.module.common.response.ResponseBean;
+import com.wdy.module.common.response.ResponseHelper;
 import com.wdy.module.common.response.ResultBean;
 import com.wdy.module.entity.*;
 import com.wdy.module.service.*;
@@ -35,33 +38,34 @@ public class UploadController {
     private DispmsService dispmsService;
     @Autowired
     private CycleJobService cycleJobService;
+
     @ApiOperation("上传单个文件")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "mode", value = "-1为商品基本信息 -2商品变价信息 0为商品特征图片 1为样式特征图片", dataType = "mode", paramType = "query", required = true)
     })
     @PostMapping("/uploadFile")
     @RequiresPermissions("上传单个文件")
-    public ResponseEntity<ResultBean> singleFileUpload(@ApiParam(value = "文件信息", required = true) @RequestParam("file") MultipartFile file, @RequestParam Integer mode, @RequestParam(required = false) String query, @RequestParam(required = false)  String queryString ) {
+    public ResponseEntity<ResultBean> singleFileUpload(@ApiParam(value = "文件信息", required = true) @RequestParam("file") MultipartFile file, @RequestParam Integer mode, @RequestParam(required = false) String query, @RequestParam(required = false) String queryString) {
         if (Objects.isNull(file) || file.isEmpty()) {
             log.error("文件为空");
-            return new ResponseEntity<>(ResultBean.error("文件为空，请重新上传"), HttpStatus.NOT_ACCEPTABLE);
+            throw new ServiceException(ResultEnum.FILE_EMPTY_ERROR);
         }
         RequestBean requestBean = new RequestBean();
         RequestItem requestItem = new RequestItem(query, queryString);
         requestBean.getItems().add(requestItem);
-        String fileName =  UUID.randomUUID().toString()+file.getOriginalFilename();
+        String fileName = UUID.randomUUID().toString() + file.getOriginalFilename();
         try {
-            if(mode == -1 ||  mode == -2) {
+            if (mode == -1 || mode == -2) {
                 CycleJob cycleJob = cycleJobService.findByMode(mode);
                 String filePath = cycleJob.getArgs() + FileConstant.ModeMap.get(mode);
                 if (FileUtil.judeFileExists(filePath, fileName))
-                    return new ResponseEntity<>(ResultBean.error("文件已经存在，请重新上传"), HttpStatus.NOT_ACCEPTABLE);
+                    throw new ServiceException(ResultEnum.FILE_EXIST_ERROR);
                 // 商品基本信息及变价信息
                 FileUtil.uploadFile(file.getBytes(), cycleJob.getArgs(), fileName);
             }
             // 商品图片
-            else if(mode == 0){
-                fileName =  "/goods_image/"+fileName;
+            else if (mode == 0) {
+                fileName = "/goods_image/" + fileName;
                 List<Good> goods = RequestBeanUtil.getGoodsByRequestBean(requestBean);
                 for (Good good : goods) {
                     String url = COSUtil.PutObjectRequest(file, fileName);
@@ -70,8 +74,8 @@ public class UploadController {
                 }
             }
             // 样式图片
-            else if(mode == 1){
-                fileName =  "/dismps_image/"+fileName;
+            else if (mode == 1) {
+                fileName = "/dismps_image/" + fileName;
                 List<Dispms> dispms = RequestBeanUtil.getDispmsByRequestBean(requestBean);
                 for (Dispms dispm : dispms) {
                     String url = COSUtil.PutObjectRequest(file, fileName);
@@ -83,7 +87,7 @@ public class UploadController {
             e.printStackTrace();
         }
         log.info("文件写入成功...");
-        return new ResponseEntity<>(ResultBean.success("文件上传成功"), HttpStatus.OK);
+        return ResponseHelper.buildSuccessResultBean("文件上传成功");
     }
 
     @ApiOperation("上传多个文件")
@@ -98,6 +102,6 @@ public class UploadController {
                 System.out.println(file[i].getName());
             }
         }
-        return new ResponseEntity<>(ResultBean.success(new ResponseBean(file.length,successNumber)), HttpStatus.OK);
+        return ResponseHelper.buildSuccessResultBean(file.length, successNumber);
     }
 }

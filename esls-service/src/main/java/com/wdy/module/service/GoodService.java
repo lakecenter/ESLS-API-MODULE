@@ -23,6 +23,8 @@ public interface GoodService extends Service {
 
     Good updateGood(Good good);
 
+    List<Good> findByShopNumber(String shopNumber);
+
     boolean setScheduleTask(String cron, String rootfilePath, Integer mode);
 
     boolean uploadGoodData(MultipartFile file, Integer mode);

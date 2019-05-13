@@ -2,12 +2,15 @@ package com.wdy.module.controller;
 
 import com.wdy.module.common.constant.ArrtributeConstant;
 import com.wdy.module.common.constant.TableConstant;
+import com.wdy.module.common.request.QueryAllBean;
 import com.wdy.module.common.request.RequestBean;
+import com.wdy.module.common.response.ResponseHelper;
 import com.wdy.module.common.response.ResultBean;
 import com.wdy.module.dto.ShopVo;
 import com.wdy.module.entity.*;
 import com.wdy.module.aop.Log;
 import com.wdy.module.service.*;
+import com.wdy.module.serviceUtil.RequestBeanUtil;
 import com.wdy.module.utils.ConditionUtil;
 import io.swagger.annotations.*;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
@@ -30,6 +33,8 @@ public class ShopController {
     private RouterService routerService;
     @Autowired
     private UserService userService;
+    @Autowired
+    private GoodService goodService;
 
     @ApiOperation(value = "根据条件获取店铺信息")
     @ApiImplicitParams({
@@ -40,38 +45,9 @@ public class ShopController {
     })
     @GetMapping("/shops")
     @RequiresPermissions("系统菜单")
-    public ResponseEntity<ResultBean> getShops(@RequestParam(required = false) String query, @RequestParam(required = false) String queryString, @Min(message = "data.page.min", value = 0) @RequestParam(required = false) Integer page, @Min(message = "data.count.min", value = 0) @RequestParam(required = false) Integer count) {
+    public ResponseEntity<ResultBean> getShops(@RequestParam(required = false) String query, @RequestParam(required = false) String queryString, @Min(message = "data.page.min", value = 0) @RequestParam(required = false) Integer page, @Min(message = "data.count.min", value = 0) @RequestParam(required = false) Integer count) throws Exception {
         String result = ConditionUtil.judgeArgument(query, queryString, page, count);
-        if (result == null)
-            return new ResponseEntity<>(ResultBean.error("参数组合有误 [query和queryString必须同时提供] [page和count必须同时提供]"), HttpStatus.BAD_REQUEST);
-        // 带条件或查询
-        if (query != null && query.contains(" ")) {
-            List content = shopService.findAllBySql(TableConstant.TABLE_SHOPS, "like", query, queryString, page, count, Shop.class);
-            return new ResponseEntity<>(new ResultBean(content, content.size()), HttpStatus.OK);
-        }
-        // 查询全部
-        if (result.equals(ConditionUtil.QUERY_ALL)) {
-            List list = shopService.findAll();
-            return new ResponseEntity<>(new ResultBean(list, list.size()), HttpStatus.OK);
-        }
-        // 查询全部分页
-        if (result.equals(ConditionUtil.QUERY_ALL_PAGE)) {
-            List list = shopService.findAll();
-            List content = shopService.findAll(page, count);
-            return new ResponseEntity<>(new ResultBean(content, list.size()), HttpStatus.OK);
-        }
-        // 带条件查询全部
-        if (result.equals(ConditionUtil.QUERY_ATTRIBUTE_ALL)) {
-            List content = shopService.findAllBySql(TableConstant.TABLE_SHOPS, query, queryString, Shop.class);
-            return new ResponseEntity<>(new ResultBean(content, content.size()), HttpStatus.OK);
-        }
-        // 带条件查询分页
-        if (result.equals(ConditionUtil.QUERY_ATTRIBUTE_PAGE)) {
-            List list = shopService.findAll();
-            List content = shopService.findAllBySql(TableConstant.TABLE_SHOPS, query, queryString, page, count, Shop.class);
-            return new ResponseEntity<>(new ResultBean(content, list.size()), HttpStatus.OK);
-        }
-        return new ResponseEntity<>(ResultBean.error("查询组合出错 函数未执行！"), HttpStatus.BAD_REQUEST);
+        return shopService.getEntityList(QueryAllBean.builder().query(query).queryString(queryString).page(page).pagecount(count).result(result).serviceName("ShopService").build());
     }
 
     @ApiOperation(value = "获取指定ID的店铺信息")
@@ -79,12 +55,20 @@ public class ShopController {
     @RequiresPermissions("获取指定ID的信息")
     public ResponseEntity<ResultBean> getShopById(@PathVariable Long id) {
         Optional<Shop> result = shopService.findById(id);
-        if (result.isPresent()) {
-            ArrayList<Shop> list = new ArrayList<>();
-            list.add(result.get());
-            return new ResponseEntity<>(new ResultBean(list), HttpStatus.OK);
+        return ResponseHelper.buildBooleanResultBean(result, "此ID店铺不存在", result.isPresent());
+    }
+
+    @ApiOperation(value = "获取某个店铺下的所有商品")
+    @GetMapping("/shop/goods")
+    @RequiresPermissions("系统菜单")
+    public ResponseEntity<ResultBean> getGoodsByShop(@RequestBody @ApiParam(value = "店铺信息json格式") RequestBean requestBean) {
+        List<Shop> shops = RequestBeanUtil.getShopsByRequestBean(requestBean);
+        Map<String, List> shopToGoods = new HashMap<>();
+        for (Shop shop : shops) {
+            List<Good> goods = goodService.findByShopNumber(shop.getNumber());
+            shopToGoods.put(shop.getNumber(), goods);
         }
-        return new ResponseEntity<>(ResultBean.error("此ID店铺不存在"), HttpStatus.BAD_REQUEST);
+        return ResponseHelper.buildSuccessResultBean(shopToGoods);
     }
 
     @ApiOperation(value = "添加或修改店铺信息")
@@ -110,7 +94,7 @@ public class ShopController {
             }
         }
         Shop reuslt = shopService.saveOne(shop);
-        return new ResponseEntity<>(new ResultBean(shopService.saveOne(reuslt)), HttpStatus.OK);
+        return ResponseHelper.buildSuccessResultBean(shopService.saveOne(reuslt));
     }
 
     @ApiOperation(value = "根据ID删除店铺信息")
@@ -130,9 +114,8 @@ public class ShopController {
                 u.setShop(null);
                 userService.saveOne(u);
             }
-            return new ResponseEntity<>(ResultBean.success("删除成功"), HttpStatus.OK);
         }
-        return new ResponseEntity<>(ResultBean.success("删除失败！没有指定ID的店铺"), HttpStatus.BAD_REQUEST);
+        return ResponseHelper.buildBooleanResultBean("删除成功", "删除失败！没有指定ID的店铺", flag);
     }
 
     @ApiOperation(value = "对标签进行巡检或设置定期巡检", notes = "定期巡检才需加cron字段")
@@ -142,6 +125,6 @@ public class ShopController {
     @PutMapping("/shop/cyclejob")
     @Log("设置商店定期任务")
     public ResponseEntity<ResultBean> shopCycelJob(@RequestBody @ApiParam("商店信息集合") RequestBean requestBean, @RequestParam Integer mode) {
-        return new ResponseEntity<>(ResultBean.success(shopService.tagsByCycle(requestBean, mode)), HttpStatus.OK);
+        return ResponseHelper.buildSuccessResultBean(shopService.tagsByCycle(requestBean, mode));
     }
 }

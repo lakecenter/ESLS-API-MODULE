@@ -2,7 +2,7 @@ package com.wdy.module.shiro;
 
 import com.alibaba.fastjson.JSONObject;
 import com.wdy.module.common.constant.Constant;
-import com.wdy.module.config.ResponseHelper;
+import com.wdy.module.common.response.ResponseHelper;
 import com.wdy.module.entity.User;
 import com.wdy.module.utils.JWTTokenUtil;
 import org.apache.shiro.web.servlet.ShiroHttpServletRequest;

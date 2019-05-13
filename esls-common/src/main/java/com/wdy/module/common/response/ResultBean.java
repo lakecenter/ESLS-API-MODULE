@@ -57,14 +57,16 @@ public class ResultBean<T> implements Serializable {
         this.code = FAIL;
     }
 
-    public static ResultBean error(String msg) {
-        ResultBean error = new ResultBean(msg, ResultBean.FAIL);
-        error.setData("error");
+    public static <T> ResultBean error(T msg) {
+        ResultBean error = new ResultBean("error", ResultBean.FAIL);
+        error.setData(msg);
         return error;
     }
 
     public static ResultBean error(String msg, Integer code) {
-        return new ResultBean(msg, code);
+        ResultBean error = new ResultBean("error", code);
+        error.setData(msg);
+        return error;
     }
 
     public static ResultBean success(Object msg) {

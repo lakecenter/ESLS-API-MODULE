@@ -60,4 +60,6 @@ public class SystemVersion implements Serializable {
     private String tagsLengthCommand;
     @ExcelField(title = "商品导入导出数据格式", order = 14)
     private String goodDataFormat;
+    @ExcelField(title = "样式数据排序格式", order = 15)
+    private String dispmsesSort;
 }

@@ -78,6 +78,27 @@ public class CopyUtil {
         return resultList;
     }
 
+    public static List<RoleVo> copyRole(List<Role> content) {
+        List<RoleVo> resultList = new ArrayList<>();
+        content.forEach(item -> {
+            RoleVo roleVo = new RoleVo();
+            roleVo.setId(item.getId());
+            roleVo.setName(item.getName());
+            roleVo.setType(item.getType());
+            List<PermissionVo> permissionVos = new ArrayList<>();
+            for (Permission permission : item.getPermissions()) {
+                PermissionVo permissionVo = new PermissionVo();
+                permissionVo.setId(permission.getId());
+                permissionVo.setName(permission.getName());
+                permissionVo.setUrl(permission.getUrl());
+                permissionVos.add(permissionVo);
+            }
+            roleVo.setPermissions(permissionVos);
+            resultList.add(roleVo);
+        });
+        return resultList;
+    }
+
     public static List<DispmsVo> copyDispms(List<Dispms> content) {
         List<DispmsVo> resultList = new ArrayList<>();
         content.forEach(item -> {
@@ -261,6 +282,26 @@ public class CopyUtil {
                 }
         );
         return resultList;
+    }
+
+    public static List copyEntity(String entityName, List content) {
+        switch (entityName) {
+            case "Good":
+                return copyGood(content);
+            case "Tag":
+                return copyTag(content);
+            case "Style":
+                return copyStyle(content);
+            case "Router":
+                return copyRouter(content);
+            case "User":
+                return copyUser(content);
+            case "Role":
+                return copyRole(content);
+            case "Dispms":
+                return copyDispms(content);
+        }
+        return content;
     }
 
     public static String[] getNullPropertyNames(Object source) {

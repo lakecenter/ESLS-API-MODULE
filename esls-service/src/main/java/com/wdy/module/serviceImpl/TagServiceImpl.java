@@ -22,57 +22,46 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import java.util.*;
 
+import static com.wdy.module.serviceUtil.TagAndRouterUtil.forbiddenTag;
+
 @Service("TagService")
 @Slf4j
-public class TagServiceImpl extends BaseServiceImpl<Tag> implements TagService<Tag> {
+public class TagServiceImpl extends BaseServiceImpl implements TagService {
     // 更新标签样式
     @Override
     public ResponseBean updateTagStyle(Tag tag, boolean isWaitingLong) {
-        int waitingTime = 300;
-        if (isWaitingLong == true)
-            waitingTime = Integer.valueOf(SystemVersionArgs.commandWaitingTime);
-        if (tag == null)
-            throw new ServiceException(ResultEnum.TAG_NOT_EXIST);
-        if (tag.getStyle() == null)
-            throw new ServiceException(ResultEnum.TAG_NOT_BIND_STYLES);
-        if (tag.getStyle().getDispmses().size() == 0)
-            throw new ServiceException(ResultEnum.TAG_EMPTY_STYLES);
-        Channel channel = SocketChannelHelper.getChannelByRouter(tag.getRouter().getId());
-        if (channel == null)
-            throw new ServiceException(ResultEnum.COMMUNITICATION_ERROR);
-        Good good = tag.getGood();
-        if (good == null)
-            throw new ServiceException(ResultEnum.TAG_BINDED_GOOD_EMPTY);
-        String regionNames = good.getRegionNames();
-        boolean isRegion = !StringUtil.isEmpty(regionNames) && !regionNames.contains("isPromote") ? true : false;
-        ByteResponse byteResponse = ImageHelper.getByteResponse(tag);
+        int waitingTime = isWaitingLong ? Integer.valueOf(SystemVersionArgs.commandWaitingTime) : 300;
+        Channel channel = testIfValidTag(tag);
+        String regionNames = tag.getGood().getRegionNames();
+        ByteResponse byteResponse = ImageHelper.getByteResponse(tag, tag.getGood());
+        if (byteResponse == null)
+            return new ResponseBean(1, 1);
+        return sendImageMessage(byteResponse, channel, tag.getBarCode(), regionNames, waitingTime);
+    }
+
+    @Override
+    public ResponseBean updateTagStyle(Tag tag, Good good, String regionNames, boolean isWaitingLong) {
+        int waitingTime = isWaitingLong ? Integer.valueOf(SystemVersionArgs.commandWaitingTime) : 300;
+        Channel channel = testIfValidTag(tag);
+        ByteResponse byteResponse = ImageHelper.getByteResponse(tag, good);
+        if (byteResponse == null)
+            return new ResponseBean(1, 1);
+        return sendImageMessage(byteResponse, channel, tag.getBarCode(), regionNames, waitingTime);
+    }
+
+    @Override
+    public ResponseBean updateTagStyle(Tag tag, String styleNumber, boolean isWaitingLong) {
+        int waitingTime = isWaitingLong ? Integer.valueOf(SystemVersionArgs.commandWaitingTime) : 300;
+        Channel channel = testIfValidTag(tag);
+        String regionNames = tag.getGood().getRegionNames();
+        ByteResponse byteResponse = ImageHelper.getByteResponse(tag, tag.getGood(), styleNumber);
         if (byteResponse == null)
             throw new ServiceException(ResultEnum.TAG_EMPTY_STYLES);
-        String resultString;
-        // 样式具体内容分包
-        List<byte[]> byteList = byteResponse.getByteList();
-        if (!isRegion) {
-            // 更改样式全局信息包
-            resultString = nettyUtil.sendMessageWithRepeat(channel, CommandConstant.getBytesByType(SpringContextUtil.getAddressByBarCode(tag.getBarCode()), byteResponse.getFirstByte(), CommandConstant.COMMANDTYPE_TAG), Integer.valueOf(SystemVersionArgs.commandRepeatTime), waitingTime);
-            System.out.println("更改样式全局信息包命令响应结果：" + resultString);
-            if (ErrorUtil.isErrorCommunication(resultString)) {
-                return new ResponseBean(1, 0);
-            }
-        }
-        for (int i = 0; i < byteList.size(); i++) {
-            if (i == 0)
-                resultString = nettyUtil.sendMessageWithRepeat(channel, CommandConstant.getBytesByType(SpringContextUtil.getAddressByBarCode(tag.getBarCode()), byteList.get(i), CommandConstant.COMMANDTYPE_TAG), Integer.valueOf(SystemVersionArgs.commandRepeatTime), waitingTime);
-            else
-                resultString = nettyUtil.sendMessageWithRepeat(channel, CommandConstant.getBytesByType(SpringContextUtil.getAddressByBarCode(tag.getBarCode()), byteList.get(i), CommandConstant.COMMANDTYPE_TAG), Integer.valueOf(SystemVersionArgs.commandRepeatTime), 300);
-            System.out.println("样式具体内容分包命令" + i + "响应结果：" + resultString);
-            if (ErrorUtil.isErrorCommunication(resultString)) {
-                return new ResponseBean(1, 0);
-            }
-        }
-        return new ResponseBean(1, 1);
+        return sendImageMessage(byteResponse, channel, tag.getBarCode(), regionNames, waitingTime);
     }
 
     // 刷新指定标签
@@ -81,7 +70,7 @@ public class TagServiceImpl extends BaseServiceImpl<Tag> implements TagService<T
         String contentType = CommandConstant.FLUSH;
         List<Tag> tags = RequestBeanUtil.getTagsByRequestBean(requestBean);
         ResponseBean responseBean;
-        responseBean = SendCommandUtil.sendCommandWithTags(tags, contentType, CommandConstant.COMMANDTYPE_TAG);
+        responseBean = SendCommandUtil.sendCommandWithTags(tags, contentType, CommandConstant.COMMANDTYPE_TAG, false);
         return responseBean;
     }
 
@@ -117,8 +106,8 @@ public class TagServiceImpl extends BaseServiceImpl<Tag> implements TagService<T
     public ResponseBean scanTags(RequestBean requestBean) {
         String contentType = CommandConstant.QUERYTAG;
         List<Tag> tags = RequestBeanUtil.getTagsByRequestBean(requestBean);
-        TagUtil.setTagIsNotWorking(tags);
-        ResponseBean responseBean = SendCommandUtil.sendCommandWithTags(tags, contentType, CommandConstant.COMMANDTYPE_TAG);
+        TagAndRouterUtil.setTagIsNotWorking(tags);
+        ResponseBean responseBean = SendCommandUtil.sendCommandWithTags(tags, contentType, CommandConstant.COMMANDTYPE_TAG, false);
         return responseBean;
     }
 
@@ -127,8 +116,8 @@ public class TagServiceImpl extends BaseServiceImpl<Tag> implements TagService<T
     public ResponseBean scanTagsByRouter(RequestBean requestBean) {
         String contentType = CommandConstant.QUERYTAG;
         List<Router> routers = RequestBeanUtil.getRoutersByRequestBean(requestBean);
-        List<Tag> tags = TagUtil.getTagsByRouters(routers);
-        TagUtil.setTagIsNotWorking(tags);
+        List<Tag> tags = TagAndRouterUtil.getTagsByRouters(routers);
+        TagAndRouterUtil.setTagIsNotWorking(tags);
         ResponseBean responseBean = SendCommandUtil.sendCommandWithRouters(routers, contentType, CommandConstant.COMMANDTYPE_TAG_BROADCAST);
         return responseBean;
     }
@@ -164,7 +153,7 @@ public class TagServiceImpl extends BaseServiceImpl<Tag> implements TagService<T
             contentType = CommandConstant.TAGBLING;
         }
         List<Tag> tags = RequestBeanUtil.getTagsByRequestBean(requestBean);
-        ResponseBean responseBean = SendCommandUtil.sendCommandWithTags(tags, contentType, CommandConstant.COMMANDTYPE_TAG);
+        ResponseBean responseBean = SendCommandUtil.sendCommandWithTags(tags, contentType, CommandConstant.COMMANDTYPE_TAG, false);
         return responseBean;
     }
 
@@ -196,6 +185,8 @@ public class TagServiceImpl extends BaseServiceImpl<Tag> implements TagService<T
         List<Tag> tagList = findByArrtribute(TableConstant.TABLE_TAGS, sourceArgs2, ArgsString2, Tag.class);
         // 获取商品实体
         List<Good> goods = findByArrtribute(TableConstant.TABLE_GOODS, sourceArgs1, ArgsString1, Good.class);
+        if (CollectionUtils.isEmpty(tagList) || CollectionUtils.isEmpty(goods))
+            return new ResponseEntity<>(ResultBean.error("标签或商品集合不一致"), HttpStatus.BAD_REQUEST);
         ResponseEntity<ResultBean> result;
         if (goods.size() > 1 || tagList.size() > 1)
             return new ResponseEntity<>(ResultBean.error(" 根据字段获取的数据不唯一 请选择唯一字段 "), HttpStatus.BAD_REQUEST);
@@ -204,62 +195,58 @@ public class TagServiceImpl extends BaseServiceImpl<Tag> implements TagService<T
             return new ResponseEntity<>(ResultBean.error("标签绑定样式为空，无法绑定"), HttpStatus.BAD_REQUEST);
         if (tagList.get(0).getStyle().getDispmses().size() == 0)
             return new ResponseEntity<>(ResultBean.error("标签绑定样式中的区域数量为0,无法绑定"), HttpStatus.BAD_REQUEST);
-        // 修改标签实体的goodid state
         Good good = goods.get(0);
-        // regionNames置空
-        good.setRegionNames(null);
-        good.setWaitUpdate(1);
-        goodDao.save(good);
-        Tag tag = tagList.get(0);
-        List<Tag> tags = new ArrayList<>();
-        tags.add(tag);
-        // 换绑
-        if ("2".equals(mode)) {
-            Style style = styleDao.findByStyleNumberAndIsPromote(tag.getStyle().getStyleNumber(), good.getIsPromote());
-            tag.setStyle(style);
-            tag.setState((byte) 1);
-            tag.setGood(good);
-            saveOne(tag);
-            SendCommandUtil.updateTagStyle(tags, false, false);
-        }
-        if (tag.getGood() == null) {
-            if (mode.equals("1"))
-                tag.setGood(good);
-            else
-                return new ResponseEntity<>(ResultBean.error(" 商品和标签暂未绑定 请改变mode重新发送请求 "), HttpStatus.BAD_REQUEST);
-        } else if (tag.getGood() != null && mode.equals("1"))
-            return new ResponseEntity<>(ResultBean.error(" 此标签已经绑定商品 请重新选择标签 "), HttpStatus.BAD_REQUEST);
-        try {
-            // 绑定
-            if (mode.equals("1")) {
-                Style style = styleDao.findByStyleNumberAndIsPromote(tag.getStyle().getStyleNumber(), good.getIsPromote());
-                tag.setStyle(style);
-                tag.setState((byte) 1);
-                saveOne(tag);
-                String contentType = CommandConstant.TAGBIND;
-                SendCommandUtil.sendCommandWithTags(tags, contentType, CommandConstant.COMMANDTYPE_TAG);
-                SendCommandUtil.updateTagStyle(tags, false, false);
-            }
-            // 解绑
-            else if (mode.equals("0")) {
-                if (tag.getStyle() != null) {
-                    Style style = styleDao.findByStyleNumberAndIsPromote(tag.getStyle().getStyleNumber(), (byte) 0);
-                    tag.setStyle(style);
-                }
-                good.setWaitUpdate(1);
-                goodDao.save(good);
-                tag.setState((byte) 0);
-                tag.setWaitUpdate(1);
-                tag.setGood(null);
-                saveOne(tag);
-                String contentType = CommandConstant.TAGBINDOVER;
-                SendCommandUtil.sendCommandWithTags(tags, contentType, CommandConstant.COMMANDTYPE_TAG);
-            }
-        } catch (Exception e) {
-            System.out.println("发送样式修改包失败");
-        }
+        SendCommandUtil.sendBindTagGood(tagList.get(0), good, Integer.valueOf(mode));
+//        Tag tag = tagList.get(0);
+//        List<Tag> tags = new ArrayList<>();
+//        tags.add(tag);
+//        // 换绑
+//        if ("2".equals(mode)) {
+//            Style style = styleDao.findByStyleNumberAndIsPromote(tag.getStyle().getStyleNumber(), good.getIsPromote());
+//            tag.setStyle(style);
+//            tag.setState((byte) 1);
+//            tag.setGood(good);
+//            saveOne(tag);
+//            SendCommandUtil.updateTagStyle(tags, false, false);
+//        }
+//        if (tag.getGood() == null) {
+//            if (mode.equals("1"))
+//                tag.setGood(good);
+//            else
+//                return new ResponseEntity<>(ResultBean.error(" 商品和标签暂未绑定 请改变mode重新发送请求 "), HttpStatus.BAD_REQUEST);
+//        } else if (tag.getGood() != null && mode.equals("1"))
+//            return new ResponseEntity<>(ResultBean.error(" 此标签已经绑定商品 请重新选择标签 "), HttpStatus.BAD_REQUEST);
+//        try {
+//            // 绑定
+//            if (mode.equals("1")) {
+//                Style style = styleDao.findByStyleNumberAndIsPromote(tag.getStyle().getStyleNumber(), good.getIsPromote());
+//                tag.setStyle(style);
+//                tag.setState((byte) 1);
+//                saveOne(tag);
+//                String contentType = CommandConstant.TAGBIND;
+//                SendCommandUtil.sendCommandWithTags(tags, contentType, CommandConstant.COMMANDTYPE_TAG,false);
+//                SendCommandUtil.updateTagStyle(tags, false, false);
+//            }
+//            // 解绑
+//            else if (mode.equals("0")) {
+//                if (tag.getStyle() != null) {
+//                    Style style = styleDao.findByStyleNumberAndIsPromote(tag.getStyle().getStyleNumber(), (byte) 0);
+//                    tag.setStyle(style);
+//                }
+//                good.setWaitUpdate(1);
+//                goodDao.save(good);
+//                tag.setState((byte) 0);
+//                tag.setWaitUpdate(1);
+//                tag.setGood(null);
+//                saveOne(tag);
+//                String contentType = CommandConstant.TAGBINDOVER;
+//                SendCommandUtil.sendCommandWithTags(tags, contentType, CommandConstant.COMMANDTYPE_TAG,false);
+//            }
+//        } catch (Exception e) {
+//            System.out.println("发送样式修改包失败");
+//        }
         // 返回前端提示信息
-        return new ResponseEntity<>(ResultBean.success(mode.equals("0") ? "取消绑定成功" : "绑定成功"), HttpStatus.OK);
+        return ResponseHelper.buildSuccessResultBean(mode.equals("0") ? "取消绑定操作成功" : "绑定操作成功");
     }
 
     // 标签移除 进入休眠状态
@@ -269,10 +256,7 @@ public class TagServiceImpl extends BaseServiceImpl<Tag> implements TagService<T
         ResponseBean responseBean = null;
         if (mode == 0) {
             List<Tag> tags = RequestBeanUtil.getTagsByRequestBean(requestBean);
-            for (Tag tag : tags) {
-                forbiddenTag(tag);
-            }
-            responseBean = SendCommandUtil.sendCommandWithTags(tags, contentType, CommandConstant.COMMANDTYPE_TAG);
+            responseBean = SendCommandUtil.sendCommandWithTags(tags, contentType, CommandConstant.COMMANDTYPE_TAG, false);
         } else if (mode == 1) {
             List<Tag> tags = new ArrayList<>();
             List<Router> routers = RequestBeanUtil.getRoutersByRequestBean(requestBean);
@@ -281,7 +265,7 @@ public class TagServiceImpl extends BaseServiceImpl<Tag> implements TagService<T
                 tags.addAll(byRouterId);
             }
             for (Tag tag : tags) {
-                forbiddenTag(tag);
+                saveOne(forbiddenTag(tag));
             }
             responseBean = SendCommandUtil.sendCommandWithRouters(routers, contentType, CommandConstant.COMMANDTYPE_TAG_BROADCAST);
         }
@@ -293,36 +277,28 @@ public class TagServiceImpl extends BaseServiceImpl<Tag> implements TagService<T
     public ResponseEntity<ResultBean> updateTagStyleById(long tagId, long styleId, Integer mode) {
         // 修改标签实体对应的styleId
         List<Tag> tagList = findByArrtribute(TableConstant.TABLE_TAGS, ArrtributeConstant.TABLE_ID, String.valueOf(tagId), Tag.class);
-        if (tagList.size() <= 0)
-            return new ResponseEntity<>(ResultBean.error("没有相应ID的标签 请重新选择"), HttpStatus.BAD_REQUEST);
+        if (CollectionUtils.isEmpty(tagList))
+            throw new ServiceException(ResultEnum.ENTITY_NOT_EXIST);
         Tag tag = tagList.get(0);
         Good good = tag.getGood();
         if (good == null)
-            return new ResponseEntity<>(ResultBean.error("标签绑定商品为空"), HttpStatus.BAD_REQUEST);
+            throw new ServiceException(ResultEnum.TAG_BINDED_GOOD_EMPTY);
         else {
             good.setWaitUpdate(1);
             good.setRegionNames(null);
             goodDao.save(good);
         }
         if (tag.getStyle() != null && tag.getStyle().getId() == styleId)
-            return new ResponseEntity<>(ResultBean.error("标签对应的样式一致,无需更改"), HttpStatus.BAD_REQUEST);
+            return ResponseHelper.buildBadRequestResultBean("标签对应的样式一致,无需更改");
         else {
-            Style one = styleDao.getOne(styleId);
-            if (one.getDispmses().size() == 0)
-                return new ResponseEntity<>(ResultBean.error("标签更换的目标样式中的区域数量为0,无法更新样式"), HttpStatus.BAD_REQUEST);
-            tag.setStyle(one);
-            saveOne(tag);
-            List<Tag> tags = new ArrayList<>();
-            tags.add(tag);
-            try {
-                ResponseBean responseBean = new ResponseBean(1, 1);
-                if (mode == 1)
-                    responseBean = SendCommandUtil.updateTagStyle(tags, false, false);
-                return new ResponseEntity<>(ResultBean.success("样式更换成功(通信成功数：" + responseBean.getSuccessNumber() + ")"), HttpStatus.OK);
-            } catch (Exception e) {
-                System.out.println("发送样式修改包失败" + e);
+            Style style = styleDao.getOne(styleId);
+            if (mode == 1) {
+                SendCommandUtil.sendTagChangeStyle(tag, style);
+            } else {
+                tag.setStyle(style);
+                saveOne(tag);
             }
-            return new ResponseEntity<>(ResultBean.error("发送样式修改包失败"), HttpStatus.BAD_REQUEST);
+            return ResponseHelper.buildBadRequestResultBean("发送样式修改包失败");
         }
     }
 
@@ -332,12 +308,26 @@ public class TagServiceImpl extends BaseServiceImpl<Tag> implements TagService<T
         ResponseBean responseBean;
         if (mode == 0) {
             List<Tag> tags = RequestBeanUtil.getTagsByRequestBean(requestBean);
-            responseBean = SendCommandUtil.sendCommandWithTags(tags, contentType, CommandConstant.COMMANDTYPE_TAG);
+            responseBean = SendCommandUtil.sendCommandWithTags(tags, contentType, CommandConstant.COMMANDTYPE_TAG, false);
         } else {
             List<Router> routers = RequestBeanUtil.getRoutersByRequestBean(requestBean);
             responseBean = SendCommandUtil.sendCommandWithRouters(routers, contentType, CommandConstant.COMMANDTYPE_TAG_BROADCAST);
         }
         return responseBean;
+    }
+
+    @Override
+    public ResponseBean scanAllTags() {
+        List<Tag> tags = findAll();
+        Set<Router> routers = new HashSet<>();
+        for (Tag tag : tags) {
+            Router router = tag.getRouter();
+            if (router != null)
+                routers.add(router);
+        }
+        String contentType = CommandConstant.QUERYTAG;
+        TagAndRouterUtil.setTagIsNotWorking(tags);
+        return SendCommandUtil.sendCommandWithRouters(new ArrayList<>(routers), contentType, CommandConstant.COMMANDTYPE_TAG_BROADCAST);
     }
 
     // 改变标签状态
@@ -381,6 +371,11 @@ public class TagServiceImpl extends BaseServiceImpl<Tag> implements TagService<T
     }
 
     @Override
+    public List<Tag> findByGoodId(Long goodId) {
+        return tagDao.findByGoodIdOrderByWaitUpdate(goodId);
+    }
+
+    @Override
     public Tag findByTagAddress(String tagAddress) {
         return tagDao.findByTagAddress(tagAddress);
     }
@@ -411,13 +406,49 @@ public class TagServiceImpl extends BaseServiceImpl<Tag> implements TagService<T
         }
     }
 
-    private void forbiddenTag(Tag tag) {
-        tag.setCompleteTime(null);
-        tag.setExecTime(null);
-        tag.setIsWorking((byte) 0);
-        tag.setForbidState(1);
-        tag.setGood(null);
-        saveOne(tag);
+
+    private ResponseBean sendImageMessage(ByteResponse byteResponse, Channel channel, String tagBarCode, String regionNames, Integer waitingTime) {
+        String resultString;
+        // 样式具体内容分包
+        List<byte[]> byteList = byteResponse.getByteList();
+        byte[] tagAddress = SpringContextUtil.getAddressByBarCode(tagBarCode);
+        boolean isRegion = !StringUtil.isEmpty(regionNames) && !regionNames.contains("isPromote") ? true : false;
+        if (!isRegion) {
+            // 更改样式全局信息包
+            resultString = nettyUtil.sendMessageWithRepeat(channel, CommandConstant.getBytesByType(tagAddress, byteResponse.getFirstByte(), CommandConstant.COMMANDTYPE_TAG), Integer.valueOf(SystemVersionArgs.commandRepeatTime), waitingTime);
+            System.out.println("更改样式全局信息包命令响应结果：" + resultString);
+            if (ErrorUtil.isErrorCommunication(resultString)) {
+                return new ResponseBean(1, 0);
+            }
+        }
+        for (int i = 0; i < byteList.size(); i++) {
+            if (i == 0)
+                resultString = nettyUtil.sendMessageWithRepeat(channel, CommandConstant.getBytesByType(tagAddress, byteList.get(i), CommandConstant.COMMANDTYPE_TAG), Integer.valueOf(SystemVersionArgs.commandRepeatTime), waitingTime);
+            else
+                resultString = nettyUtil.sendMessageWithRepeat(channel, CommandConstant.getBytesByType(tagAddress, byteList.get(i), CommandConstant.COMMANDTYPE_TAG), Integer.valueOf(SystemVersionArgs.commandRepeatTime), 300);
+            System.out.println("样式具体内容分包命令" + i + "响应结果：" + resultString);
+            if (ErrorUtil.isErrorCommunication(resultString)) {
+                return new ResponseBean(1, 0);
+            }
+        }
+        return new ResponseBean(1, 1);
+    }
+
+    private Channel testIfValidTag(Tag tag) {
+        if (tag == null)
+            throw new ServiceException(ResultEnum.TAG_NOT_EXIST);
+        if (tag.getStyle() == null)
+            throw new ServiceException(ResultEnum.TAG_NOT_BIND_STYLES);
+        if (tag.getStyle().getDispmses().size() == 0)
+            throw new ServiceException(ResultEnum.TAG_EMPTY_STYLES);
+        if (tag.getRouter() == null)
+            throw new ServiceException(ResultEnum.TAG_EMPTY_ROUTER);
+        Channel channel = SocketChannelHelper.getChannelByRouter(tag.getRouter().getId());
+        if (channel == null)
+            throw new ServiceException(ResultEnum.COMMUNITICATION_ERROR);
+        if (tag.getGood() == null)
+            throw new ServiceException(ResultEnum.TAG_BINDED_GOOD_EMPTY);
+        return channel;
     }
 
     @Autowired

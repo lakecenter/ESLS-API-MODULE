@@ -2,8 +2,8 @@ package com.wdy.module.controller;
 
 import com.wdy.module.aop.Log;
 import com.wdy.module.common.constant.PublicResultConstant;
-import com.wdy.module.config.ResponseHelper;
-import com.wdy.module.config.ResponseModel;
+import com.wdy.module.common.response.ResponseHelper;
+import com.wdy.module.common.response.ResponseModel;
 import com.wdy.module.serviceUtil.*;
 import io.swagger.annotations.*;
 import org.springframework.web.bind.annotation.*;

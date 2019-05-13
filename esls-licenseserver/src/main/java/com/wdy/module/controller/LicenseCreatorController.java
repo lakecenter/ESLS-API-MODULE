@@ -56,16 +56,19 @@ public class LicenseCreatorController {
     }
 
     @ApiOperation("下载证书")
-    @GetMapping(value = "/downloadLicense")
+    @GetMapping(value = "/license/downloadLicense")
     public ResponseEntity<ResultBean> downloadLicense(HttpServletResponse response) {
         response.setContentType("application/force-download");// 设置强制下载不打开
         response.addHeader("Content-Disposition", "attachment;fileName=" + "data.license");// 设置文件名
         // 写出响应
         try (OutputStream os = response.getOutputStream()) {
-            ClassPathResource classPathResource = new ClassPathResource("license/data.license");
+//            ClassPathResource classPathResource = new ClassPathResource("license/data.license");
+            File file = new File("data.license");
             byte[] buffer = new byte[1024];
+            FileInputStream fis;
             BufferedInputStream bis;
-            bis = new BufferedInputStream(classPathResource.getInputStream());
+            fis = new FileInputStream(file);
+            bis = new BufferedInputStream(fis);
             int i = bis.read(buffer);
             while (i != -1) {
                 os.write(buffer, 0, i);

@@ -212,6 +212,7 @@ public class ServerChannelHandler extends SimpleChannelInboundHandler<Object> {
 
     private void setRouterIsWorking(Channel channel) {
         Router router = SocketChannelHelper.getRouterByChannel(channel);
+        System.out.println(router + " " + channel);
         if (router == null)
             return;
         RouterService routerService = (RouterService) SpringContextUtil.getBean("RouterService");

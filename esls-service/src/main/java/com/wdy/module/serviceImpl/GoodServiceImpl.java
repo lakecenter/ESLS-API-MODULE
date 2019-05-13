@@ -6,8 +6,8 @@ import com.wdy.module.common.response.ResponseBean;
 import com.wdy.module.cycleJob.DynamicTask;
 import com.wdy.module.dao.*;
 import com.wdy.module.entity.*;
+import com.wdy.module.netty.command.CommandConstant;
 import com.wdy.module.serviceUtil.*;
-import com.wdy.module.utils.*;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
@@ -83,7 +83,7 @@ public class GoodServiceImpl extends BaseServiceImpl implements GoodService {
     public Good updateGood(Good good) {
         // 添加商品
         Good g = findByBarCode(good.getBarCode());
-        if (g != null && g.getWaitUpdate() != null && g.getWaitUpdate() != 0) {
+        if (g != null) {
             good.setId(g.getId());
             setRegionNames(good, g);
             BeanUtils.copyProperties(good, g, CopyUtil.getNullPropertyNames(good));
@@ -93,6 +93,11 @@ public class GoodServiceImpl extends BaseServiceImpl implements GoodService {
             good.setImportTime(new Timestamp(System.currentTimeMillis()));
             return goodDao.save(good);
         }
+    }
+
+    @Override
+    public List<Good> findByShopNumber(String shopNumber) {
+        return goodDao.findByShopNumber(shopNumber);
     }
 
     @Override
@@ -207,6 +212,13 @@ public class GoodServiceImpl extends BaseServiceImpl implements GoodService {
     public boolean deleteById(Long id) {
         try {
             goodDao.deleteById(id);
+            List<Tag> tags = tagDao.findByGoodId(id);
+            for (Tag tag : tags) {
+                String contentType = CommandConstant.TAGBINDOVER;
+                SendCommandUtil.sendCommandWithTags(tags, contentType, CommandConstant.COMMANDTYPE_TAG, false);
+                tag.setGood(null);
+                tagDao.save(tag);
+            }
             return true;
         } catch (Exception e) {
             return false;

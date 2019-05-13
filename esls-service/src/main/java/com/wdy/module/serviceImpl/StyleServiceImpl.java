@@ -48,7 +48,7 @@ public class StyleServiceImpl extends BaseServiceImpl implements StyleService {
                 } catch (Exception e) {
                 }
                 try {
-                    responseBean = SendCommandUtil.sendCommandWithTags(tags, contentType, CommandConstant.COMMANDTYPE_TAG);
+                    responseBean = SendCommandUtil.sendCommandWithTags(tags, contentType, CommandConstant.COMMANDTYPE_TAG,false);
                 } catch (Exception e) {
                 }
                 try {
@@ -56,7 +56,7 @@ public class StyleServiceImpl extends BaseServiceImpl implements StyleService {
                 } catch (Exception e) {
                 }
             } else
-                responseBean = SendCommandUtil.sendCommandWithTags(tags, contentType, CommandConstant.COMMANDTYPE_TAG);
+                responseBean = SendCommandUtil.sendCommandWithTags(tags, contentType, CommandConstant.COMMANDTYPE_TAG,false);
         } else if (mode == 1) {
             log.info("向选用该样式的标签发送定期刷新");
             // 设置定期刷新
@@ -130,7 +130,6 @@ public class StyleServiceImpl extends BaseServiceImpl implements StyleService {
                     }
                     resultTags.addAll(realTags);
                 }
-                // 通过标签实体的路由器IP地址发送更改标签内容包
                 SendCommandUtil.updateTagStyle(resultTags, false, false);
             }
             return new ResponseBean(sum, successnumber);
@@ -248,7 +247,7 @@ public class StyleServiceImpl extends BaseServiceImpl implements StyleService {
         if (!style.isPresent()) return false;
         List<Tag> tagList = findTagsByStyle(style.get());
         if (!CollectionUtils.isEmpty(tagList)) {
-            TagUtil.setBaseTagStyle(tagList);
+            TagAndRouterUtil.setBaseTagStyle(tagList);
         }
         if ("2101 2102 2901 2902 4201 4202".contains(style.get().getStyleNumber()))
             return false;
@@ -272,7 +271,7 @@ public class StyleServiceImpl extends BaseServiceImpl implements StyleService {
             return responseBean;
         List<Tag> tagList = findTagsByStyle(styles.get(0));
         if (!CollectionUtils.isEmpty(tagList)) {
-            TagUtil.setBaseTagStyle(tagList);
+            TagAndRouterUtil.setBaseTagStyle(tagList);
         }
         sum = styles.size();
         for (Style s : styles) {

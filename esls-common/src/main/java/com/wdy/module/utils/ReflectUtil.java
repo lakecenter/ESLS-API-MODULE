@@ -63,4 +63,13 @@ public class ReflectUtil {
         }
         return result;
     }
+
+    public static Method reflectClassMethod(Object serviceObj, String methodName, Class<?>... parameterTypes) throws Exception {
+        Method method;
+        if (parameterTypes != null)
+            method = serviceObj.getClass().getMethod(methodName, parameterTypes);
+        else
+            method = serviceObj.getClass().getMethod(methodName);
+        return method;
+    }
 }

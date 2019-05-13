@@ -115,7 +115,7 @@ public class RouterServiceImpl extends BaseServiceImpl implements RouterService 
     public ResponseBean routerScan(RequestBean requestBean) {
         String contentType = CommandConstant.QUERYROUTER;
         List<Router> routerList = RequestBeanUtil.getRoutersByRequestBean(requestBean);
-        TagUtil.setRouterIsNotWorking(routerList);
+        TagAndRouterUtil.setRouterIsNotWorking(routerList);
         ResponseBean responseBean = SendCommandUtil.sendCommandWithRouters(routerList, contentType, CommandConstant.COMMANDTYPE_ROUTER);
         return responseBean;
     }
@@ -128,7 +128,7 @@ public class RouterServiceImpl extends BaseServiceImpl implements RouterService 
         for (Router r : routers)
             if (r.getState() == 1)
                 workingRouter.add(r);
-        TagUtil.setRouterIsNotWorking(workingRouter);
+        TagAndRouterUtil.setRouterIsNotWorking(workingRouter);
         ResponseBean responseBean = SendCommandUtil.sendCommandWithRouters(workingRouter, contentType, CommandConstant.COMMANDTYPE_ROUTER);
         return responseBean;
     }

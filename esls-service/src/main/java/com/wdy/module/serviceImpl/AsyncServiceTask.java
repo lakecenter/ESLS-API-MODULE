@@ -2,13 +2,12 @@ package com.wdy.module.serviceImpl;
 
 import com.google.common.collect.Lists;
 import com.wdy.module.common.exception.ResultEnum;
-import com.wdy.module.common.exception.ServiceException;
 import com.wdy.module.common.response.ResponseBean;
 import com.wdy.module.common.response.SuccessAndFailList;
 import com.wdy.module.netty.command.CommandConstant;
+import com.wdy.module.service.*;
 import com.wdy.module.serviceUtil.*;
 import com.wdy.module.system.SystemVersionArgs;
-import com.wdy.module.utils.MailSender;
 import com.wdy.module.entity.*;
 import io.netty.channel.Channel;
 import lombok.extern.slf4j.Slf4j;
@@ -17,10 +16,8 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.AsyncResult;
 import org.springframework.stereotype.Component;
 import org.springframework.util.concurrent.ListenableFuture;
-import com.wdy.module.service.TagService;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 
 
@@ -34,17 +31,24 @@ public class AsyncServiceTask {
     private NettyUtil nettyUtil;
     @Autowired
     private TagService tagService;
+    @Autowired
+    private StyleService styleService;
+    @Autowired
+    private GoodService goodService;
 
     @Async
-    public ListenableFuture<Integer> sendMessageWithRepeat(List<Tag> tagList, long begin, byte[] content, Integer messageType, Integer depth) throws ExecutionException, InterruptedException {
+    public ListenableFuture<Integer> sendMessageWithRepeat(List<Tag> tagList, long begin, String contentType, Integer messageType, Integer depth) throws ExecutionException, InterruptedException {
         if (depth == 0)
             return new AsyncResult<>(0);
         log.info("-----向(标签集合)发送命令线程-----");
         SuccessAndFailList successAndFailList = null;
         if (tagList.size() > 1) {
-            nettyUtil.awakeFirst(tagList);
             try {
-                successAndFailList = sendByTags(tagList, begin, content, messageType, 1000);
+                nettyUtil.awakeFirst(tagList);
+            } catch (Exception e) {
+            }
+            try {
+                successAndFailList = sendByTags(tagList, begin, contentType, messageType, 1000);
             } catch (Exception e) {
             }
             try {
@@ -52,16 +56,16 @@ public class AsyncServiceTask {
             } catch (Exception e) {
             }
         } else {
-            successAndFailList = sendByTags(tagList, begin, content, messageType, 5500);
+            successAndFailList = sendByTags(tagList, begin, contentType, messageType, 5500);
         }
         if (successAndFailList == null)
             return new AsyncResult<>(0);
-        ListenableFuture<Integer> integerListenableFuture = sendMessageWithRepeat(successAndFailList.getNoSuccessTags(), begin, content, messageType, --depth);
+        ListenableFuture<Integer> integerListenableFuture = sendMessageWithRepeat(successAndFailList.getNoSuccessTags(), begin, contentType, messageType, --depth);
         return new AsyncResult<>(integerListenableFuture.get() + successAndFailList.getSuccessNumber());
     }
 
     @Async
-    public ListenableFuture<Integer> updateTagStyle(List<Tag> tagList, List<Tag> tagsAll, long begin, int depth, boolean isNeedSending) throws ExecutionException, InterruptedException {
+    public ListenableFuture<Integer> updateTagStyle(List<Tag> tagList, long begin, int depth) throws ExecutionException, InterruptedException {
         if (depth == 0 || tagList.size() == 0)
             return new AsyncResult<>(0);
         log.info("-----向(标签集合)发送更新样式命令线程-----");
@@ -70,7 +74,10 @@ public class AsyncServiceTask {
         if (tagList.size() > 1) {
             List<List<Tag>> splitByTags = Lists.partition(tagList, tagsLengthCommand);
             for (List tags : splitByTags) {
-                nettyUtil.awakeFirst(tags);
+                try {
+                    nettyUtil.awakeFirst(tags);
+                } catch (Exception e) {
+                }
                 try {
                     successAndFailList = updateStylesByTags(tags, begin, false);
                 } catch (Exception e) {
@@ -86,8 +93,22 @@ public class AsyncServiceTask {
         if (successAndFailList == null) {
             return new AsyncResult<>(0);
         }
-        ListenableFuture<Integer> integerListenableFuture = updateTagStyle(successAndFailList.getNoSuccessTags(), tagsAll, begin, --depth, isNeedSending);
+        ListenableFuture<Integer> integerListenableFuture = updateTagStyle(successAndFailList.getNoSuccessTags(), begin, --depth);
         return new AsyncResult<>(integerListenableFuture.get() + successAndFailList.getSuccessNumber());
+    }
+
+    @Async
+    public ListenableFuture<Integer> sendMessageWithRepeat(Channel channel, Router router, String contentType, Integer messageType, long begin, int time) {
+        log.info("-----向(路由器集合)发送命令线程-----");
+        byte[] content = CommandConstant.COMMAND_BYTE.get(contentType);
+        byte[] message = CommandConstant.getBytesByType(null, content, messageType);
+        String result = nettyUtil.sendMessageWithRepeat(channel, message, time, 5100);
+        int sucessNumber = 0;
+        if ("成功".equals(result)) {
+            TagAndRouterUtil.judgeResultAndSettingRouter(result, begin, router, message, contentType);
+            sucessNumber = 1;
+        }
+        return new AsyncResult<>(sucessNumber);
     }
 
     @Async
@@ -98,29 +119,31 @@ public class AsyncServiceTask {
         String result = nettyUtil.sendMessageWithRepeat(channel, message, time, 5100);
         int sucessNumber = 0;
         if ("成功".equals(result)) {
-            TagUtil.judgeResultAndSettingRouter(result, begin, router, message);
+            TagAndRouterUtil.judgeResultAndSettingRouter(result, begin, router, message);
             sucessNumber = 1;
         }
         return new AsyncResult<>(sucessNumber);
     }
 
-    private SuccessAndFailList sendByTags(List<Tag> tagList, long begin, byte[] content, Integer messageType, Integer commandWaitingTime) {
+    private SuccessAndFailList sendByTags(List<Tag> tagList, long begin, String contentType, Integer messageType, Integer commandWaitingTime) {
         int successNumber = 0;
+        byte[] content = CommandConstant.COMMAND_BYTE.get(contentType);
         List<Tag> nosuccessTags = new ArrayList<>();
         for (Tag tag : tagList) {
-            if (tag.getForbidState() == 0) continue;
-            Channel channel = SocketChannelHelper.getChannelByRouter(tag.getRouter().getId());
-            if (channel == null) continue;
-            byte[] address = SpringContextUtil.getAddressByBarCode(tag.getBarCode());
-            if (address == null || (tag.getForbidState() != null && tag.getForbidState() == 0)) continue;
-            byte[] message = CommandConstant.getBytesByType(address, content, messageType);
             String result = "失败";
+            Channel channel = SocketChannelHelper.getChannelByRouter(tag.getRouter().getId());
+            byte[] address = SpringContextUtil.getAddressByBarCode(tag.getBarCode());
+            if (channel == null || address == null || (tag.getForbidState() != null && tag.getForbidState() == 0)) {
+                TagAndRouterUtil.judgeResultAndSettingTag(result, contentType, begin, tag);
+                continue;
+            }
+            byte[] message = CommandConstant.getBytesByType(address, content, messageType);
             try {
                 result = nettyUtil.sendMessageWithRepeat(channel, message, Integer.valueOf(SystemVersionArgs.commandRepeatTime), commandWaitingTime);
             } catch (Exception e) {
-                TagUtil.judgeResultAndSettingTag(result, begin, tag);
+                TagAndRouterUtil.judgeResultAndSettingTag(result, contentType, begin, tag);
             }
-            TagUtil.judgeResultAndSettingTag(result, begin, tag);
+            TagAndRouterUtil.judgeResultAndSettingTag(result, contentType, begin, tag);
             if ("成功".equals(result)) {
                 successNumber++;
             } else {
@@ -139,12 +162,13 @@ public class AsyncServiceTask {
             try {
                 responseBean = tagService.updateTagStyle(tag, isWaitingLong);
             } catch (Exception e) {
-                if (e.getMessage().equals(ResultEnum.TAG_EMPTY_STYLES.getMessage())) {
+                if (!e.getMessage().equals(ResultEnum.COMMUNITICATION_ERROR.getMessage())) {
+                    responseBean.setSum(1);
                     responseBean.setSuccessNumber(1);
                 }
             }
-            String result = responseBean.getSuccessNumber() == 1 ? "成功" : "失败";
-            TagUtil.judgeResultAndSettingTagWaitUpdate(result, begin, tag);
+            String result = responseBean.getSuccessNumber() == 1 && responseBean.getSum() == 1 ? "成功" : "失败";
+            TagAndRouterUtil.judgeResultAndSettingTagWaitUpdate(result, begin, tag);
             if ("失败".equals(result))
                 nosuccessTags.add(tag);
             else
@@ -154,4 +178,80 @@ public class AsyncServiceTask {
         return new SuccessAndFailList(successNumber, nosuccessTags, successTags);
     }
 
+    @Async
+    public ListenableFuture<Integer> sendBindTagGood(Tag tag, Good good, Integer mode) {
+        ResponseBean responseBean;
+        String contentType;
+        // 换绑
+        switch (mode) {
+            case 2:
+                responseBean = tagService.updateTagStyle(tag, good, good.getRegionNames(), true);
+                if (responseBean.getSuccessNumber() == 1) {
+                    // 换绑
+                    setGoodTagBind(good, tag, (byte) 1);
+                }
+                break;
+            case 1:
+                contentType = CommandConstant.TAGBIND;
+                responseBean = SendCommandUtil.sendCommandWithTags(Arrays.asList(tag), contentType, CommandConstant.COMMANDTYPE_TAG, true);
+                if (responseBean.getSuccessNumber() == 1) {
+                    try {
+                        tagService.updateTagStyle(tag, good, good.getRegionNames(), true);
+                    } catch (Exception e) {
+                    }
+                    // 绑定
+                    setGoodTagBind(good, tag, (byte) 1);
+                }
+                break;
+            case 0:
+                contentType = CommandConstant.TAGBINDOVER;
+                responseBean = SendCommandUtil.sendCommandWithTags(Arrays.asList(tag), contentType, CommandConstant.COMMANDTYPE_TAG, true);
+                if (responseBean.getSuccessNumber() == 1) {
+                    setGoodTagUnBind(good, tag, (byte) 0);
+                }
+                break;
+            default:
+                break;
+        }
+        return new AsyncResult<>(1);
+    }
+
+    @Async
+    public ListenableFuture<Integer> sendTagChangeStyle(Tag tag, Style style, Boolean isWaitingLong) {
+        ResponseBean responseBean = tagService.updateTagStyle(tag, style.getStyleNumber(), isWaitingLong);
+        if (responseBean.getSuccessNumber() == 1) {
+            tag.setStyle(style);
+            tagService.saveOne(tag);
+        }
+        return new AsyncResult<>(1);
+    }
+
+    public void setGoodTagBind(Good good, Tag tag, Byte state) {
+        Style style = styleService.findByStyleNumberAndIsPromote(tag.getStyle().getStyleNumber(), good.getIsPromote());
+        tag.setStyle(style);
+        tag.setState((byte) 1);
+        tag.setGood(good);
+        tag.setState(state);
+        tagService.saveOne(tag);
+
+        // regionNames置空
+        good.setRegionNames(null);
+        good.setWaitUpdate(1);
+        goodService.save(good);
+    }
+
+    public void setGoodTagUnBind(Good good, Tag tag, Byte state) {
+        if (tag.getStyle() != null) {
+            Style style = styleService.findByStyleNumberAndIsPromote(tag.getStyle().getStyleNumber(), (byte) 0);
+            tag.setStyle(style);
+        }
+        good.setWaitUpdate(1);
+        // regionNames置空
+        good.setRegionNames(null);
+        goodService.save(good);
+        tag.setState(state);
+        tag.setWaitUpdate(1);
+        tag.setGood(null);
+        tagService.saveOne(tag);
+    }
 }

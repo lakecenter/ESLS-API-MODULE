@@ -1,9 +1,9 @@
 package com.wdy.module;
 
-import com.wdy.module.dao.GoodDao;
-import com.wdy.module.dao.StyleDao;
+import com.wdy.module.dao.*;
 import com.wdy.module.dynamicquery.DynamicQuery;
 import com.wdy.module.entity.*;
+import com.wdy.module.service.DispmsService;
 import com.wdy.module.service.UserService;
 import com.wdy.module.serviceUtil.MessageSender;
 import com.wdy.module.serviceUtil.SpringContextUtil;
@@ -28,6 +28,8 @@ public class ESLSApplicationTests {
     private StyleDao styleDao;
     @Autowired
     private GoodDao goodDao;
+    @Autowired
+    DispmsDao dispmsDao;
 
     @Test
     public void contextLoads() {
@@ -78,7 +80,11 @@ public class ESLSApplicationTests {
 
     @Test
     public void testMessage() throws Exception {
-        String p = "1 2 3";
-        MessageSender.sendMsgByTxPlatform("17722828134", p.split(" "));
+//        String p = "1 2 3";
+//        MessageSender.sendMsgByTxPlatform("17722828134", p.split(" "));
+        List<Style> byStyleNumber = styleDao.findByStyleNumber("2101");
+        List<Dispms> dispmses = (List<Dispms>) byStyleNumber.get(0).getDispmses();
+        dispmses.sort((a, b) -> (int) (a.getRegionId() - b.getRegionId()));
+        System.out.println(dispmses);
     }
 }

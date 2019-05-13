@@ -1,6 +1,5 @@
 package com.wdy.module.netty.handler;
 
-import com.wdy.module.common.constant.StyleType;
 import com.wdy.module.entity.*;
 import com.wdy.module.netty.command.CommandCategory;
 import com.wdy.module.netty.command.CommandConstant;
@@ -14,7 +13,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.interceptor.TransactionAspectSupport;
 import org.springframework.util.CollectionUtils;
 
-import javax.swing.*;
 import java.sql.Timestamp;
 import java.util.*;
 
@@ -87,7 +85,7 @@ public class Handler21 implements ServiceHandler {
             if (!CollectionUtils.isEmpty(style))
                 tag.setStyle(style.get(0));
             else {
-                TagUtil.setBaseTagStyle(Arrays.asList(tag));
+                TagAndRouterUtil.setBaseTagStyle(Arrays.asList(tag));
             }
             tagService.saveOne(tag);
         } catch (Exception e) {

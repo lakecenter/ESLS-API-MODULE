@@ -4,7 +4,7 @@ import com.wdy.module.aop.CurrentUser;
 import com.wdy.module.common.constant.TableConstant;
 import com.wdy.module.common.exception.ResultEnum;
 import com.wdy.module.common.request.*;
-import com.wdy.module.common.response.ResponseBean;
+import com.wdy.module.common.response.ResponseHelper;
 import com.wdy.module.common.response.ResultBean;
 import com.wdy.module.dao.RoleDao;
 import com.wdy.module.dao.UserAndRoleDao;
@@ -62,39 +62,9 @@ public class UserController {
     })
     @GetMapping("/users")
     @RequiresPermissions("系统菜单")
-    public ResponseEntity<ResultBean> getGoods(@RequestParam(required = false) String query, @RequestParam(required = false) String queryString, @Min(message = "data.page.min", value = 0) @RequestParam(required = false) Integer page, @RequestParam(required = false) @Min(message = "data.count.min", value = 0) Integer count) {
+    public ResponseEntity<ResultBean> getGoods(@RequestParam(required = false) String query, @RequestParam(required = false) String queryString, @Min(message = "data.page.min", value = 0) @RequestParam(required = false) Integer page, @RequestParam(required = false) @Min(message = "data.count.min", value = 0) Integer count) throws Exception {
         String result = ConditionUtil.judgeArgument(query, queryString, page, count);
-        if (result == null)
-            return new ResponseEntity<>(ResultBean.error("参数组合有误 [query和queryString必须同时提供] [page和count必须同时提供]"), HttpStatus.BAD_REQUEST);
-        // 带条件或查询
-        if (query != null && query.contains(" ")) {
-            List content = userService.findAllBySql(TableConstant.TABLE_USER, "like", query, queryString, page, count, User.class);
-            return new ResponseEntity<>(new ResultBean(content, content.size()), HttpStatus.OK);
-        }
-        // 查询全部
-        if (result.equals(ConditionUtil.QUERY_ALL)) {
-            List list = userService.findAll();
-            List content = CopyUtil.copyUser(list);
-            return new ResponseEntity<>(new ResultBean(content, list.size()), HttpStatus.OK);
-        }
-        // 查询全部分页
-        if (result.equals(ConditionUtil.QUERY_ALL_PAGE)) {
-            List list = userService.findAll();
-            List content = userService.findAll(page, count);
-            return new ResponseEntity<>(new ResultBean(CopyUtil.copyUser(content), list.size()), HttpStatus.OK);
-        }
-        // 带条件查询全部
-        if (result.equals(ConditionUtil.QUERY_ATTRIBUTE_ALL)) {
-            List content = userService.findAllBySql(TableConstant.TABLE_USER, query, queryString, User.class);
-            return new ResponseEntity<>(new ResultBean(CopyUtil.copyUser(content), content.size()), HttpStatus.OK);
-        }
-        // 带条件查询分页
-        if (result.equals(ConditionUtil.QUERY_ATTRIBUTE_PAGE)) {
-            List list = userService.findAll();
-            List content = userService.findAllBySql(TableConstant.TABLE_USER, query, queryString, page, count, User.class);
-            return new ResponseEntity<>(new ResultBean(CopyUtil.copyUser(content), list.size()), HttpStatus.OK);
-        }
-        return new ResponseEntity<>(ResultBean.error("查询组合出错 函数未执行！"), HttpStatus.OK);
+        return userService.getEntityList(QueryAllBean.builder().query(query).queryString(queryString).page(page).pagecount(count).result(result).serviceName("UserService").build());
     }
 
     @ApiOperation(value = "获取指定ID的用户信息")
@@ -103,11 +73,7 @@ public class UserController {
     @RequiresPermissions("获取指定ID的信息")
     public ResponseEntity<ResultBean> getGoodById(@PathVariable Long id) {
         User user = userService.findById(id);
-        if (user == null)
-            return new ResponseEntity<>(ResultBean.error("此ID用户不存在"), HttpStatus.BAD_REQUEST);
-        List users = new ArrayList<>();
-        users.add(user);
-        return new ResponseEntity<>(new ResultBean(users), HttpStatus.OK);
+        return ResponseHelper.buildBooleanResultBean(user, "此ID用户不存在", user != null);
     }
 
     @ApiOperation(value = "根据ID删除用户信息")
@@ -116,20 +82,14 @@ public class UserController {
     @RequiresPermissions("删除指定ID的信息")
     public ResponseEntity<ResultBean> deleteGoodById(@PathVariable Long id) {
         boolean flag = userService.deleteById(id);
-        if (flag)
-            return new ResponseEntity<>(ResultBean.success("删除成功"), HttpStatus.OK);
-        return new ResponseEntity<>(ResultBean.success("删除失败！没有指定ID的用户"), HttpStatus.BAD_REQUEST);
+        return ResponseHelper.buildBooleanResultBean("删除成功", "删除失败！没有指定ID的用户", flag);
     }
 
     @ApiOperation(value = "根据用户ID获得用户角色")
     @GetMapping("/user/role/{id}")
     public ResponseEntity<ResultBean> getRolesByUserId(@PathVariable Long id) {
         User user = userService.findById(id);
-        if (user == null)
-            return new ResponseEntity<>(ResultBean.error("获取失败！没有指定ID的用户"), HttpStatus.BAD_REQUEST);
-        else
-            return new ResponseEntity<>(ResultBean.success(user.getRoleList()), HttpStatus.OK);
-
+        return ResponseHelper.buildBooleanResultBean(user.getRoleList(), "获取失败！没有指定ID的用户", user != null);
     }
 
     @ApiOperation(value = "根据用户ID删除用户角色")
@@ -138,7 +98,7 @@ public class UserController {
         User user = userService.findById(id);
         int successNumber = 0;
         if (user == null)
-            return new ResponseEntity<>(ResultBean.error("获取失败！没有指定ID的用户"), HttpStatus.BAD_REQUEST);
+            return ResponseHelper.buildBadRequestResultBean("获取失败！没有指定ID的用户");
         else {
             for (Long roleId : roleIds) {
                 if (!roleDao.findById(roleId).isPresent())
@@ -147,15 +107,14 @@ public class UserController {
                 if (result != null && result > 0)
                     successNumber++;
             }
-            return new ResponseEntity<>(ResultBean.success(new ResponseBean(roleIds.size(), successNumber)), HttpStatus.OK);
+            return ResponseHelper.buildSuccessResultBean(roleIds.size(), successNumber);
         }
-
     }
 
     @ApiOperation(value = "获取当前用户信息")
     @GetMapping("/user/currentUser")
     public ResponseEntity<ResultBean> getUser(@CurrentUser User user) {
-        return new ResponseEntity<>(ResultBean.success(user), HttpStatus.OK);
+        return ResponseHelper.buildSuccessResultBean(user);
     }
 
     @ApiOperation(value = "user登录")
@@ -184,11 +143,11 @@ public class UserController {
             responseHeaders.set("Access-Control-Expose-Headers", "ESLS");
             List<User> users = new ArrayList<>();
             users.add(admin);
-            List<UserVo> userVos = CopyUtil.copyUser(users);
+            List<UserVo> userVos = CopyUtil.copyUser(users );
             return new ResponseEntity<>(ResultBean.success(userVos.get(0)), responseHeaders, HttpStatus.OK);
         } else {
             //登陆失败
-            return new ResponseEntity<>(ResultBean.error("用户名或密码错误"), HttpStatus.BAD_REQUEST);
+            return ResponseHelper.buildBadRequestResultBean("用户名或密码错误");
         }
     }
 
@@ -196,10 +155,7 @@ public class UserController {
     @PostMapping("/user/registry")
     public ResponseEntity<ResultBean> registryUser(@RequestBody @ApiParam("用户信息集合") UserVo userVo) throws MessagingException {
         User user = userService.registerUser(userVo);
-        if (user != null)
-            return new ResponseEntity<>(ResultBean.success(user), HttpStatus.OK);
-        else
-            return new ResponseEntity<>(ResultBean.error("失败 [用户名已经存在] "), HttpStatus.BAD_REQUEST);
+        return ResponseHelper.buildBooleanResultBean(user, "失败 [用户名已经存在]", user != null);
     }
 
     @ApiOperation(value = "用户激活")
@@ -213,7 +169,7 @@ public class UserController {
         if (newUser == null)
             throw new ServiceException(ResultEnum.USER_SAVE_ERROR);
         userService.giveBasePermissionToUser(newUser);
-        return new ResponseEntity<>(ResultBean.success("激活成功"), HttpStatus.OK);
+        return ResponseHelper.buildSuccessResultBean("激活成功");
     }
 
     @ApiOperation(value = "用户修改密码")
@@ -229,7 +185,7 @@ public class UserController {
         Object obj = new SimpleHash("MD5", newPassword, credentialsSalt, MD5Util.HASHITERATIONS);
         user.setPasswd(((SimpleHash) obj).toHex());
         userService.saveOne(user);
-        return new ResponseEntity<>(ResultBean.success("修改成功"), HttpStatus.OK);
+        return ResponseHelper.buildSuccessResultBean("修改成功");
     }
 
     @ApiOperation(value = "向指定的用户手机号发送验证码")
@@ -240,7 +196,7 @@ public class UserController {
             throw new ServiceException(ResultEnum.USER_NOT_EXIST);
         String authcode = MessageSender.generateRandomCode();
         authcode = authcode + " " + authcode + " " + authcode;
-        return new ResponseEntity<>(ResultBean.success(MessageSender.sendMsgByTxPlatform(phoneNumber, authcode.split(" "))), HttpStatus.OK);
+        return ResponseHelper.buildSuccessResultBean(MessageSender.sendMsgByTxPlatform(phoneNumber, authcode.split(" ")));
     }
 
     @ApiOperation(value = "验证手机验证码的正确性")
@@ -253,14 +209,14 @@ public class UserController {
         Admin admin = new Admin(user.getName(), user.getRawPasswd());
         if (code.equals(realCode)) {
             if (password == null)
-                return new ResponseEntity<>(ResultBean.success(login(admin, null)), HttpStatus.OK);
+                return ResponseHelper.buildSuccessResultBean(login(admin, null));
             else {
                 RequestBean requestBean = new RequestBean();
                 requestBean.getItems().add(new RequestItem("id", String.valueOf(user.getId())));
                 return changePassword(requestBean, password);
             }
         } else
-            return new ResponseEntity<>(ResultBean.error("验证失败"), HttpStatus.BAD_REQUEST);
+            return ResponseHelper.buildBadRequestResultBean("验证失败");
     }
 
     @ApiOperation("切换指定ID的用户的状态（0禁用1启用）")
@@ -283,10 +239,10 @@ public class UserController {
             target.setItems(targetItems);
             Integer result = userService.updateByArrtribute(TableConstant.TABLE_USER, source, target);
             if (result != null && result > 0)
-                return new ResponseEntity<>(ResultBean.success("切换状态成功 当前状态为：" + str), HttpStatus.OK);
-            return new ResponseEntity<>(ResultBean.error("切换状态失败 当前状态为：" + status), HttpStatus.BAD_REQUEST);
+                return ResponseHelper.buildSuccessResultBean("切换状态成功 当前状态为：" + str);
+            return ResponseHelper.buildBadRequestResultBean("切换状态失败 当前状态为：" + status);
         }
-        return new ResponseEntity<>(ResultBean.error("不存在此用户"), HttpStatus.BAD_REQUEST);
+        return ResponseHelper.buildBadRequestResultBean("不存在此用户");
     }
 
     @ApiOperation("为指定ID的用户添加角色")
@@ -316,6 +272,6 @@ public class UserController {
             }
             sumResult.put(i + 1, sum);
         }
-        return new ResponseEntity<>(ResultBean.success(sumResult), HttpStatus.OK);
+        return ResponseHelper.buildSuccessResultBean(sumResult);
     }
 }

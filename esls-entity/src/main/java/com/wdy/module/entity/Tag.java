@@ -65,12 +65,14 @@ public class Tag implements Serializable {
     @OneToMany(mappedBy = "tag")
     @JsonIgnore
     private Collection<Balance> balances;
+
     public Tag() {
     }
 
     @Override
     public String toString() {
         return "Tag{" +
+                "id=" + id +
                 ", barCode='" + barCode + '\'' +
                 '}';
     }

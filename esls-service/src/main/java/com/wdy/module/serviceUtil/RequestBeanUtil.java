@@ -51,7 +51,7 @@ public class RequestBeanUtil {
         for (RequestItem items : requestBean.getItems()) {
             List<Router> routerItem = service.findByArrtribute(TableConstant.TABLE_ROUTERS, items.getQuery(), items.getQueryString(), Router.class);
             for (Router r : routerItem)
-                if (r.getState()!=null && r.getState() == 1)
+                if (r.getState() != null && r.getState() == 1)
                     routers.add(r);
         }
         return routers;
@@ -106,4 +106,5 @@ public class RequestBeanUtil {
         }
         return shops;
     }
+
 }

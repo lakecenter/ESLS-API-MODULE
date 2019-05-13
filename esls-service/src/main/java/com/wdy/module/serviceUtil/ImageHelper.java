@@ -42,7 +42,8 @@ public class ImageHelper {
         firstByte[7] = '\0';
         firstByte[8] = (byte) dispms.size();
 //        FileUtils.deleteDirectory(new File("D:\\styles\\"+styleNumber+"("+dispms.get(0).getStyle().getId()+")"));
-        dispms = sortDispms(dispms);
+        dispms.sort((a, b) -> (int) (a.getRegionId() - b.getRegionId()));
+//        dispms = sortDispms(dispms);
         for (i = 0; i < dispms.size(); i++) {
             try {
                 Dispms region = dispms.get(i);
@@ -102,7 +103,8 @@ public class ImageHelper {
         if (dispms.size() == 0)
             return null;
         List<byte[]> allbyteList = new ArrayList<>();
-        dispms = sortDispms(dispms);
+//        dispms = sortDispms(dispms);
+        dispms.sort((a, b) -> (int) (a.getRegionId() - b.getRegionId()));
         for (int i = 0; i < dispms.size(); i++) {
             Dispms region = dispms.get(i);
             ByteAndRegion byteAndRegion = getRegionImage(region, styleNumber, good);
@@ -274,11 +276,10 @@ public class ImageHelper {
         return new ByteAndRegion(changeImage(bufferedImage, styleNumber), returnDispms);
     }
 
-    public static synchronized ByteResponse getByteResponse(Tag tag) {
+    public static synchronized ByteResponse getByteResponse(Tag tag, Good good, String... styleNumber) {
         StyleService styleService = (StyleService) SpringContextUtil.getBean("StyleService");
         List<Dispms> dispmsesList = new ArrayList<>();
-        Good good = tag.getGood();
-        List<Dispms> dispmses = (List<Dispms>) styleService.findByStyleNumberAndIsPromote(tag.getStyle().getStyleNumber(), good.getIsPromote() == null ? 0 : good.getIsPromote()).getDispmses();
+        List<Dispms> dispmses = (List<Dispms>) styleService.findByStyleNumberAndIsPromote(styleNumber == null ? tag.getStyle().getStyleNumber() : styleNumber[0], good.getIsPromote() == null ? 0 : good.getIsPromote()).getDispmses();
         String regionNames = good.getRegionNames();
         boolean isRegion = !StringUtil.isEmpty(regionNames) && !regionNames.contains("isPromote") ? true : false;
         ByteResponse byteResponse;

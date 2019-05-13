@@ -9,6 +9,7 @@ import com.wdy.module.serviceUtil.*;
 import io.netty.channel.Channel;
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ResourceUtils;
@@ -51,6 +52,7 @@ public class SystemVersionArgs {
     public static String basePermissions;
     public static String tagsLengthCommand;
     public static String goodDataFormat;
+    public static String dispmsesSort;
 
     public void init() {
         try {
@@ -144,6 +146,7 @@ public class SystemVersionArgs {
             SystemVersionArgs.basePermissions = systemVersion.getBasePermissions();
             SystemVersionArgs.tagsLengthCommand = systemVersion.getTagsLengthCommand();
             SystemVersionArgs.goodDataFormat = systemVersion.getGoodDataFormat();
+            SystemVersionArgs.dispmsesSort = systemVersion.getDispmsesSort();
         } else {
             String softVersion = "V1.00";
             String productor = "数据库组";
@@ -159,6 +162,7 @@ public class SystemVersionArgs {
             StringBuffer basePermissions = new StringBuffer();
             basePermissions.append("标签闪灯 添加或修改信息 标签商品绑定 系统菜单 设置通讯命令时间参数 设置通讯命令时间参数 导入数据库表 导出数据库表 获取数据表信息 获取指定ID的信息 删除指定ID的信息 查询和搜索功能");
             String goodDataFormat = "name barCode qrCode price promotePrice provider operator category origin spec stock unit shelfNumber promoteTimeGap promotionReason isPromote rfu01 rfu02 rfus01 rfus02";
+            String dispmsesSort = "name line price promotePrice category origin provider shelfNumber spec stock unit barCode qrCode imageUrl 0";
             SystemVersion newSystemVersion = new SystemVersion();
             newSystemVersion.setId((long) 1);
             newSystemVersion.setSoftVersion(softVersion);
@@ -174,6 +178,7 @@ public class SystemVersionArgs {
             newSystemVersion.setBasePermissions(basePermissions.toString());
             newSystemVersion.setTagsLengthCommand(tagsLengthCommand);
             newSystemVersion.setGoodDataFormat(goodDataFormat);
+            newSystemVersion.setDispmsesSort(dispmsesSort);
             SystemVersionArgs.softVersion = softVersion;
             SystemVersionArgs.productor = productor;
             SystemVersionArgs.date = date;
@@ -186,15 +191,16 @@ public class SystemVersionArgs {
             SystemVersionArgs.basePermissions = basePermissions.toString();
             SystemVersionArgs.tagsLengthCommand = tagsLengthCommand;
             SystemVersionArgs.goodDataFormat = goodDataFormat;
+            SystemVersionArgs.dispmsesSort = dispmsesSort;
             systemVersionDao.save(newSystemVersion);
         }
     }
 
     public void initPermissions() throws IOException {
         // 加载默认权限
-        File file = ResourceUtils.getFile("classpath:data/permission.xlsx");
-        FileInputStream inputStream = new FileInputStream(file);
-        MultipartFile multipartFile = new MockMultipartFile(file.getName(), inputStream);
+        ClassPathResource classPathResource = new ClassPathResource("data/permission.xlsx");
+        FileInputStream inputStream = new FileInputStream(classPathResource.getFile());
+        MultipartFile multipartFile = new MockMultipartFile(classPathResource.getFile().getName(), inputStream);
         PoiUtil.importExcelDataFile(multipartFile, "permission");
     }
 

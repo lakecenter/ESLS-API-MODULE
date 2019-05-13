@@ -3,17 +3,17 @@ package com.wdy.module.controller;
 import com.baomidou.mybatisplus.mapper.EntityWrapper;
 import com.baomidou.mybatisplus.mapper.Wrapper;
 import com.baomidou.mybatisplus.plugins.Page;
-import com.wdy.module.aop.Log;
+import com.wdy.module.common.exception.ResultEnum;
+import com.wdy.module.common.exception.ServiceException;
 import com.wdy.module.common.response.ResultBean;
-import com.wdy.module.config.ResponseHelper;
-import com.wdy.module.config.ResponseModel;
+import com.wdy.module.common.response.ResponseHelper;
+import com.wdy.module.common.response.ResponseModel;
 import com.wdy.module.entity.OperationLog;
 import com.wdy.module.mybatis.mybatisService.IOperationLogService;
 import com.wdy.module.utils.ConditionUtil;
 import io.swagger.annotations.*;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -45,17 +45,17 @@ public class OperationLogController {
     public ResponseEntity<ResultBean> getAll(@RequestParam(required = false) String query, @RequestParam(required = false) String queryString, @Min(message = "data.page.min", value = 0) @RequestParam(required = false) Integer page, @Min(message = "data.count.min", value = 0) @RequestParam(required = false) Integer count) {
         String result = ConditionUtil.judgeArgument(query, queryString, page, count);
         if (result == null)
-            return new ResponseEntity<>(ResultBean.error("参数组合有误 [query和queryString必须同时提供] [page和count必须同时提供]"), HttpStatus.BAD_REQUEST);
+            throw new ServiceException(ResultEnum.QUERY_LIST_ARGS_ERROR);
         // 查询全部
         if (result.equals(ConditionUtil.QUERY_ALL)) {
             List list = operationLogService.findAll();
-            return new ResponseEntity<>(new ResultBean(list, list.size()), HttpStatus.OK);
+            return ResponseHelper.buildSuccessResultBean(list, list.size());
         }
         // 查询全部分页
         if (result.equals(ConditionUtil.QUERY_ALL_PAGE)) {
             List list = operationLogService.findAll();
             Page smsVerifyPage = operationLogService.selectPage(new Page<>(page, count));
-            return new ResponseEntity<>(new ResultBean(smsVerifyPage.getRecords(), list.size()), HttpStatus.OK);
+            return ResponseHelper.buildSuccessResultBean(smsVerifyPage.getRecords(), list.size());
         }
         // 带条件查询全部
         if (result.equals(ConditionUtil.QUERY_ATTRIBUTE_ALL)) {
@@ -63,7 +63,7 @@ public class OperationLogController {
             Wrapper<OperationLog> entity = new EntityWrapper<>();
             entity.like(query, queryString);
             List smsVerifies = operationLogService.selectList(entity);
-            return new ResponseEntity<>(new ResultBean(smsVerifies, list.size()), HttpStatus.OK);
+            return ResponseHelper.buildSuccessResultBean(smsVerifies, list.size());
         }
         // 带条件查询分页
         if (result.equals(ConditionUtil.QUERY_ATTRIBUTE_PAGE)) {
@@ -71,9 +71,10 @@ public class OperationLogController {
             Wrapper<OperationLog> queryWrapper = new EntityWrapper<>();
             queryWrapper.like(query, queryString).orderBy("id", false);
             Page smsVerifyPage = operationLogService.selectPage(new Page<>(page, count), queryWrapper);
-            return new ResponseEntity<>(new ResultBean(smsVerifyPage.getRecords(), list.size()), HttpStatus.OK);
+            return ResponseHelper.buildSuccessResultBean(smsVerifyPage.getRecords(), list.size());
         }
-        return new ResponseEntity<>(ResultBean.error("查询组合出错 函数未执行！"), HttpStatus.BAD_REQUEST);
+        return ResponseHelper.buildBadRequestResultBean("查询组合出错 函数未执行！");
+
     }
 
     @ApiOperation("查询")

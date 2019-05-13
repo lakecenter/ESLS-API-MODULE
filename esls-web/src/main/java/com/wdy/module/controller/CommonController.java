@@ -3,6 +3,9 @@ package com.wdy.module.controller;
 import com.wdy.module.aop.Log;
 import com.wdy.module.common.constant.SqlConstant;
 import com.wdy.module.common.constant.TableConstant;
+import com.wdy.module.common.exception.ResultEnum;
+import com.wdy.module.common.exception.ServiceException;
+import com.wdy.module.common.response.ResponseHelper;
 import com.wdy.module.common.response.ResultBean;
 import com.wdy.module.dao.SystemVersionDao;
 import com.wdy.module.entity.SystemVersion;
@@ -55,7 +58,7 @@ public class CommonController {
             resultMap.put("keyName", str);
             mapToList.add(resultMap);
         }
-        return new ResponseEntity<>(ResultBean.success(mapToList), HttpStatus.OK);
+        return ResponseHelper.buildSuccessResultBean(mapToList);
     }
 
     @ApiOperation(value = "导出指定条件数据库excel报表(连接符可取 =  或  like),mode为1则导出全部数据表")
@@ -77,7 +80,7 @@ public class CommonController {
                     dataList = baseDao.findBySql(SqlConstant.getQuerySql(tableName, query, connection, queryString), Class.forName("com.datagroup.ESLS.entity." + SqlConstant.EntityToSqlMap.get(tableName)));
                 }
             } catch (ClassNotFoundException e) {
-                return new ResponseEntity<>(ResultBean.error("导出excel出错" + e.toString()), HttpStatus.BAD_REQUEST);
+                return ResponseHelper.buildBadRequestResultBean("导出excel出错" + e.toString());
             }
             hssfWorkbook = PoiUtil.exportData2Excel(dataList, dataColumnList, tableName);
             PoiUtil.writeToResponse(hssfWorkbook, request, response, tableName);
@@ -86,7 +89,7 @@ public class CommonController {
             PoiUtil.writeToResponse(hssfWorkbook, request, response, "总表");
         }
         //以流输出到浏览器
-        return new ResponseEntity<>(ResultBean.success("导出excel成功"), HttpStatus.OK);
+        return ResponseHelper.buildSuccessResultBean("导出excel成功");
     }
 
     @ApiOperation("导出指定条件数据库csv文件(连接符可取 =  或  like)")
@@ -111,9 +114,9 @@ public class CommonController {
             }
             PoiUtil.exportData2Csv(dataList, dataColumnList, os);
         } catch (Exception e) {
-            return new ResponseEntity<>(ResultBean.error("导出csv出错"), HttpStatus.BAD_REQUEST);
+            return ResponseHelper.buildBadRequestResultBean("导出csv出错");
         }
-        return new ResponseEntity<>(ResultBean.success("导出csv成功"), HttpStatus.OK);
+        return ResponseHelper.buildSuccessResultBean("导出csv成功");
     }
 
     @ApiOperation("导入Excel数据库表,mode为1则导入全部数据表")
@@ -121,13 +124,13 @@ public class CommonController {
     @RequiresPermissions("导入数据库表")
     public ResponseEntity<ResultBean> importExcelDataFile(@ApiParam(value = "文件信息", required = true) @RequestParam("file") MultipartFile file, @RequestParam(required = false) @ApiParam("数据库表名") String tableName, @RequestParam Integer mode) {
         if (Objects.isNull(file) || file.isEmpty()) {
-            return new ResponseEntity<>(ResultBean.error("文件为空，请重新上传"), HttpStatus.NOT_ACCEPTABLE);
+            throw new ServiceException(ResultEnum.FILE_EMPTY_ERROR);
         }
         if (mode == 0) {
             PoiUtil.importExcelDataFile(file, tableName);
         } else
             PoiUtil.importExcelDataFileBatch(file);
-        return new ResponseEntity<>(ResultBean.success("文件上传成功"), HttpStatus.OK);
+        return ResponseHelper.buildSuccessResultBean("文件上传成功");
     }
 
     @ApiOperation("导入Csv数据库表")
@@ -135,7 +138,7 @@ public class CommonController {
     @RequiresPermissions("导入数据库表")
     public ResponseEntity<ResultBean> importCsvDataFile(@ApiParam(value = "文件信息", required = true) @RequestParam("file") MultipartFile file, @RequestParam @ApiParam("数据库表名") String tableName) {
         if (Objects.isNull(file) || file.isEmpty()) {
-            return new ResponseEntity<>(ResultBean.error("文件为空，请重新上传"), HttpStatus.NOT_ACCEPTABLE);
+            throw new ServiceException(ResultEnum.FILE_EMPTY_ERROR);
         }
         List dataColumnList = baseDao.findBySql(SqlConstant.QUERY_TABLIE_COLUMN + "\'" + tableName + "\'");
         try {
@@ -146,7 +149,7 @@ public class CommonController {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return new ResponseEntity<>(ResultBean.success("文件上传成功"), HttpStatus.OK);
+        return ResponseHelper.buildSuccessResultBean("文件上传成功");
     }
 
     @ApiImplicitParams({
@@ -199,7 +202,7 @@ public class CommonController {
         systemVersion.setDate(new Timestamp(System.currentTimeMillis()));
         SystemVersion result = systemVersionDao.save(systemVersion);
         systemVersionArgs.init();
-        return new ResponseEntity<>(ResultBean.success(result), HttpStatus.OK);
+        return ResponseHelper.buildSuccessResultBean(result);
     }
 
     @ApiOperation("设置系统版本号和开发人员")
@@ -213,7 +216,7 @@ public class CommonController {
         systemVersion.setDate(new Timestamp(System.currentTimeMillis()));
         SystemVersion result = systemVersionDao.save(systemVersion);
         systemVersionArgs.init();
-        return new ResponseEntity<>(ResultBean.success(result), HttpStatus.OK);
+        return ResponseHelper.buildSuccessResultBean(result);
     }
 
     @ApiOperation("获得系统参数")
@@ -221,6 +224,6 @@ public class CommonController {
     @RequiresPermissions("获得系统参数")
     public ResponseEntity<ResultBean> getSystemArgs() {
         List<SystemVersion> results = systemVersionDao.findAll();
-        return new ResponseEntity<>(ResultBean.success(results), HttpStatus.OK);
+        return ResponseHelper.buildSuccessResultBean(results);
     }
 }

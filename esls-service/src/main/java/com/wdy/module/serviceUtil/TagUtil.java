@@ -7,8 +7,7 @@ import com.wdy.module.service.*;
 import com.wdy.module.utils.SettingUtil;
 
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class TagUtil {
 
@@ -56,6 +55,7 @@ public class TagUtil {
             Tag newTag = SettingUtil.settingTag(tag, begin);
             newTag.setWaitUpdate(1);
             tagService.saveOne(newTag);
+            updateGoodWaitUpdate(tag);
         } else {
             // 变价超时
             tag.setWaitUpdate(0);
@@ -89,10 +89,10 @@ public class TagUtil {
 
     public static void setTagIsNotWorking(List<Tag> tags) {
         TagService tagService = (TagService) SpringContextUtil.getBean("TagService");
-        for (Tag tag : tags) {
-            tag.setIsWorking((byte) 0);
-            tagService.saveOne(tag);
-        }
+        tags.forEach(item -> {
+            item.setIsWorking((byte) 0);
+            tagService.saveOne(item);
+        });
     }
 
     public static void setRouterIsNotWorking(List<Router> routers) {
@@ -146,4 +146,27 @@ public class TagUtil {
         }
         return style;
     }
+
+    private static void updateGoodWaitUpdate(Tag tag) {
+        // 更新商品
+        boolean flag = true;
+        if (tag.getGood() != null) {
+            TagService tagService = ((TagService) SpringContextUtil.getBean("TagService"));
+            List<Tag> tags = tagService.findByGoodId(tag.getGood().getId());
+            for (Tag label : tags) {
+                if (label.getWaitUpdate() == 0) {
+                    flag = false;
+                    break;
+                }
+            }
+        }
+        if (flag) {
+            GoodService goodService = ((GoodService) SpringContextUtil.getBean("GoodService"));
+            Good good = tag.getGood();
+            good.setWaitUpdate(1);
+            good.setRegionNames(null);
+            goodService.save(good);
+        }
+    }
+
 }

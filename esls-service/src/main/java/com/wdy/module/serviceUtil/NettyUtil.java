@@ -71,13 +71,13 @@ public class NettyUtil {
 
     public void awakeFirst(List tags) {
         // 对多个标签操作需要先批量唤醒，以路由器为单位进行唤醒
-        List<TagsAndRouter> tagsAndRouters = TagUtil.splitTagsByRouter(tags);
+        List<TagsAndRouter> tagsAndRouters = TagAndRouterUtil.splitTagsByRouter(tags);
         SendCommandUtil.sendAwakeMessage(tagsAndRouters, CommandConstant.COMMANDTYPE_TAG_BROADCAST);
     }
 
     public void awakeOverLast(List tags) {
         // 以路由器为单位结束唤醒
-        List<TagsAndRouter> tagsAndRouters = TagUtil.splitTagsByRouter(tags);
+        List<TagsAndRouter> tagsAndRouters = TagAndRouterUtil.splitTagsByRouter(tags);
         for (TagsAndRouter tagsAndRouter : tagsAndRouters) {
             if (tagsAndRouter.getTags().size() > 1) {
                 Channel channel = SocketChannelHelper.getChannelByRouter(tagsAndRouter.getRouter());
