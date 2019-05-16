@@ -11,6 +11,7 @@ import org.springframework.scheduling.annotation.EnableAsync;
 public class EslsWebApplication {
 
     public static void main(String[] args) {
+        System.out.println("ESLS后台管理系统启动");
         SpringApplication.run(EslsWebApplication.class, args);
     }
 
