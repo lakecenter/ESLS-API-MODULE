@@ -278,8 +278,9 @@ public class ImageHelper {
 
     public static synchronized ByteResponse getByteResponse(Tag tag, Good good, String... styleNumber) {
         StyleService styleService = (StyleService) SpringContextUtil.getBean("StyleService");
+        String realStyleNumber = styleNumber.length == 0 ?tag.getStyle().getStyleNumber():styleNumber[0];
         List<Dispms> dispmsesList = new ArrayList<>();
-        List<Dispms> dispmses = (List<Dispms>) styleService.findByStyleNumberAndIsPromote(styleNumber == null ? tag.getStyle().getStyleNumber() : styleNumber[0], good.getIsPromote() == null ? 0 : good.getIsPromote()).getDispmses();
+        List<Dispms> dispmses = (List<Dispms>) styleService.findByStyleNumberAndIsPromote(realStyleNumber, good.getIsPromote() == null ? 0 : good.getIsPromote()).getDispmses();
         String regionNames = good.getRegionNames();
         boolean isRegion = !StringUtil.isEmpty(regionNames) && !regionNames.contains("isPromote") ? true : false;
         ByteResponse byteResponse;
@@ -291,7 +292,7 @@ public class ImageHelper {
                 }
             }
             log.info("区域:" + dispmsesList.size());
-            byteResponse = getRegionRequest(dispmsesList, tag.getStyle().getStyleNumber(), good);
+            byteResponse = getRegionRequest(dispmsesList, realStyleNumber, good);
         } else {
             for (int i = 0; i < dispmses.size(); i++) {
                 Dispms dispms = dispmses.get(i);
@@ -299,7 +300,7 @@ public class ImageHelper {
                     dispmsesList.add(dispmses.get(i));
             }
             log.info("全局:" + dispmsesList.size());
-            byteResponse = getRequest(dispmsesList, tag.getStyle().getStyleNumber(), good);
+            byteResponse = getRequest(dispmsesList, realStyleNumber, good);
         }
         return byteResponse;
     }

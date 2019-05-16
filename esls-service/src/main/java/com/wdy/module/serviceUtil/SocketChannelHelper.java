@@ -76,8 +76,12 @@ public class SocketChannelHelper {
 
     public static boolean isBroadcastCommand(byte[] message) {
         // 返回false则需要等待应答
-        if ((message[0] != 0x11 && message[1] != 0x11) || (message[0] != 0x22 && message[1] != 0x22))
+        // 路由器升级文件需要应答
+        if (!((message[0] == 0x11 && message[1] == 0x11) || (message[0] == 0x22 && message[1] == 0x22)))
             return false;
+        // 标签广播
+        if (message[4] == 0x00 && message[5] == 0x00 && message[6] == 0x00 && message[7] == 0x00)
+            return true;
         // 路由器设置 和 结束唤醒 当作普通命令 通讯超时当做广播命令
         if ((message[8] == 0x01 && message[9] == 0x03))
             return true;
@@ -91,9 +95,6 @@ public class SocketChannelHelper {
             // 路由器IP设置
         else if (message[8] == 0x0A)
             return false;
-            // 标签广播
-        else if (message[4] == 0 && message[5] == 0 && message[6] == 0 && message[7] == 0)
-            return true;
             // 在线升级命令
         else if (message[8] == 0x0c)
             return false;

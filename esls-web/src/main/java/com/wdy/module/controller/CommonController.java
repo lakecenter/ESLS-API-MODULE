@@ -58,7 +58,7 @@ public class CommonController {
             resultMap.put("keyName", str);
             mapToList.add(resultMap);
         }
-        return ResponseHelper.buildSuccessResultBean(mapToList);
+        return ResponseHelper.OK(mapToList);
     }
 
     @ApiOperation(value = "导出指定条件数据库excel报表(连接符可取 =  或  like),mode为1则导出全部数据表")
@@ -80,7 +80,7 @@ public class CommonController {
                     dataList = baseDao.findBySql(SqlConstant.getQuerySql(tableName, query, connection, queryString), Class.forName("com.datagroup.ESLS.entity." + SqlConstant.EntityToSqlMap.get(tableName)));
                 }
             } catch (ClassNotFoundException e) {
-                return ResponseHelper.buildBadRequestResultBean("导出excel出错" + e.toString());
+                return ResponseHelper.BadRequest("导出excel出错" + e.toString());
             }
             hssfWorkbook = PoiUtil.exportData2Excel(dataList, dataColumnList, tableName);
             PoiUtil.writeToResponse(hssfWorkbook, request, response, tableName);
@@ -89,7 +89,7 @@ public class CommonController {
             PoiUtil.writeToResponse(hssfWorkbook, request, response, "总表");
         }
         //以流输出到浏览器
-        return ResponseHelper.buildSuccessResultBean("导出excel成功");
+        return ResponseHelper.OK("导出excel成功");
     }
 
     @ApiOperation("导出指定条件数据库csv文件(连接符可取 =  或  like)")
@@ -114,9 +114,9 @@ public class CommonController {
             }
             PoiUtil.exportData2Csv(dataList, dataColumnList, os);
         } catch (Exception e) {
-            return ResponseHelper.buildBadRequestResultBean("导出csv出错");
+            return ResponseHelper.BadRequest("导出csv出错");
         }
-        return ResponseHelper.buildSuccessResultBean("导出csv成功");
+        return ResponseHelper.OK("导出csv成功");
     }
 
     @ApiOperation("导入Excel数据库表,mode为1则导入全部数据表")
@@ -130,7 +130,7 @@ public class CommonController {
             PoiUtil.importExcelDataFile(file, tableName);
         } else
             PoiUtil.importExcelDataFileBatch(file);
-        return ResponseHelper.buildSuccessResultBean("文件上传成功");
+        return ResponseHelper.OK("文件上传成功");
     }
 
     @ApiOperation("导入Csv数据库表")
@@ -149,7 +149,7 @@ public class CommonController {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return ResponseHelper.buildSuccessResultBean("文件上传成功");
+        return ResponseHelper.OK("文件上传成功");
     }
 
     @ApiImplicitParams({
@@ -202,7 +202,7 @@ public class CommonController {
         systemVersion.setDate(new Timestamp(System.currentTimeMillis()));
         SystemVersion result = systemVersionDao.save(systemVersion);
         systemVersionArgs.init();
-        return ResponseHelper.buildSuccessResultBean(result);
+        return ResponseHelper.OK(result);
     }
 
     @ApiOperation("设置系统版本号和开发人员")
@@ -216,7 +216,7 @@ public class CommonController {
         systemVersion.setDate(new Timestamp(System.currentTimeMillis()));
         SystemVersion result = systemVersionDao.save(systemVersion);
         systemVersionArgs.init();
-        return ResponseHelper.buildSuccessResultBean(result);
+        return ResponseHelper.OK(result);
     }
 
     @ApiOperation("获得系统参数")
@@ -224,6 +224,6 @@ public class CommonController {
     @RequiresPermissions("获得系统参数")
     public ResponseEntity<ResultBean> getSystemArgs() {
         List<SystemVersion> results = systemVersionDao.findAll();
-        return ResponseHelper.buildSuccessResultBean(results);
+        return ResponseHelper.OK(results);
     }
 }

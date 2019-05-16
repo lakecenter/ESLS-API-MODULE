@@ -1,7 +1,6 @@
 package com.wdy.module.controller;
 
 import com.wdy.module.aop.Log;
-import com.wdy.module.common.constant.TableConstant;
 import com.wdy.module.common.request.QueryAllBean;
 import com.wdy.module.common.request.RequestBean;
 import com.wdy.module.common.response.ResponseBean;
@@ -16,7 +15,6 @@ import com.wdy.module.utils.*;
 import io.swagger.annotations.*;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -52,14 +50,14 @@ public class BalanceController {
     @RequiresPermissions("获取指定ID的信息")
     public ResponseEntity<ResultBean> getLogById(@PathVariable Long id) {
         Balance result = balanceService.findById(id);
-        return ResponseHelper.buildSuccessResultBean(result);
+        return ResponseHelper.OK(result);
     }
 
     @ApiOperation(value = "添加或修改电子秤信息")
     @PostMapping("/balance")
     @RequiresPermissions("添加或修改信息")
     public ResponseEntity<ResultBean> saveLog(@RequestBody @ApiParam(value = "电子秤信息json格式") Balance balance) {
-        return ResponseHelper.buildSuccessResultBean(balanceService.saveOne(balance));
+        return ResponseHelper.OK(balanceService.saveOne(balance));
     }
 
     @ApiOperation(value = "根据ID删除电子秤信息")
@@ -67,7 +65,7 @@ public class BalanceController {
     @RequiresPermissions("删除指定ID的信息")
     public ResponseEntity<ResultBean> deleteLogById(@PathVariable Long id) {
         boolean flag = balanceService.deleteById(id);
-        return ResponseHelper.buildBooleanResultBean("删除成功", "删除失败！没有指定ID的电子秤信息", flag);
+        return ResponseHelper.BooleanResultBean("删除成功", "删除失败！没有指定ID的电子秤信息", flag);
     }
 
     @ApiOperation(value = "获取指定标签连接的电子秤的计量数据")
@@ -89,6 +87,6 @@ public class BalanceController {
         } else if (mode == 3) {
             responseBean = SendCommandUtil.sendCommandWithTags(tags, CommandConstant.GETBALANCEPOWER, CommandConstant.COMMANDTYPE_TAG, false);
         }
-        return ResponseHelper.buildSuccessResultBean(responseBean);
+        return ResponseHelper.OK(responseBean);
     }
 }

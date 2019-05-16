@@ -76,7 +76,7 @@ public class ServerChannelHandler extends SimpleChannelInboundHandler<Object> {
                 case WRITER_IDLE:
                     byte[] heartBeat = CommandConstant.COMMAND_BYTE.get(CommandConstant.ROUTERHEARTBEAN);
                     ctx.channel().writeAndFlush(Unpooled.wrappedBuffer(heartBeat));
-                    log.info(ctx.channel().id().toString() + "发送心跳包");
+                    log.info(ctx.channel().toString() + "发送心跳包");
                     break;
                 case ALL_IDLE:
                     break;
@@ -100,7 +100,7 @@ public class ServerChannelHandler extends SimpleChannelInboundHandler<Object> {
         // ACK
         if (header[0] == 0x01 && header[1] == 0x01) {
             if (req[11] == 0x0B && req[12] == 0x01) {
-                String id = ctx.channel().id().toString();
+                String id = ctx.channel().toString();
                 log.info(id + ":接收到心跳包");
                 setRouterIsWorking(ctx.channel());
                 SocketChannelHelper.heartBeanMap.put(ctx.channel().id().toString(), SocketChannelHelper.heartBeanMap.get(id) == null ? 0 : SocketChannelHelper.heartBeanMap.get(id) - 1);
@@ -172,8 +172,6 @@ public class ServerChannelHandler extends SimpleChannelInboundHandler<Object> {
         }
         // 路由器注册命令
         else if (header[0] == 0x02 && header[1] == 0x03) {
-            String key = ctx.channel().id().toString();
-            SpringContextUtil.printBytes("key = " + key + " 接收路由器注册消息", req);
             ((AsyncTask) SpringContextUtil.getBean("AsyncTask")).execute(handlerName, ctx.channel(), header, ByteUtil.splitByte(req, 11, req[10]));
         }
         // 标签注册命令
@@ -212,7 +210,6 @@ public class ServerChannelHandler extends SimpleChannelInboundHandler<Object> {
 
     private void setRouterIsWorking(Channel channel) {
         Router router = SocketChannelHelper.getRouterByChannel(channel);
-        System.out.println(router + " " + channel);
         if (router == null)
             return;
         RouterService routerService = (RouterService) SpringContextUtil.getBean("RouterService");

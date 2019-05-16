@@ -46,12 +46,14 @@ public class LicenseCheckInterceptor extends HandlerInterceptorAdapter {
             } else {
                 response.setCharacterEncoding("utf-8");
                 response.setStatus(401);
+                response.setContentType("text/html");
                 response.getWriter().write(JSON.toJSONString(ResultBean.error("您的证书无效，请核查服务器是否取得授权或重新申请证书！")));
                 return false;
             }
         } catch (Exception e) {
             response.setCharacterEncoding("utf-8");
             response.setStatus(401);
+            response.setContentType("text/html");
             response.getWriter().write(JSON.toJSONString(ResultBean.error("证书未安装")));
         }
         return false;

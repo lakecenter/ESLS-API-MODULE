@@ -68,7 +68,7 @@ public class LicenseCreatorController {
     public ResponseEntity<ResultBean> generateLicense(@RequestBody LicenseCreatorParam param) {
         LicenseCreator licenseCreator = new LicenseCreator(param);
         boolean result = licenseCreator.generateLicense();
-        return ResponseHelper.buildSuccessResultBean(result);
+        return ResponseHelper.OK(result);
     }
 
     @ApiOperation("下载证书")
@@ -91,9 +91,9 @@ public class LicenseCreatorController {
                 i = bis.read(buffer);
             }
 
-            return ResponseHelper.buildSuccessResultBean("下载成功");
+            return ResponseHelper.OK("下载成功");
         } catch (Exception e) {
-            return ResponseHelper.buildBadRequestResultBean("下载失败" + e);
+            return ResponseHelper.BadRequest("下载失败" + e);
         }
     }
 
@@ -116,9 +116,9 @@ public class LicenseCreatorController {
             multipartFile.transferTo(localFile);
             LicenseCheckListener licenseCheckListener = (LicenseCheckListener) SpringContextUtil.getBean("LicenseCheckListener");
             licenseCheckListener.installLicense();
-            return ResponseHelper.buildSuccessResultBean("安装成功");
+            return ResponseHelper.OK("安装成功");
         } catch (Exception e) {
-            return ResponseHelper.buildBadRequestResultBean("安装失败" + e);
+            return ResponseHelper.BadRequest("安装失败" + e);
         }
     }
 
@@ -127,6 +127,6 @@ public class LicenseCreatorController {
     public ResponseEntity<ResultBean> getValidTime() throws Exception {
         LicenseManager licenseManager = LicenseManagerHolder.getInstance(null);
         LicenseContent verify = licenseManager.verify();
-        return ResponseHelper.buildSuccessResultBean(verify);
+        return ResponseHelper.OK(verify);
     }
 }

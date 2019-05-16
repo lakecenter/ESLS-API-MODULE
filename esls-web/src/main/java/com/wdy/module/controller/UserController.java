@@ -73,7 +73,7 @@ public class UserController {
     @RequiresPermissions("获取指定ID的信息")
     public ResponseEntity<ResultBean> getGoodById(@PathVariable Long id) {
         User user = userService.findById(id);
-        return ResponseHelper.buildBooleanResultBean(user, "此ID用户不存在", user != null);
+        return ResponseHelper.BooleanResultBean(user, "此ID用户不存在", user != null);
     }
 
     @ApiOperation(value = "根据ID删除用户信息")
@@ -82,14 +82,14 @@ public class UserController {
     @RequiresPermissions("删除指定ID的信息")
     public ResponseEntity<ResultBean> deleteGoodById(@PathVariable Long id) {
         boolean flag = userService.deleteById(id);
-        return ResponseHelper.buildBooleanResultBean("删除成功", "删除失败！没有指定ID的用户", flag);
+        return ResponseHelper.BooleanResultBean("删除成功", "删除失败！没有指定ID的用户", flag);
     }
 
     @ApiOperation(value = "根据用户ID获得用户角色")
     @GetMapping("/user/role/{id}")
     public ResponseEntity<ResultBean> getRolesByUserId(@PathVariable Long id) {
         User user = userService.findById(id);
-        return ResponseHelper.buildBooleanResultBean(user.getRoleList(), "获取失败！没有指定ID的用户", user != null);
+        return ResponseHelper.BooleanResultBean(user.getRoleList(), "获取失败！没有指定ID的用户", user != null);
     }
 
     @ApiOperation(value = "根据用户ID删除用户角色")
@@ -98,7 +98,7 @@ public class UserController {
         User user = userService.findById(id);
         int successNumber = 0;
         if (user == null)
-            return ResponseHelper.buildBadRequestResultBean("获取失败！没有指定ID的用户");
+            return ResponseHelper.BadRequest("获取失败！没有指定ID的用户");
         else {
             for (Long roleId : roleIds) {
                 if (!roleDao.findById(roleId).isPresent())
@@ -107,14 +107,14 @@ public class UserController {
                 if (result != null && result > 0)
                     successNumber++;
             }
-            return ResponseHelper.buildSuccessResultBean(roleIds.size(), successNumber);
+            return ResponseHelper.OK(roleIds.size(), successNumber);
         }
     }
 
     @ApiOperation(value = "获取当前用户信息")
     @GetMapping("/user/currentUser")
     public ResponseEntity<ResultBean> getUser(@CurrentUser User user) {
-        return ResponseHelper.buildSuccessResultBean(user);
+        return ResponseHelper.OK(user);
     }
 
     @ApiOperation(value = "user登录")
@@ -147,7 +147,7 @@ public class UserController {
             return new ResponseEntity<>(ResultBean.success(userVos.get(0)), responseHeaders, HttpStatus.OK);
         } else {
             //登陆失败
-            return ResponseHelper.buildBadRequestResultBean("用户名或密码错误");
+            return ResponseHelper.BadRequest("用户名或密码错误");
         }
     }
 
@@ -155,7 +155,7 @@ public class UserController {
     @PostMapping("/user/registry")
     public ResponseEntity<ResultBean> registryUser(@RequestBody @ApiParam("用户信息集合") UserVo userVo) throws MessagingException {
         User user = userService.registerUser(userVo);
-        return ResponseHelper.buildBooleanResultBean(user, "失败 [用户名已经存在]", user != null);
+        return ResponseHelper.BooleanResultBean(user, "失败 [用户名已经存在]", user != null);
     }
 
     @ApiOperation(value = "用户激活")
@@ -169,7 +169,7 @@ public class UserController {
         if (newUser == null)
             throw new ServiceException(ResultEnum.USER_SAVE_ERROR);
         userService.giveBasePermissionToUser(newUser);
-        return ResponseHelper.buildSuccessResultBean("激活成功");
+        return ResponseHelper.OK("激活成功");
     }
 
     @ApiOperation(value = "用户修改密码")
@@ -185,7 +185,7 @@ public class UserController {
         Object obj = new SimpleHash("MD5", newPassword, credentialsSalt, MD5Util.HASHITERATIONS);
         user.setPasswd(((SimpleHash) obj).toHex());
         userService.saveOne(user);
-        return ResponseHelper.buildSuccessResultBean("修改成功");
+        return ResponseHelper.OK("修改成功");
     }
 
     @ApiOperation(value = "向指定的用户手机号发送验证码")
@@ -196,7 +196,7 @@ public class UserController {
             throw new ServiceException(ResultEnum.USER_NOT_EXIST);
         String authcode = MessageSender.generateRandomCode();
         authcode = authcode + " " + authcode + " " + authcode;
-        return ResponseHelper.buildSuccessResultBean(MessageSender.sendMsgByTxPlatform(phoneNumber, authcode.split(" ")));
+        return ResponseHelper.OK(MessageSender.sendMsgByTxPlatform(phoneNumber, authcode.split(" ")));
     }
 
     @ApiOperation(value = "验证手机验证码的正确性")
@@ -209,14 +209,14 @@ public class UserController {
         Admin admin = new Admin(user.getName(), user.getRawPasswd());
         if (code.equals(realCode)) {
             if (password == null)
-                return ResponseHelper.buildSuccessResultBean(login(admin, null));
+                return ResponseHelper.OK(login(admin, null));
             else {
                 RequestBean requestBean = new RequestBean();
                 requestBean.getItems().add(new RequestItem("id", String.valueOf(user.getId())));
                 return changePassword(requestBean, password);
             }
         } else
-            return ResponseHelper.buildBadRequestResultBean("验证失败");
+            return ResponseHelper.BadRequest("验证失败");
     }
 
     @ApiOperation("切换指定ID的用户的状态（0禁用1启用）")
@@ -239,10 +239,10 @@ public class UserController {
             target.setItems(targetItems);
             Integer result = userService.updateByArrtribute(TableConstant.TABLE_USER, source, target);
             if (result != null && result > 0)
-                return ResponseHelper.buildSuccessResultBean("切换状态成功 当前状态为：" + str);
-            return ResponseHelper.buildBadRequestResultBean("切换状态失败 当前状态为：" + status);
+                return ResponseHelper.OK("切换状态成功 当前状态为：" + str);
+            return ResponseHelper.BadRequest("切换状态失败 当前状态为：" + status);
         }
-        return ResponseHelper.buildBadRequestResultBean("不存在此用户");
+        return ResponseHelper.BadRequest("不存在此用户");
     }
 
     @ApiOperation("为指定ID的用户添加角色")
@@ -272,6 +272,6 @@ public class UserController {
             }
             sumResult.put(i + 1, sum);
         }
-        return ResponseHelper.buildSuccessResultBean(sumResult);
+        return ResponseHelper.OK(sumResult);
     }
 }

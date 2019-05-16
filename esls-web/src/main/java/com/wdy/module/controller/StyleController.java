@@ -2,15 +2,12 @@ package com.wdy.module.controller;
 
 import com.wdy.module.common.constant.ArrtributeConstant;
 import com.wdy.module.common.constant.TableConstant;
-import com.wdy.module.common.exception.ResultEnum;
-import com.wdy.module.common.exception.ServiceException;
 import com.wdy.module.common.request.QueryAllBean;
 import com.wdy.module.common.request.RequestBean;
 import com.wdy.module.common.response.ResponseBean;
 import com.wdy.module.common.response.ResponseHelper;
 import com.wdy.module.common.response.ResultBean;
 import com.wdy.module.dao.TagDao;
-import com.wdy.module.dto.StyleVo;
 import com.wdy.module.entity.*;
 import com.wdy.module.entity.Tag;
 import com.wdy.module.aop.Log;
@@ -21,7 +18,6 @@ import com.wdy.module.utils.*;
 import io.swagger.annotations.*;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -65,7 +61,7 @@ public class StyleController {
     @RequiresPermissions("获取指定ID的信息")
     public ResponseEntity<ResultBean> getStyleById(@PathVariable Long id) {
         Optional<Style> result = styleService.findById(id);
-        return ResponseHelper.buildBooleanResultBean(CopyUtil.copyStyle(Arrays.asList(result.get())), "此ID样式不存在", result.isPresent());
+        return ResponseHelper.BooleanResultBean(CopyUtil.copyStyle(Arrays.asList(result.get())), "此ID样式不存在", result.isPresent());
     }
 
     @ApiOperation("获得指定ID的样式的所有小样式信息")
@@ -84,7 +80,7 @@ public class StyleController {
                 dispmses.set(i - 1, temp);
             }
         }
-        return ResponseHelper.buildSuccessResultBean(CopyUtil.copyDispms(dispmses));
+        return ResponseHelper.OK(CopyUtil.copyDispms(dispmses));
     }
 
     @ApiOperation(value = "添加样式信息")
@@ -92,20 +88,20 @@ public class StyleController {
     @RequiresPermissions("添加或修改信息")
     public ResponseEntity<ResultBean> saveStyleByStyleType(@RequestParam String styleType) {
         List<Style> result = styleService.saveOne(styleType);
-        return ResponseHelper.buildSuccessResultBean(result);
+        return ResponseHelper.OK(result);
     }
 
     @ApiOperation(value = "获得促销或非促销的样式信息")
     @GetMapping("/style/promote")
     public ResponseEntity<ResultBean> getStyleByStyleNumberAndType(@RequestParam String styleNumber, @RequestParam Byte isPromote) {
-        return ResponseHelper.buildSuccessResultBean(styleService.findByStyleNumberAndIsPromote(styleNumber, isPromote));
+        return ResponseHelper.OK(styleService.findByStyleNumberAndIsPromote(styleNumber, isPromote));
     }
 
     @ApiOperation(value = "添加或修改样式信息")
     @PostMapping("/style")
     @RequiresPermissions("添加或修改信息")
     public ResponseEntity<ResultBean> saveStyle(@RequestBody @ApiParam(value = "样式信息JSON格式") Style style) {
-        return ResponseHelper.buildSuccessResultBean(styleService.saveOne(style));
+        return ResponseHelper.OK(styleService.saveOne(style));
     }
 
     @ApiOperation(value = "根据ID删除样式信息")
@@ -114,7 +110,7 @@ public class StyleController {
     @RequiresPermissions("删除指定ID的信息")
     public ResponseEntity<ResultBean> deleteStyleById(@PathVariable Long id) {
         boolean flag = styleService.deleteById(id);
-        return ResponseHelper.buildBooleanResultBean("删除成功", "删除失败！没有指定ID的样式", flag);
+        return ResponseHelper.BooleanResultBean("删除成功", "删除失败！没有指定ID的样式", flag);
     }
 
     @ApiOperation(value = "根据styleNumber删除样式信息")
@@ -122,7 +118,7 @@ public class StyleController {
     @Log("根据styleNumber删除样式信息")
     @RequiresPermissions("删除指定ID的信息")
     public ResponseEntity<ResultBean> deleteStyleByStyleNumber(@PathVariable String styleNumber) {
-        return ResponseHelper.buildSuccessResultBean(styleService.deleteByStyleNumber(styleNumber));
+        return ResponseHelper.OK(styleService.deleteByStyleNumber(styleNumber));
     }
 
     //    @ApiOperation(value = "更改指定ID样式的小样式")
@@ -146,7 +142,7 @@ public class StyleController {
     @RequiresPermissions("新建或修改样式同时绑定小样式")
     public ResponseEntity<ResultBean> newStyleById(@RequestParam long styleId, @RequestBody @ApiParam(value = "样式信息JSON格式") List<Dispms> dispms, @RequestParam Integer mode, @RequestParam Integer update) {
         Optional<Style> style = styleService.findById(styleId);
-        return ResponseHelper.buildBooleanResultBean(styleService.newStyleById(styleId, dispms, style.get(), mode, update), "没有指定的样式,请先添加样式", style.isPresent());
+        return ResponseHelper.BooleanResultBean(styleService.newStyleById(styleId, dispms, style.get(), mode, update), "没有指定的样式,请先添加样式", style.isPresent());
     }
 
     @ApiOperation(value = "刷新选用该样式的标签或设置定期刷新", notes = "定期刷新才需加beginTime和cycleTime字段")
@@ -157,7 +153,7 @@ public class StyleController {
     @Log("刷新选用该样式的标签或设置定期刷新")
     @RequiresPermissions("刷新选用该样式的标签或设置定期刷新")
     public ResponseEntity<ResultBean> flushTags(@RequestBody @ApiParam("样式集合") RequestBean requestBean, @RequestParam @Min(message = "data.page.min", value = 0) @Max(message = "data.mode.max", value = 1) Integer mode) {
-        return ResponseHelper.buildSuccessResultBean(styleService.flushTags(requestBean, mode));
+        return ResponseHelper.OK(styleService.flushTags(requestBean, mode));
     }
 
     @ApiOperation("生成指定ID样式的所有小样式图片")
@@ -170,7 +166,7 @@ public class StyleController {
         for (Dispms dispms : dispmses) {
             ImageHelper.getRegionImage(dispms, style.getStyleNumber(), good);
         }
-        return ResponseHelper.buildSuccessResultBean("成功");
+        return ResponseHelper.OK("成功");
     }
 
     @ApiOperation("生成指定ID样式的所有小样式图片")
@@ -180,7 +176,7 @@ public class StyleController {
         Dispms dispms = dispmsService.findById(id).get();
         Good good = goodService.findById(goodId);
         ImageHelper.getRegionImage(dispms, styleNumber, good);
-        return ResponseHelper.buildSuccessResultBean("成功");
+        return ResponseHelper.OK("成功");
     }
 
     @ApiOperation("向选用此样式的所有标签发送样式")
@@ -196,6 +192,6 @@ public class StyleController {
             nettyUtil.awakeOverLast(tags);
         } else
             responseBean = SendCommandUtil.updateTagStyle(tags, false, false);
-        return ResponseHelper.buildSuccessResultBean(responseBean);
+        return ResponseHelper.OK(responseBean);
     }
 }

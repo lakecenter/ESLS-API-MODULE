@@ -5,7 +5,6 @@ import com.wdy.module.common.exception.ResultEnum;
 import com.wdy.module.common.exception.ServiceException;
 import com.wdy.module.common.request.RequestBean;
 import com.wdy.module.common.request.RequestItem;
-import com.wdy.module.common.response.ResponseBean;
 import com.wdy.module.common.response.ResponseHelper;
 import com.wdy.module.common.response.ResultBean;
 import com.wdy.module.entity.*;
@@ -18,7 +17,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -87,7 +85,7 @@ public class UploadController {
             e.printStackTrace();
         }
         log.info("文件写入成功...");
-        return ResponseHelper.buildSuccessResultBean("文件上传成功");
+        return ResponseHelper.OK("文件上传成功");
     }
 
     @ApiOperation("上传多个文件")
@@ -102,6 +100,6 @@ public class UploadController {
                 System.out.println(file[i].getName());
             }
         }
-        return ResponseHelper.buildSuccessResultBean(file.length, successNumber);
+        return ResponseHelper.OK(file.length, successNumber);
     }
 }

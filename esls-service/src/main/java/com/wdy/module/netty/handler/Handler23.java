@@ -19,7 +19,6 @@ public class Handler23 implements ServiceHandler {
     public byte[] executeRequest(byte[] header, byte[] message, Channel channel) {
         log.info("路由器注册（更新）-----处理器执行！");
         try {
-            SpringContextUtil.printBytes("接受注册路由器消息包", message);
             String routerMac = ByteUtil.getMergeMessage(ByteUtil.splitByte(message, 0, 6));
             String routerIP = ByteUtil.getIpMessage(ByteUtil.splitByte(message, 6, 4));
             String routerBarCode = ByteUtil.getDigitalMessage(ByteUtil.splitByte(message, 10, 12));
@@ -27,18 +26,9 @@ public class Handler23 implements ServiceHandler {
             String routerFrequency = ByteUtil.getRealMessage(ByteUtil.splitByte(message, 23, 2)) + "0000";
             String routerHardVersion = ByteUtil.getVersionMessage(ByteUtil.splitByte(message, 25, 6));
             String routerSoftVersion = ByteUtil.getVersionMessage(ByteUtil.splitByte(message, 31, 6));
-            System.out.println("mac:" + routerMac);
-            System.out.println("routerIP:" + routerIP);
-            System.out.println("routerBarCode:" + routerBarCode);
-            System.out.println("routerChannelId:" + routerChannelId);
-            System.out.println("routerFrequency:" + routerFrequency);
-            System.out.println("routerHardVersion:" + routerHardVersion);
-            System.out.println("routerSoftVersion:" + routerSoftVersion);
             RouterService routerService = ((RouterService) SpringContextUtil.getBean("RouterService"));
             InetSocketAddress socketAddress = (InetSocketAddress) channel.remoteAddress();
             String ip = socketAddress.getAddress().getHostAddress();
-            System.out.println("ip:" + ip);
-            System.out.println("端口:" + socketAddress.getPort());
             Router router = routerService.findByBarCode(routerBarCode);
             if (!SocketChannelHelper.channelIdGroup.containsKey(ip + socketAddress.getPort()))
                 SocketChannelHelper.channelIdGroup.put(ip + socketAddress.getPort(), channel);
@@ -58,12 +48,8 @@ public class Handler23 implements ServiceHandler {
             r.setCompleteTime(new Timestamp(System.currentTimeMillis()));
             routerService.saveOne(r);
         } catch (Exception e) {
-            System.out.println(e);
             return CommandCategory.getResponse(null, header, CommandConstant.COMMANDTYPE_ROUTER, null, CommandCategory.NACK);
         }
-//        System.out.println(CommandConstant.ACK);
-//        System.out.println(CommandConstant.COMMANDTYPE_ROUTER);
-//        System.out.println(CommandCategory.getResponse(CommandConstant.ACK,header,CommandConstant.COMMANDTYPE_ROUTER,null));
         return CommandCategory.getResponse(null, header, CommandConstant.COMMANDTYPE_ROUTER, null, CommandCategory.ACK);
     }
 }

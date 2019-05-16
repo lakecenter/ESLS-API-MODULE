@@ -52,7 +52,7 @@ public class NettyServer {
                         @Override
                         protected void initChannel(SocketChannel ch) throws Exception {
                             // 进行设置心跳检测
-                            ch.pipeline().addLast(new IdleStateHandler(60,50,60*50, TimeUnit.SECONDS));
+                            ch.pipeline().addLast(new IdleStateHandler(60,30,60*30, TimeUnit.SECONDS));
                             ch.pipeline().addLast(new StringEncoder());
                             // 配置通道处理  来进行业务处理
                             ch.pipeline().addLast(serverChannelHandler);

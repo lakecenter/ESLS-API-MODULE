@@ -26,7 +26,6 @@ public class Handler21 implements ServiceHandler {
         log.info("标签注册-----处理器执行！");
         String barCode = null;
         try {
-            SpringContextUtil.printBytes("接受标签注册消息包", message);
             barCode = ByteUtil.getDigitalMessage(ByteUtil.splitByte(message, 0, 12));
             String styleNumber = ByteUtil.getDigitalMessage(ByteUtil.splitByte(message, 12, 4));
             String resolutionWidth = ByteUtil.getRealMessage(ByteUtil.splitByte(message, 17, 2));
@@ -37,20 +36,8 @@ public class Handler21 implements ServiceHandler {
             String ap_rssi = String.valueOf(Integer.valueOf(ByteUtil.getRealMessage(ByteUtil.splitByte(message, 24, 1))) - 256);
             String hardVersion = ByteUtil.getVersionMessage(ByteUtil.splitByte(message, 25, 6));
             String softVersion = ByteUtil.getVersionMessage(ByteUtil.splitByte(message, 31, 6));
-            System.out.println("条码：" + barCode);
-            System.out.println("样式数字：" + styleNumber);
-            System.out.println("分辨率宽（长边）：" + resolutionWidth);
-            System.out.println("分辨率高（短边）：" + resolutionHeight);
-            // 2：黑白屏 ； 3：三色屏
-            System.out.println("屏幕类型：" + screenType);
-            System.out.println("电量：" + power);
-            System.out.println("tagrssi：" + tag_rssi);
-            System.out.println("aprssi：" + ap_rssi);
-            System.out.println("hardversion：" + hardVersion);
-            System.out.println("softversion：" + softVersion);
             TagService tagService = ((TagService) SpringContextUtil.getBean("TagService"));
             String tagAddress = ByteUtil.getMergeMessage(SpringContextUtil.getAddressByBarCode(barCode));
-            System.out.println("标签地址：" + tagAddress);
             Tag tagByTagAddress = tagService.findByTagAddress(tagAddress);
             Tag tag = tagByTagAddress == null ? new Tag() : tagByTagAddress;
             tag.setTagAddress(tagAddress);
@@ -77,7 +64,6 @@ public class Handler21 implements ServiceHandler {
             tag.setCompleteTime(new Timestamp(System.currentTimeMillis()));
             // 绑定路由器
             Router router = SocketChannelHelper.getRouterByChannel(channel);
-            System.out.println("选择的路由器:" + router);
             tag.setRouter(router);
             // 找到标签对应的样式
             StyleService styleService = ((StyleService) SpringContextUtil.getBean("StyleService"));
@@ -89,7 +75,6 @@ public class Handler21 implements ServiceHandler {
             }
             tagService.saveOne(tag);
         } catch (Exception e) {
-            System.out.println(e);
             TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
             return CommandCategory.getResponse(null, header, CommandConstant.COMMANDTYPE_TAG, SpringContextUtil.getAddressByBarCode(barCode), CommandCategory.NACK);
         }

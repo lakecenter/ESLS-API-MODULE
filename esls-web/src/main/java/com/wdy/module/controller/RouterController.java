@@ -21,7 +21,6 @@ import io.swagger.annotations.*;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -63,7 +62,7 @@ public class RouterController {
     @RequiresPermissions("获取指定ID的信息")
     public ResponseEntity<ResultBean> getRouterById(@PathVariable Long id) {
         Optional<Router> result = routerService.findById(id);
-        return ResponseHelper.buildBooleanResultBean(CopyUtil.copyRouter(Arrays.asList(result.get())), "此ID路由器不存在", result.isPresent());
+        return ResponseHelper.BooleanResultBean(CopyUtil.copyRouter(Arrays.asList(result.get())), "此ID路由器不存在", result.isPresent());
     }
 
     @ApiOperation(value = "添加或修改路由器信息(路由器设置)")
@@ -76,13 +75,13 @@ public class RouterController {
         if (routerVo.getShopId() != 0) {
             Shop shop = new Shop();
             if (!shopService.findById(routerVo.getShopId()).isPresent())
-                return ResponseHelper.buildBadRequestResultBean("商店不存在");
+                return ResponseHelper.BadRequest("商店不存在");
             shop.setId(routerVo.getShopId());
             router.setShop(shop);
         }
         List result = new ArrayList();
         result.add(routerService.saveOne(router));
-        return ResponseHelper.buildSuccessResultBean(CopyUtil.copyRouter(result));
+        return ResponseHelper.OK(CopyUtil.copyRouter(result));
     }
 
     @ApiOperation(value = "根据ID删除路由器信息")
@@ -98,7 +97,7 @@ public class RouterController {
                 tagService.save(tag);
             }
         }
-        return ResponseHelper.buildBooleanResultBean("删除成功", "删除失败！没有指定ID的路由器或者此ID下的路由器仍有绑定的标签", flag);
+        return ResponseHelper.BooleanResultBean("删除成功", "删除失败！没有指定ID的路由器或者此ID下的路由器仍有绑定的标签", flag);
     }
 
     @ApiOperation("根据多个字段搜索数据")
@@ -106,7 +105,7 @@ public class RouterController {
     @RequiresPermissions("查询和搜索功能")
     public ResponseEntity<ResultBean> searchRoutersByConditon(@RequestParam String connection, @Min(message = "data.page.min", value = 0) @RequestParam Integer page, @RequestParam @Min(message = "data.count.min", value = 0) Integer count, @RequestBody @ApiParam(value = "查询条件json格式") RequestBean requestBean) {
         List<Router> routerList = routerService.findAllBySql(TableConstant.TABLE_ROUTERS, connection, requestBean, page, count, Router.class);
-        return ResponseHelper.buildSuccessResultBean(CopyUtil.copyRouter(routerList));
+        return ResponseHelper.OK(CopyUtil.copyRouter(routerList));
     }
 
     // 更换路由器
@@ -116,7 +115,7 @@ public class RouterController {
     @RequiresPermissions("更换路由器")
     public ResponseEntity<ResultBean> changeRouter(@RequestParam @ApiParam("源字段名") String sourceQuery, @RequestParam @ApiParam("源字段值") String sourceQueryString, @RequestParam @ApiParam("目的字段名") String targetQuery, @RequestParam @ApiParam("目的字段值") String targetQueryString) {
         ResponseBean responseBean = routerService.changeRouter(sourceQuery, sourceQueryString, targetQuery, targetQueryString);
-        return ResponseHelper.buildSuccessResultBean(responseBean);
+        return ResponseHelper.OK(responseBean);
     }
 
     // 路由器巡检（查询路由器信息）
@@ -133,7 +132,7 @@ public class RouterController {
             responseBean = routerService.routerScan(requestBean);
         else
             responseBean = routerService.routerScanByCycle(requestBean);
-        return ResponseHelper.buildSuccessResultBean(responseBean);
+        return ResponseHelper.OK(responseBean);
     }
 
     @ApiOperation("对所有路由器发起巡检")
@@ -142,7 +141,7 @@ public class RouterController {
     @Log("对所有路由器发起巡检")
     public ResponseEntity<ResultBean> routersScan() {
         ResponseBean responseBean = routerService.routersScan();
-        return ResponseHelper.buildSuccessResultBean(responseBean);
+        return ResponseHelper.OK(responseBean);
     }
 
     // 路由器设置
@@ -152,7 +151,7 @@ public class RouterController {
     @Log("发送路由器设置命令")
     public ResponseEntity<ResultBean> routerSetting(@RequestBody @ApiParam("路由器信息集合") RequestBean requestBean) {
         ResponseBean responseBean = routerService.settingRouter(requestBean);
-        return ResponseHelper.buildSuccessResultBean(responseBean);
+        return ResponseHelper.OK(responseBean);
     }
 
     // 路由器移除
@@ -161,7 +160,7 @@ public class RouterController {
     @RequiresPermissions("发送路由器移除命令")
     public ResponseEntity<ResultBean> routerRemove(@RequestBody @ApiParam("路由器信息集合") RequestBean requestBean) {
         ResponseBean responseBean = routerService.routerRemove(requestBean);
-        return ResponseHelper.buildSuccessResultBean(responseBean);
+        return ResponseHelper.OK(responseBean);
     }
 
     // AP信息写入
@@ -176,7 +175,7 @@ public class RouterController {
         // 9获取接收无线帧RSSI
         if (mode == 6) {
             Map<String, String> map = SocketChannelHelper.rssiResponse;
-            return ResponseHelper.buildSuccessResultBean(map);
+            return ResponseHelper.OK(map);
         }
         List<Router> routerList = new ArrayList<>();
         for (RequestItem items : requestBean.getItems()) {
@@ -208,7 +207,7 @@ public class RouterController {
         else if (mode == 5) {
             responseBean = SendCommandUtil.sendCommandWithRouters(routerList, CommandConstant.APRECEIVEBYCHANNELIDSTOP, CommandConstant.COMMANDTYPE_ROUTER);
         }
-        return ResponseHelper.buildSuccessResultBean(responseBean);
+        return ResponseHelper.OK(responseBean);
     }
 
     @ApiOperation("设置远程服务器信息")
@@ -222,7 +221,7 @@ public class RouterController {
         // 3接收查询历史连接IP列表信息
         if (mode == 3) {
             Set<String> ipHistory = SocketChannelHelper.ipHistory;
-            return ResponseHelper.buildSuccessResultBean(ipHistory);
+            return ResponseHelper.OK(ipHistory);
         }
         List<Router> routerList = new ArrayList<>();
         for (RequestItem items : requestBean.getItems()) {
@@ -236,7 +235,7 @@ public class RouterController {
         } else if (mode == 2) {
             responseBean = SendCommandUtil.sendCommandWithRouters(routerList, CommandConstant.GETIPRECORD, CommandConstant.COMMANDTYPE_ROUTER);
         }
-        return ResponseHelper.buildSuccessResultBean(responseBean);
+        return ResponseHelper.OK(responseBean);
     }
 
     @ApiOperation("上传路由器升级数据文件")
@@ -246,6 +245,6 @@ public class RouterController {
     public ResponseEntity<ResultBean> uploadRouter(@ApiParam(value = "文件信息", required = true) @RequestParam("file") MultipartFile file, @RequestParam Long routerId) throws IOException {
         Router router = routerService.findById(routerId).get();
         ResponseBean responseBean = SendCommandUtil.sendCommandWithRoutersUpdate(Arrays.asList(router), file);
-        return ResponseHelper.buildSuccessResultBean(responseBean);
+        return ResponseHelper.OK(responseBean);
     }
 }

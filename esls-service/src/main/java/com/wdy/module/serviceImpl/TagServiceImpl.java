@@ -35,7 +35,7 @@ public class TagServiceImpl extends BaseServiceImpl implements TagService {
     @Override
     public ResponseBean updateTagStyle(Tag tag, boolean isWaitingLong) {
         int waitingTime = isWaitingLong ? Integer.valueOf(SystemVersionArgs.commandWaitingTime) : 300;
-        Channel channel = testIfValidTag(tag);
+        Channel channel = testIfValidTag(tag, tag.getGood());
         String regionNames = tag.getGood().getRegionNames();
         ByteResponse byteResponse = ImageHelper.getByteResponse(tag, tag.getGood());
         if (byteResponse == null)
@@ -46,7 +46,7 @@ public class TagServiceImpl extends BaseServiceImpl implements TagService {
     @Override
     public ResponseBean updateTagStyle(Tag tag, Good good, String regionNames, boolean isWaitingLong) {
         int waitingTime = isWaitingLong ? Integer.valueOf(SystemVersionArgs.commandWaitingTime) : 300;
-        Channel channel = testIfValidTag(tag);
+        Channel channel = testIfValidTag(tag, good);
         ByteResponse byteResponse = ImageHelper.getByteResponse(tag, good);
         if (byteResponse == null)
             return new ResponseBean(1, 1);
@@ -56,7 +56,7 @@ public class TagServiceImpl extends BaseServiceImpl implements TagService {
     @Override
     public ResponseBean updateTagStyle(Tag tag, String styleNumber, boolean isWaitingLong) {
         int waitingTime = isWaitingLong ? Integer.valueOf(SystemVersionArgs.commandWaitingTime) : 300;
-        Channel channel = testIfValidTag(tag);
+        Channel channel = testIfValidTag(tag, tag.getGood());
         String regionNames = tag.getGood().getRegionNames();
         ByteResponse byteResponse = ImageHelper.getByteResponse(tag, tag.getGood(), styleNumber);
         if (byteResponse == null)
@@ -180,13 +180,13 @@ public class TagServiceImpl extends BaseServiceImpl implements TagService {
 
     //绑定商品和标签
     @Override
-    public ResponseEntity<ResultBean> bindGoodAndTag(String sourceArgs1, String ArgsString1, String sourceArgs2, String ArgsString2, String mode) {
+    public ResponseEntity<ResultBean> bindGoodAndTag(String sourceArgs1, String ArgsString1, String sourceArgs2, String ArgsString2, Integer mode, Byte isNeedWaiting) {
         // 获取标签实体
         List<Tag> tagList = findByArrtribute(TableConstant.TABLE_TAGS, sourceArgs2, ArgsString2, Tag.class);
         // 获取商品实体
         List<Good> goods = findByArrtribute(TableConstant.TABLE_GOODS, sourceArgs1, ArgsString1, Good.class);
         if (CollectionUtils.isEmpty(tagList) || CollectionUtils.isEmpty(goods))
-            return new ResponseEntity<>(ResultBean.error("标签或商品集合不一致"), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(ResultBean.error("标签或商品集合为空"), HttpStatus.BAD_REQUEST);
         ResponseEntity<ResultBean> result;
         if (goods.size() > 1 || tagList.size() > 1)
             return new ResponseEntity<>(ResultBean.error(" 根据字段获取的数据不唯一 请选择唯一字段 "), HttpStatus.BAD_REQUEST);
@@ -196,57 +196,11 @@ public class TagServiceImpl extends BaseServiceImpl implements TagService {
         if (tagList.get(0).getStyle().getDispmses().size() == 0)
             return new ResponseEntity<>(ResultBean.error("标签绑定样式中的区域数量为0,无法绑定"), HttpStatus.BAD_REQUEST);
         Good good = goods.get(0);
-        SendCommandUtil.sendBindTagGood(tagList.get(0), good, Integer.valueOf(mode));
-//        Tag tag = tagList.get(0);
-//        List<Tag> tags = new ArrayList<>();
-//        tags.add(tag);
-//        // 换绑
-//        if ("2".equals(mode)) {
-//            Style style = styleDao.findByStyleNumberAndIsPromote(tag.getStyle().getStyleNumber(), good.getIsPromote());
-//            tag.setStyle(style);
-//            tag.setState((byte) 1);
-//            tag.setGood(good);
-//            saveOne(tag);
-//            SendCommandUtil.updateTagStyle(tags, false, false);
-//        }
-//        if (tag.getGood() == null) {
-//            if (mode.equals("1"))
-//                tag.setGood(good);
-//            else
-//                return new ResponseEntity<>(ResultBean.error(" 商品和标签暂未绑定 请改变mode重新发送请求 "), HttpStatus.BAD_REQUEST);
-//        } else if (tag.getGood() != null && mode.equals("1"))
-//            return new ResponseEntity<>(ResultBean.error(" 此标签已经绑定商品 请重新选择标签 "), HttpStatus.BAD_REQUEST);
-//        try {
-//            // 绑定
-//            if (mode.equals("1")) {
-//                Style style = styleDao.findByStyleNumberAndIsPromote(tag.getStyle().getStyleNumber(), good.getIsPromote());
-//                tag.setStyle(style);
-//                tag.setState((byte) 1);
-//                saveOne(tag);
-//                String contentType = CommandConstant.TAGBIND;
-//                SendCommandUtil.sendCommandWithTags(tags, contentType, CommandConstant.COMMANDTYPE_TAG,false);
-//                SendCommandUtil.updateTagStyle(tags, false, false);
-//            }
-//            // 解绑
-//            else if (mode.equals("0")) {
-//                if (tag.getStyle() != null) {
-//                    Style style = styleDao.findByStyleNumberAndIsPromote(tag.getStyle().getStyleNumber(), (byte) 0);
-//                    tag.setStyle(style);
-//                }
-//                good.setWaitUpdate(1);
-//                goodDao.save(good);
-//                tag.setState((byte) 0);
-//                tag.setWaitUpdate(1);
-//                tag.setGood(null);
-//                saveOne(tag);
-//                String contentType = CommandConstant.TAGBINDOVER;
-//                SendCommandUtil.sendCommandWithTags(tags, contentType, CommandConstant.COMMANDTYPE_TAG,false);
-//            }
-//        } catch (Exception e) {
-//            System.out.println("发送样式修改包失败");
-//        }
-        // 返回前端提示信息
-        return ResponseHelper.buildSuccessResultBean(mode.equals("0") ? "取消绑定操作成功" : "绑定操作成功");
+        if (2 == mode && tagList.get(0).getGood() == null) {
+            mode = 1;
+        }
+        SendCommandUtil.sendBindTagGood(tagList.get(0), good, mode, isNeedWaiting);
+        return ResponseHelper.OK(mode.equals("0") ? "取消绑定操作成功" : "绑定操作成功");
     }
 
     // 标签移除 进入休眠状态
@@ -281,15 +235,15 @@ public class TagServiceImpl extends BaseServiceImpl implements TagService {
             throw new ServiceException(ResultEnum.ENTITY_NOT_EXIST);
         Tag tag = tagList.get(0);
         Good good = tag.getGood();
-        if (good == null)
+        if (good == null && mode == 1)
             throw new ServiceException(ResultEnum.TAG_BINDED_GOOD_EMPTY);
-        else {
+        if (good != null && mode == 1) {
             good.setWaitUpdate(1);
             good.setRegionNames(null);
             goodDao.save(good);
         }
         if (tag.getStyle() != null && tag.getStyle().getId() == styleId)
-            return ResponseHelper.buildBadRequestResultBean("标签对应的样式一致,无需更改");
+            return ResponseHelper.BadRequest("标签对应的样式一致,无需更改");
         else {
             Style style = styleDao.getOne(styleId);
             if (mode == 1) {
@@ -298,7 +252,7 @@ public class TagServiceImpl extends BaseServiceImpl implements TagService {
                 tag.setStyle(style);
                 saveOne(tag);
             }
-            return ResponseHelper.buildBadRequestResultBean("发送样式修改包失败");
+            return ResponseHelper.OK("标签更换样式操作成功");
         }
     }
 
@@ -434,7 +388,7 @@ public class TagServiceImpl extends BaseServiceImpl implements TagService {
         return new ResponseBean(1, 1);
     }
 
-    private Channel testIfValidTag(Tag tag) {
+    private Channel testIfValidTag(Tag tag, Good good) {
         if (tag == null)
             throw new ServiceException(ResultEnum.TAG_NOT_EXIST);
         if (tag.getStyle() == null)
@@ -446,7 +400,7 @@ public class TagServiceImpl extends BaseServiceImpl implements TagService {
         Channel channel = SocketChannelHelper.getChannelByRouter(tag.getRouter().getId());
         if (channel == null)
             throw new ServiceException(ResultEnum.COMMUNITICATION_ERROR);
-        if (tag.getGood() == null)
+        if (good == null)
             throw new ServiceException(ResultEnum.TAG_BINDED_GOOD_EMPTY);
         return channel;
     }

@@ -46,7 +46,7 @@ public class PermissionController {
     @RequiresPermissions("获取指定ID的信息")
     public ResponseEntity<ResultBean> getPermissionById(@PathVariable Long id) {
         Optional<Permission> result = permissionService.findById(id);
-        return ResponseHelper.buildBooleanResultBean(result, "此ID权限不存在", result.isPresent());
+        return ResponseHelper.BooleanResultBean(result, "此ID权限不存在", result.isPresent());
     }
 
     //    @ApiOperation(value = "添加或修改权限信息")
@@ -78,6 +78,6 @@ public class PermissionController {
     @RequiresPermissions("根据角色ID获得权限")
     public ResponseEntity<ResultBean> getPermissionByRoleId(@PathVariable Long id) {
         Role role = roleDao.findById(id).get();
-        return ResponseHelper.buildBooleanResultBean(role.getPermissions(), "不存在此用户", role != null);
+        return ResponseHelper.BooleanResultBean(role.getPermissions(), "不存在此用户", role != null);
     }
 }

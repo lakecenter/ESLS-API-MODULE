@@ -50,7 +50,7 @@ public class CycleJobController {
     @RequiresPermissions("获取指定ID的信息")
     public ResponseEntity<ResultBean> getGoodById(@PathVariable Long id) {
         CycleJob cycleJob = cycleJobService.findById(id);
-        return ResponseHelper.buildSuccessResultBean(Arrays.asList(cycleJob));
+        return ResponseHelper.OK(Arrays.asList(cycleJob));
     }
 
     @ApiOperation(value = "添加或修改定期任务信息")
@@ -63,7 +63,7 @@ public class CycleJobController {
             throw new ServiceException(ResultEnum.CYCLEJOB_NOT_ALLOW_CHANGE_CHANGE_GOOD_JOB);
         CycleJob result = cycleJobService.saveOne(cycleJob);
         dynamicTask.restartFutures();
-        return ResponseHelper.buildSuccessResultBean(result);
+        return ResponseHelper.OK(result);
     }
 
     @ApiOperation(value = "根据ID删除定期任务信息")
@@ -77,6 +77,6 @@ public class CycleJobController {
         if (flag) {
             dynamicTask.restartFutures();
         }
-        return ResponseHelper.buildBooleanResultBean("删除成功", "删除失败！没有指定ID的定期任务", flag);
+        return ResponseHelper.BooleanResultBean("删除成功", "删除失败！没有指定ID的定期任务", flag);
     }
 }

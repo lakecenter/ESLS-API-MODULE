@@ -59,15 +59,15 @@ public interface TagService extends Service {
 
     ResponseBean updateTagStyle(Tag tag, boolean isWaitingLong);
 
-    ResponseBean updateTagStyle(Tag tag, Good good,String regionNames, boolean isWaitingLong);
+    ResponseBean updateTagStyle(Tag tag, Good good, String regionNames, boolean isWaitingLong);
 
-    ResponseBean updateTagStyle(Tag tag, String styleNumber,boolean isWaitingLong);
+    ResponseBean updateTagStyle(Tag tag, String styleNumber, boolean isWaitingLong);
 
     // 对指定的标签或路由器发出标签移除命令
     ResponseBean removeTagCommand(RequestBean requestBean, Integer mode);
 
     // 绑定和解绑商品和标签
-    ResponseEntity<ResultBean> bindGoodAndTag(String sourceArgs1, String ArgsString1, String sourceArgs2, String ArgsString2, String mode);
+    ResponseEntity<ResultBean> bindGoodAndTag(String sourceArgs1, String ArgsString1, String sourceArgs2, String ArgsString2, Integer mode, Byte isNeedWaiting);
 
     // 价签更换样式
     ResponseEntity<ResultBean> updateTagStyleById(long tagId, long styleId, Integer mode);

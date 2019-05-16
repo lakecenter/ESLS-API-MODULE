@@ -16,7 +16,6 @@ import io.swagger.annotations.*;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -55,7 +54,7 @@ public class ShopController {
     @RequiresPermissions("获取指定ID的信息")
     public ResponseEntity<ResultBean> getShopById(@PathVariable Long id) {
         Optional<Shop> result = shopService.findById(id);
-        return ResponseHelper.buildBooleanResultBean(result, "此ID店铺不存在", result.isPresent());
+        return ResponseHelper.BooleanResultBean(result, "此ID店铺不存在", result.isPresent());
     }
 
     @ApiOperation(value = "获取某个店铺下的所有商品")
@@ -68,7 +67,7 @@ public class ShopController {
             List<Good> goods = goodService.findByShopNumber(shop.getNumber());
             shopToGoods.put(shop.getNumber(), goods);
         }
-        return ResponseHelper.buildSuccessResultBean(shopToGoods);
+        return ResponseHelper.OK(shopToGoods);
     }
 
     @ApiOperation(value = "添加或修改店铺信息")
@@ -94,7 +93,7 @@ public class ShopController {
             }
         }
         Shop reuslt = shopService.saveOne(shop);
-        return ResponseHelper.buildSuccessResultBean(shopService.saveOne(reuslt));
+        return ResponseHelper.OK(shopService.saveOne(reuslt));
     }
 
     @ApiOperation(value = "根据ID删除店铺信息")
@@ -115,7 +114,7 @@ public class ShopController {
                 userService.saveOne(u);
             }
         }
-        return ResponseHelper.buildBooleanResultBean("删除成功", "删除失败！没有指定ID的店铺", flag);
+        return ResponseHelper.BooleanResultBean("删除成功", "删除失败！没有指定ID的店铺", flag);
     }
 
     @ApiOperation(value = "对标签进行巡检或设置定期巡检", notes = "定期巡检才需加cron字段")
@@ -125,6 +124,6 @@ public class ShopController {
     @PutMapping("/shop/cyclejob")
     @Log("设置商店定期任务")
     public ResponseEntity<ResultBean> shopCycelJob(@RequestBody @ApiParam("商店信息集合") RequestBean requestBean, @RequestParam Integer mode) {
-        return ResponseHelper.buildSuccessResultBean(shopService.tagsByCycle(requestBean, mode));
+        return ResponseHelper.OK(shopService.tagsByCycle(requestBean, mode));
     }
 }

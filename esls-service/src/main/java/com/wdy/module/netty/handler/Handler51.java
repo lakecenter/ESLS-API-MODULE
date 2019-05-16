@@ -18,19 +18,12 @@ public class Handler51 implements ServiceHandler {
     @Override
     public byte[] executeRequest(byte[] header, byte[] message, Channel channel) {
         log.info("标签巡检（应答包）-----处理器执行！");
-
         String tagAddress = ByteUtil.getTagAddress(ByteUtil.splitByte(message, 0, 4));
         String power = ByteUtil.getRealMessage(ByteUtil.splitByte(message, 4, 1));
         String tag_rssi = String.valueOf(Integer.valueOf(ByteUtil.getRealMessage(ByteUtil.splitByte(message, 5, 1)))-256);
         String ap_rssi = String.valueOf(Integer.valueOf(ByteUtil.getRealMessage(ByteUtil.splitByte(message, 6, 1)))-256);
         byte[] state = ByteUtil.splitByte(message, 7, 1);
-        System.out.println("标签地址："+tagAddress);
-        System.out.println("电量："+power);
-        System.out.println("tagrssi："+tag_rssi);
-        System.out.println("aprssi："+ap_rssi);
-        System.out.println("state："+state[0]);
         Router router = SocketChannelHelper.getRouterByChannel(channel);
-        System.out.println("选择的路由器:"+router);
         TagService tagService = ((TagService) SpringContextUtil.getBean("TagService"));
         Tag tag  = tagService.findByTagAddress(tagAddress);
         tag = tag==null?new Tag():tag;

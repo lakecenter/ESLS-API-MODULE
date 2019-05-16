@@ -12,7 +12,7 @@ public class ResponseUtil {
     public static ResponseEntity<ResultBean> testListSize(String msg, List... args) {
         for (int i = 0; i < args.length; i++)
             if (CollectionUtils.isEmpty(args[i]))
-                return ResponseHelper.buildBadRequestResultBean(msg);
+                return ResponseHelper.BadRequest(msg);
         return null;
     }
 }

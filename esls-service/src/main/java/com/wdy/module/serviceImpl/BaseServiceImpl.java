@@ -160,8 +160,8 @@ public class BaseServiceImpl<T> implements Service<T> {
             resultList = CopyUtil.copyEntity(entityName, content);
         }
         if (resultList == null)
-            return ResponseHelper.buildBadRequestResultBean("查询组合出错 函数未执行！");
-        return ResponseHelper.buildSuccessResultBean(resultList, list != null ? list.size() : resultList.size());
+            return ResponseHelper.BadRequest("查询组合出错 函数未执行！");
+        return ResponseHelper.OK(resultList, list != null ? list.size() : resultList.size());
     }
 
     @Override

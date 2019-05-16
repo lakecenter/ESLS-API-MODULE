@@ -45,7 +45,7 @@ public class DispmsController {
     @RequiresPermissions("获取指定ID的信息")
     public ResponseEntity<ResultBean> getDispmsById(@PathVariable Long id) {
         Optional<Dispms> dispms = dispmsService.findById(id);
-        return ResponseHelper.buildSuccessResultBean(CopyUtil.copyDispms(Arrays.asList(dispms.get())));
+        return ResponseHelper.OK(CopyUtil.copyDispms(Arrays.asList(dispms.get())));
     }
 
     @ApiOperation(value = "添加或修改样式块信息")
@@ -54,7 +54,7 @@ public class DispmsController {
     public ResponseEntity<ResultBean> saveDispms(@RequestBody @ApiParam(value = "样式块信息json格式") DispmsVo dispmsVo) {
         Dispms dispms = new Dispms();
         BeanUtils.copyProperties(dispmsVo, dispms);
-        return ResponseHelper.buildSuccessResultBean(dispmsService.saveOne(dispms));
+        return ResponseHelper.OK(dispmsService.saveOne(dispms));
     }
 
     @ApiOperation(value = "根据ID删除样式块信息")
@@ -62,6 +62,6 @@ public class DispmsController {
     @RequiresPermissions("删除指定ID的信息")
     public ResponseEntity<ResultBean> deleteDispmsById(@PathVariable Long id) {
         boolean flag = dispmsService.deleteById(id);
-        return ResponseHelper.buildBooleanResultBean("删除成功", "删除失败！没有指定ID的样式块", flag);
+        return ResponseHelper.BooleanResultBean("删除成功", "删除失败！没有指定ID的样式块", flag);
     }
 }

@@ -1,8 +1,6 @@
 package com.wdy.module.controller;
 
 import com.wdy.module.common.constant.TableConstant;
-import com.wdy.module.common.exception.ResultEnum;
-import com.wdy.module.common.exception.ServiceException;
 import com.wdy.module.common.request.QueryAllBean;
 import com.wdy.module.common.request.RequestBean;
 import com.wdy.module.common.response.ResultBean;
@@ -53,7 +51,7 @@ public class GoodController {
     @RequiresPermissions("查询和搜索功能")
     public ResponseEntity<ResultBean> searchGoodsByConditon(@RequestParam String connection, @Min(message = "data.page.min", value = 0) @RequestParam Integer page, @RequestParam @Min(message = "data.count.min", value = 0) Integer count, @RequestBody @ApiParam(value = "查询条件json格式") RequestBean requestBean) {
         List<Good> goods = goodService.findAllBySql(TableConstant.TABLE_GOODS, connection, requestBean, page, count, Good.class);
-        return ResponseHelper.buildSuccessResultBean(CopyUtil.copyGood(goods));
+        return ResponseHelper.OK(CopyUtil.copyGood(goods));
     }
 
     @ApiOperation(value = "获取指定ID的商品信息")
@@ -61,7 +59,7 @@ public class GoodController {
     @Transactional
     @RequiresPermissions("获取指定ID的信息")
     public ResponseEntity<ResultBean> getGoodById(@PathVariable Long id) {
-        return ResponseHelper.buildSuccessResultBean(CopyUtil.copyGood(Arrays.asList(goodService.findById(id))));
+        return ResponseHelper.OK(CopyUtil.copyGood(Arrays.asList(goodService.findById(id))));
     }
 
     // 上传商品时带特征图片
@@ -69,7 +67,7 @@ public class GoodController {
     @PostMapping("/good")
     @RequiresPermissions("添加或修改信息")
     public ResponseEntity<ResultBean> saveGood(@RequestBody @ApiParam(value = "商品信息json格式") Good good) {
-        return ResponseHelper.buildSuccessResultBean(goodService.saveOne(good));
+        return ResponseHelper.OK(goodService.saveOne(good));
     }
 
     @ApiOperation(value = "根据ID删除商品信息")
@@ -78,7 +76,7 @@ public class GoodController {
     @RequiresPermissions("删除指定ID的信息")
     public ResponseEntity<ResultBean> deleteGoodById(@PathVariable Long id) {
         boolean flag = goodService.deleteById(id);
-        return ResponseHelper.buildBooleanResultBean("删除成功", "删除失败！没有指定ID的商品", flag);
+        return ResponseHelper.BooleanResultBean("删除成功", "删除失败！没有指定ID的商品", flag);
     }
 
     @ApiOperation("对绑定商品的所有标签内容进行更新(可单个 批量) 不指定put参数则对商品数据waitUpdate字段为0的数据进行更新")
@@ -87,10 +85,10 @@ public class GoodController {
     @RequiresPermissions("商品改价")
     public ResponseEntity<ResultBean> updateGoods(@RequestBody(required = false) @ApiParam("商品信息集合") RequestBean requestBean) {
         if (requestBean == null || requestBean.getItems().size() == 0)
-            return ResponseHelper.buildSuccessResultBean(goodService.updateGoods(false));
+            return ResponseHelper.OK(goodService.updateGoods(false));
         else if (requestBean.getItems().size() > 0)
-            return ResponseHelper.buildSuccessResultBean(goodService.updateGoods(requestBean));
-        return ResponseHelper.buildBadRequestResultBean("参数有误");
+            return ResponseHelper.OK(goodService.updateGoods(requestBean));
+        return ResponseHelper.BadRequest("参数有误");
     }
 
     @ApiOperation("通过商品属性获取其绑定的所有标签信息（连接符可取=或like）")
@@ -98,7 +96,7 @@ public class GoodController {
     @RequiresPermissions("通过商品ID获取其绑定的所有标签信息")
     public ResponseEntity<ResultBean> getBindTags(@RequestParam String query, @RequestParam String connection, @RequestParam String queryString) {
         List<Tag> tags = goodService.getBindTags(query, connection, queryString);
-        return ResponseHelper.buildSuccessResultBean(CopyUtil.copyTag(tags));
+        return ResponseHelper.OK(CopyUtil.copyTag(tags));
     }
 
     @ApiOperation("设置商品基本数据和商品变价文件路径及cron表达式（定期任务）")
@@ -112,7 +110,7 @@ public class GoodController {
     @RequiresPermissions("设置商品基本数据和商品变价文件路径及cron表达式（定期任务）")
     public ResponseEntity<ResultBean> setSchedule(@RequestParam(required = false) String cron, @RequestParam(required = false) String rootFilePath, @RequestParam Integer mode) {
         boolean flag = goodService.setScheduleTask(cron, rootFilePath, mode);
-        return ResponseHelper.buildBooleanResultBean("设置成功", "设置失败", flag);
+        return ResponseHelper.BooleanResultBean("设置成功", "设置失败", flag);
     }
 
     @ApiOperation("上传商品基本数据及变价数据文件(csv)")
@@ -124,6 +122,6 @@ public class GoodController {
     @RequiresPermissions("上传商品基本数据及变价数据文件")
     public ResponseEntity<ResultBean> uploadGoodData(@ApiParam(value = "文件信息", required = true) @RequestParam("file") MultipartFile file, @RequestParam Integer mode) {
         boolean flag = goodService.uploadGoodData(file, mode);
-        return ResponseHelper.buildBooleanResultBean("上传成功", "上传失败", flag);
+        return ResponseHelper.BooleanResultBean("上传成功", "上传失败", flag);
     }
 }

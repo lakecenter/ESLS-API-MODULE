@@ -108,8 +108,13 @@ public class SendCommandUtil {
         return new ResponseBean(sum, successNumber);
     }
 
-    public static void sendBindTagGood(Tag tag, Good good, Integer mode) {
-        ((AsyncServiceTask) SpringContextUtil.getBean("AsyncServiceTask")).sendBindTagGood(tag, good, mode);
+    public static void sendBindTagGood(Tag tag, Good good, Integer mode, Byte isNeedWaiting) {
+        ArrayList<ListenableFuture<Integer>> listenableFutures = new ArrayList<>();
+        ListenableFuture<Integer> result = ((AsyncServiceTask) SpringContextUtil.getBean("AsyncServiceTask")).sendBindTagGood(tag, good, mode);
+        listenableFutures.add(result);
+        if (isNeedWaiting == 1) {
+            waitAllThread(listenableFutures);
+        }
     }
 
     public static void sendTagChangeStyle(Tag tag, Style style) {

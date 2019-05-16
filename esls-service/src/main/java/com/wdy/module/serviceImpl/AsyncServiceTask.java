@@ -188,26 +188,23 @@ public class AsyncServiceTask {
                 responseBean = tagService.updateTagStyle(tag, good, good.getRegionNames(), true);
                 if (responseBean.getSuccessNumber() == 1) {
                     // 换绑
-                    setGoodTagBind(good, tag, (byte) 1);
+                    setGoodTagBind(good, tag);
                 }
                 break;
             case 1:
                 contentType = CommandConstant.TAGBIND;
                 responseBean = SendCommandUtil.sendCommandWithTags(Arrays.asList(tag), contentType, CommandConstant.COMMANDTYPE_TAG, true);
                 if (responseBean.getSuccessNumber() == 1) {
-                    try {
-                        tagService.updateTagStyle(tag, good, good.getRegionNames(), true);
-                    } catch (Exception e) {
-                    }
                     // 绑定
-                    setGoodTagBind(good, tag, (byte) 1);
+                    setGoodTagBind(good, tag);
+                    tagService.updateTagStyle(tag, good, good.getRegionNames(), true);
                 }
                 break;
             case 0:
                 contentType = CommandConstant.TAGBINDOVER;
                 responseBean = SendCommandUtil.sendCommandWithTags(Arrays.asList(tag), contentType, CommandConstant.COMMANDTYPE_TAG, true);
                 if (responseBean.getSuccessNumber() == 1) {
-                    setGoodTagUnBind(good, tag, (byte) 0);
+                    setGoodTagUnBind(good, tag);
                 }
                 break;
             default:
@@ -226,12 +223,12 @@ public class AsyncServiceTask {
         return new AsyncResult<>(1);
     }
 
-    public void setGoodTagBind(Good good, Tag tag, Byte state) {
+    public void setGoodTagBind(Good good, Tag tag) {
         Style style = styleService.findByStyleNumberAndIsPromote(tag.getStyle().getStyleNumber(), good.getIsPromote());
         tag.setStyle(style);
         tag.setState((byte) 1);
         tag.setGood(good);
-        tag.setState(state);
+        tag.setState((byte) 1);
         tagService.saveOne(tag);
 
         // regionNames置空
@@ -240,7 +237,7 @@ public class AsyncServiceTask {
         goodService.save(good);
     }
 
-    public void setGoodTagUnBind(Good good, Tag tag, Byte state) {
+    public void setGoodTagUnBind(Good good, Tag tag) {
         if (tag.getStyle() != null) {
             Style style = styleService.findByStyleNumberAndIsPromote(tag.getStyle().getStyleNumber(), (byte) 0);
             tag.setStyle(style);
@@ -249,7 +246,7 @@ public class AsyncServiceTask {
         // regionNames置空
         good.setRegionNames(null);
         goodService.save(good);
-        tag.setState(state);
+        tag.setState((byte) 0);
         tag.setWaitUpdate(1);
         tag.setGood(null);
         tagService.saveOne(tag);

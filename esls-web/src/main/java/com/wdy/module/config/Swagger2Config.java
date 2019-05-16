@@ -17,6 +17,7 @@ package com.wdy.module.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.context.request.async.DeferredResult;
 import springfox.documentation.builders.*;
 import springfox.documentation.service.ApiInfo;
 import springfox.documentation.service.ApiKey;
@@ -34,6 +35,9 @@ public class Swagger2Config {
     @Bean
     public Docket createRestApi() {
         return new Docket(DocumentationType.SWAGGER_2)
+                .genericModelSubstitutes(DeferredResult.class)
+                .useDefaultResponseMessages(false)
+                .forCodeGeneration(false)
                 .apiInfo(apiInfo())
                 .select()
                 //为当前包路径

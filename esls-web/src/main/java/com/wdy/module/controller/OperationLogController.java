@@ -49,13 +49,13 @@ public class OperationLogController {
         // 查询全部
         if (result.equals(ConditionUtil.QUERY_ALL)) {
             List list = operationLogService.findAll();
-            return ResponseHelper.buildSuccessResultBean(list, list.size());
+            return ResponseHelper.OK(list, list.size());
         }
         // 查询全部分页
         if (result.equals(ConditionUtil.QUERY_ALL_PAGE)) {
             List list = operationLogService.findAll();
             Page smsVerifyPage = operationLogService.selectPage(new Page<>(page, count));
-            return ResponseHelper.buildSuccessResultBean(smsVerifyPage.getRecords(), list.size());
+            return ResponseHelper.OK(smsVerifyPage.getRecords(), list.size());
         }
         // 带条件查询全部
         if (result.equals(ConditionUtil.QUERY_ATTRIBUTE_ALL)) {
@@ -63,7 +63,7 @@ public class OperationLogController {
             Wrapper<OperationLog> entity = new EntityWrapper<>();
             entity.like(query, queryString);
             List smsVerifies = operationLogService.selectList(entity);
-            return ResponseHelper.buildSuccessResultBean(smsVerifies, list.size());
+            return ResponseHelper.OK(smsVerifies, list.size());
         }
         // 带条件查询分页
         if (result.equals(ConditionUtil.QUERY_ATTRIBUTE_PAGE)) {
@@ -71,9 +71,9 @@ public class OperationLogController {
             Wrapper<OperationLog> queryWrapper = new EntityWrapper<>();
             queryWrapper.like(query, queryString).orderBy("id", false);
             Page smsVerifyPage = operationLogService.selectPage(new Page<>(page, count), queryWrapper);
-            return ResponseHelper.buildSuccessResultBean(smsVerifyPage.getRecords(), list.size());
+            return ResponseHelper.OK(smsVerifyPage.getRecords(), list.size());
         }
-        return ResponseHelper.buildBadRequestResultBean("查询组合出错 函数未执行！");
+        return ResponseHelper.BadRequest("查询组合出错 函数未执行！");
 
     }
 

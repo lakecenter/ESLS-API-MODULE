@@ -34,7 +34,7 @@ public class MyMvcConfig implements WebMvcConfigurer {
         //静态资源；  *.css , *.js
         //SpringBoot已经做好了静态资源映射
 //        registry.addInterceptor(licenseCheckInterceptor())
-//                .excludePathPatterns("/index.html", "/", "/user/login", "/asserts/**")
+//                .excludePathPatterns("/index.html", "/", "/user/login", "/asserts/**","/docs.html/**")
 //                .excludePathPatterns("/swagger-resources/**", "/webjars/**", "/v2/**", "/swagger-ui.html/**", "/license/installLicense", "/license/getServerInfos", "/license/generateLicense", "/license/downloadLicense")
 //                .addPathPatterns("/**");
     }
@@ -47,6 +47,8 @@ public class MyMvcConfig implements WebMvcConfigurer {
                 .addResourceLocations("classpath:/META-INF/resources/");
         registry.addResourceHandler("/webjars/**")
                 .addResourceLocations("classpath:/META-INF/resources/webjars/");
+        registry.addResourceHandler("docs.html")
+                .addResourceLocations("classpath:/META-INF/resources/");
     }
 
     @Override
@@ -58,5 +60,13 @@ public class MyMvcConfig implements WebMvcConfigurer {
     @Bean
     public CurrentUserMethodArgumentResolver currentUserMethodArgumentResolver() {
         return new CurrentUserMethodArgumentResolver();
+    }
+    @Override
+    public void addCorsMappings(CorsRegistry registry) {
+        registry.addMapping("/**")
+                .allowCredentials(true)
+                .allowedHeaders("*")
+                .allowedOrigins("*")
+                .allowedMethods("*");
     }
 }

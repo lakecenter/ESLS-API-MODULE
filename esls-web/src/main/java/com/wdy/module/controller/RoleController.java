@@ -60,7 +60,7 @@ public class RoleController {
     @RequiresPermissions("获取指定ID的信息")
     public ResponseEntity<ResultBean> getRoleById(@PathVariable Long id) {
         Optional<Role> result = roleService.findById(id);
-        return ResponseHelper.buildBooleanResultBean(result, "此ID角色不存在", result.isPresent());
+        return ResponseHelper.BooleanResultBean(result, "此ID角色不存在", result.isPresent());
     }
 
     @ApiOperation(value = "添加或修改角色信息")
@@ -68,7 +68,7 @@ public class RoleController {
     @RequiresPermissions("添加或修改信息")
     public ResponseEntity<ResultBean> saveRole(@ApiParam("角色描述") @RequestParam String name, @ApiParam("角色类型") @RequestParam String type) {
         Role role = new Role(name, type);
-        return ResponseHelper.buildSuccessResultBean(roleService.saveOne(role));
+        return ResponseHelper.OK(roleService.saveOne(role));
     }
 
     @ApiOperation(value = "根据ID删除角色信息")
@@ -84,7 +84,7 @@ public class RoleController {
         // 删除user_role 和role_permission表中数据
         roleService.deleteByIdList(TableConstant.TABLE_USER_ROLE, "roleId", idList);
         roleService.deleteByIdList(TableConstant.TABLE_ROLE_PERMISSION, "roleId", idList);
-        return ResponseHelper.buildBooleanResultBean("删除成功", "删除失败！没有指定ID的角色", flag);
+        return ResponseHelper.BooleanResultBean("删除成功", "删除失败！没有指定ID的角色", flag);
     }
 
     @ApiOperation("为指定ID的角色添加权限")
@@ -120,7 +120,7 @@ public class RoleController {
             sumResult.put(i + 1, sum);
         }
         shiroService.updatePermission();
-        return ResponseHelper.buildSuccessResultBean(sumResult);
+        return ResponseHelper.OK(sumResult);
     }
 
     @ApiOperation("删除指定ID的角色的对应权限")
@@ -154,6 +154,6 @@ public class RoleController {
             sumResult.put(i + 1, sum);
         }
         shiroService.updatePermission();
-        return ResponseHelper.buildSuccessResultBean(sumResult);
+        return ResponseHelper.OK(sumResult);
     }
 }

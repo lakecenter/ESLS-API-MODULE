@@ -18,7 +18,6 @@ import org.springframework.util.concurrent.ListenableFuture;
 public class AsyncTask {
     @Async
     public ListenableFuture<String> execute(String name, Channel channel, byte[] header, byte[] message) {
-        log.info("开始执行线程-----" + name);
         byte[] response ;
         try {
             ServiceHandler handler = (ServiceHandler) SpringContextUtil.getBean(name);
@@ -26,7 +25,7 @@ public class AsyncTask {
             try {
                 if(response!=null) {
                     channel.writeAndFlush(Unpooled.wrappedBuffer(response));
-                    SpringContextUtil.printBytes(name + "消息包应答", response);
+//                    SpringContextUtil.printBytes(name + "消息包应答", response);
                 }
             } catch (Exception e) {
                 System.out.println(e);
