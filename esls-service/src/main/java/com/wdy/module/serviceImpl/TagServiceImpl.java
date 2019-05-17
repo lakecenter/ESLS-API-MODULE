@@ -391,8 +391,9 @@ public class TagServiceImpl extends BaseServiceImpl implements TagService {
     private Channel testIfValidTag(Tag tag, Good good) {
         if (tag == null)
             throw new ServiceException(ResultEnum.TAG_NOT_EXIST);
-        if (tag.getStyle() == null)
-            throw new ServiceException(ResultEnum.TAG_NOT_BIND_STYLES);
+        if (tag.getStyle() == null) {
+            TagAndRouterUtil.setBaseTagStyle(Arrays.asList(tag));
+        }
         if (tag.getStyle().getDispmses().size() == 0)
             throw new ServiceException(ResultEnum.TAG_EMPTY_STYLES);
         if (tag.getRouter() == null)

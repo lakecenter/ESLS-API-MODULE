@@ -26,7 +26,7 @@ public class StringUtil {
             sb.append(dispM.getStartText());
         }
         // 为与商品有关字段
-        if (!dispM.getSourceColumn().equals("0")) {
+        if (!dispM.getSourceColumn().equals("0") || !dispM.getSourceColumn().equals("custom")) {
             String text = SpringContextUtil.getSourceData(dispM.getSourceColumn(), good);
             if (NUMBER.equals(dispM.getColumnType())) {
                 if (text.contains(".")) {

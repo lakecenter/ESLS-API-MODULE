@@ -124,10 +124,8 @@ public class TagController {
     @PutMapping("/tag/bind")
     @Log("标签和商品绑定和取消绑定")
     @AccessLimit(perSecond = 1)
-    public ResponseEntity<ResultBean> bindGoodAndTag(@RequestParam String sourceArgs1, @RequestParam String ArgsString1, @RequestParam String sourceArgs2, @RequestParam String ArgsString2, Integer mode, @RequestParam(required = false) Byte isNeedWaiting) {
-        if (isNeedWaiting == null)
-            isNeedWaiting = 0;
-        return tagService.bindGoodAndTag(sourceArgs1, ArgsString1, sourceArgs2, ArgsString2, mode, isNeedWaiting);
+    public ResponseEntity<ResultBean> bindGoodAndTag(@RequestParam String sourceArgs1, @RequestParam String ArgsString1, @RequestParam String sourceArgs2, @RequestParam String ArgsString2, Integer mode, @RequestParam(required = false) Byte isNeedWaiting ) {
+        return tagService.bindGoodAndTag(sourceArgs1, ArgsString1, sourceArgs2, ArgsString2, mode, isNeedWaiting==null?0:isNeedWaiting);
     }
 
     @ApiOperation(value = "标签更换样式")

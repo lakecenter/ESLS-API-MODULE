@@ -54,14 +54,14 @@ public class OperationLogController {
         // 查询全部分页
         if (result.equals(ConditionUtil.QUERY_ALL_PAGE)) {
             List list = operationLogService.findAll();
-            Page smsVerifyPage = operationLogService.selectPage(new Page<>(page, count));
+            Page smsVerifyPage = operationLogService.selectPage(new Page<>(page, count,"createTime",false));
             return ResponseHelper.OK(smsVerifyPage.getRecords(), list.size());
         }
         // 带条件查询全部
         if (result.equals(ConditionUtil.QUERY_ATTRIBUTE_ALL)) {
             List list = operationLogService.findAll();
             Wrapper<OperationLog> entity = new EntityWrapper<>();
-            entity.like(query, queryString);
+            entity.like(query, queryString).orderBy("createTime", false);
             List smsVerifies = operationLogService.selectList(entity);
             return ResponseHelper.OK(smsVerifies, list.size());
         }
@@ -69,7 +69,7 @@ public class OperationLogController {
         if (result.equals(ConditionUtil.QUERY_ATTRIBUTE_PAGE)) {
             List list = operationLogService.findAll();
             Wrapper<OperationLog> queryWrapper = new EntityWrapper<>();
-            queryWrapper.like(query, queryString).orderBy("id", false);
+            queryWrapper.like(query, queryString).orderBy("createTime", false);
             Page smsVerifyPage = operationLogService.selectPage(new Page<>(page, count), queryWrapper);
             return ResponseHelper.OK(smsVerifyPage.getRecords(), list.size());
         }

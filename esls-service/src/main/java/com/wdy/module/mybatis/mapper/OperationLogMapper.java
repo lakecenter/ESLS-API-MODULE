@@ -15,6 +15,6 @@ import java.util.List;
  * @since 2019-04-26
  */
 public interface OperationLogMapper extends BaseMapper<OperationLog> {
-    @Select("select * from operation_log")
+    @Select("select * from operation_log order by createTime desc")
     List<OperationLog> findAll();
 }
